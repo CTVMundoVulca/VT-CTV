@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Visita Técnica — CTV</title>
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --navy-mid: #162436;
+    --orange: #F47820;
+    --orange-light: #FF8F35;
+    --silver: #C0C0C0;
+    --silver-light: #E8E8E8;
+    --white: #FFFFFF;
+    --text: #1A1A2E;
+    --text-light: #555;
+    --danger: #E53935;
+    --success: #2E7D32;
+    --radius: 10px;
+    --gap: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F0F2F5;
+    color: var(--text);
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--orange);
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    background: var(--orange);
+    color: white;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .logo-name {
+    color: var(--silver-light);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    max-width: 140px;
+  }
+  .doc-tag {
+    background: rgba(244,120,32,0.15);
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .header-sub {
+    margin-top: 10px;
+    color: var(--silver);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header-sub span { opacity: 0.5; }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    background: var(--navy-mid);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--orange);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-label {
+    color: var(--silver);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* ── CONTAINER ── */
+  .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+  /* ── SECTIONS ── */
+  .section {
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: var(--gap);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .section-header {
+    background: var(--navy);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .section-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── FIELDS ── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  label .req { color: var(--orange); margin-left: 2px; }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #DDE1E7;
+    border-radius: 7px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #FAFBFC;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(244,120,32,0.12);
+    background: white;
+  }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  /* ── HINT ── */
+  .hint {
+    font-size: 11px;
+    color: #999;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* ── RADIO / CHECK ── */
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .options-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .option-btn {
+    padding: 9px 8px;
+    border: 1.5px solid #DDE1E7;
+    border-radius: 7px;
+    background: #FAFBFC;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .option-btn.selected {
+    border-color: var(--orange);
+    background: rgba(244,120,32,0.08);
+    color: var(--orange);
+  }
+  .option-btn.selected-danger {
+    border-color: var(--danger);
+    background: rgba(229,57,53,0.08);
+    color: var(--danger);
+  }
+
+  /* ── CONDITION RATING ── */
+  .rating-row { display: flex; gap: 6px; }
+  .rating-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 6px;
+    border: 1.5px solid #DDE1E7;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .rating-btn[data-val="OK"] { color: var(--success); }
+  .rating-btn[data-val="OK"].active { background: var(--success); color: white; border-color: var(--success); }
+  .rating-btn[data-val="AT"] { color: #E65100; }
+  .rating-btn[data-val="AT"].active { background: #E65100; color: white; border-color: #E65100; }
+  .rating-btn[data-val="CR"] { color: var(--danger); }
+  .rating-btn[data-val="CR"].active { background: var(--danger); color: white; border-color: var(--danger); }
+  .rating-btn[data-val="NA"] { color: #AAA; }
+  .rating-btn[data-val="NA"].active { background: #AAA; color: white; border-color: #AAA; }
+
+  /* ── COUNTER ── */
+  .counter-row { display: flex; align-items: center; gap: 10px; }
+  .counter-btn {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    border: 1.5px solid #DDE1E7;
+    background: #FAFBFC;
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-light);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .counter-btn:active { background: var(--silver-light); }
+  .counter-val {
+    flex: 1;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .counter-unit {
+    font-size: 11px;
+    color: var(--text-light);
+    width: 40px;
+    text-align: left;
+  }
+
+  /* ── EMENDA CARD ── */
+  .emenda-list { display: flex; flex-direction: column; gap: 8px; }
+  .emenda-card {
+    border: 1.5px solid #DDE1E7;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #FAFBFC;
+  }
+  .emenda-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .emenda-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.3px;
+  }
+  .btn-remove {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .btn-add-emenda {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px dashed var(--orange);
+    border-radius: 8px;
+    background: rgba(244,120,32,0.04);
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+  }
+  .btn-add-emenda:active { background: rgba(244,120,32,0.12); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: #EEF0F3;
+    margin: 2px 0;
+  }
+
+  /* ── ALERT BOX ── */
+  .alert-box {
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .alert-box.warn {
+    background: rgba(230,81,0,0.07);
+    border: 1px solid rgba(230,81,0,0.25);
+    color: #B23500;
+  }
+  .alert-box.info {
+    background: rgba(13,27,42,0.05);
+    border: 1px solid rgba(13,27,42,0.12);
+    color: var(--text-light);
+  }
+
+  /* ── FOTO UPLOAD ── */
+  .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .foto-slot {
+    aspect-ratio: 1;
+    border: 1.5px dashed #CCC;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #FAFBFC;
+    position: relative;
+    overflow: hidden;
+    padding: 6px 4px;
+  }
+  .foto-slot img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .foto-slot input { display: none; }
+  .foto-btns {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+    width: 100%;
+    justify-content: center;
+  }
+  .foto-btn-cam, .foto-btn-gal {
+    flex: 1;
+    padding: 3px 2px;
+    border: 1.5px solid #DDE1E7;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .foto-btn-cam:active, .foto-btn-gal:active { background: #EEF0F3; }
+  .foto-label { font-size: 9px; color: #AAA; text-align: center; font-weight: 600; }
+  .foto-icon { font-size: 18px; }
+  .foto-remove {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.5);
+    color: white; border: none; border-radius: 50%;
+    width: 22px; height: 22px;
+    font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+  }
+  .foto-download {
+    position: absolute; top: 4px; left: 4px;
+    background: rgba(244,120,32,0.85);
+    color: white; border: none; border-radius: 50%;
+    width: 22px; height: 22px;
+    font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+  }
+
+  /* ── SUBMIT ── */
+  .submit-area {
+    padding: 8px 0 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-save {
+    width: 100%;
+    padding: 15px;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(244,120,32,0.35);
+  }
+  .btn-save:active { background: var(--orange-light); transform: scale(0.99); }
+  .btn-export {
+    width: 100%;
+    padding: 13px;
+    background: white;
+    color: var(--navy);
+    border: 1.5px solid var(--navy);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-export:active { background: #F0F2F5; }
+  .saved-msg {
+    text-align: center;
+    font-size: 12px;
+    color: var(--success);
+    font-weight: 600;
+    display: none;
+    padding: 6px;
+    background: rgba(46,125,50,0.08);
+    border-radius: 6px;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--navy);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    transition: transform 0.3s ease;
+    z-index: 999;
+    border-left: 4px solid var(--orange);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 360px) {
+    .field-row, .field-row-3 { grid-template-columns: 1fr; }
+    .options-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── BTN PDF ── */
+  .btn-pdf {
+    width: 100%;
+    padding: 15px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(13,27,42,0.25);
+  }
+  .btn-pdf:active { opacity: 0.85; }
+
+  .btn-email {
+    width: 100%;
+    padding: 14px;
+    background: white;
+    color: #1A73E8;
+    border: 1.5px solid #1A73E8;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-email:active { background: rgba(26,115,232,0.08); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 380px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal-box h3 {
+    font-size: 16px;
+    color: var(--navy);
+    margin-bottom: 12px;
+  }
+  .modal-text {
+    font-size: 13px;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .modal-box label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .modal-box input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #DDE1E7;
+    border-radius: 7px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-modal-cancel, .btn-modal-confirm {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-modal-cancel { background: #F0F2F5; border: none; color: var(--text-light); }
+  .btn-modal-confirm { background: var(--orange); border: none; color: white; }
+
+  /* ── TOOL ROWS ── */
+  .tool-group { display: flex; flex-direction: column; gap: 0; border: 1.5px solid #DDE1E7; border-radius: 8px; overflow: hidden; }
+  .tool-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 80px;
+    align-items: center;
+    gap: 0;
+    background: #FAFBFC;
+    border-bottom: 1px solid #EEF0F3;
+    transition: background 0.15s;
+    min-height: 42px;
+  }
+  .tool-row:last-child { border-bottom: none; }
+  .tool-row.checked { background: rgba(244,120,32,0.06); }
+  .tool-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    cursor: pointer;
+    padding: 0 6px;
+    border-right: 1px solid #EEF0F3;
+    color: #CCC;
+    font-size: 16px;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .tool-row.checked .tool-check { color: var(--orange); }
+  .tool-name {
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.3;
+  }
+  .tool-row.checked .tool-name { font-weight: 600; color: var(--navy); }
+  .tool-qty {
+    border: none;
+    border-left: 1px solid #EEF0F3;
+    background: transparent;
+    width: 80px;
+    height: 100%;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    text-align: center;
+    outline: none;
+    font-family: inherit;
+  }
+  .tool-qty:focus { background: white; }
+  .tool-qty::placeholder { color: #CCC; font-weight: 400; }
+  .tool-row.checked .tool-qty { background: white; }
+
+  /* linha manual */
+  .tool-manual-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 32px;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .tool-manual-row input[type="text"] { font-size: 13px; padding: 8px 10px; }
+  .tool-manual-row input[type="number"] { font-size: 13px; padding: 8px; text-align: center; }
+  .btn-rm-manual {
+    width: 32px; height: 32px;
+    background: none; border: 1.5px solid #EEE;
+    border-radius: 6px; color: var(--danger);
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-row">
+    <div class="logo-area">
+      <div class="logo-badge">CTV</div>
+      <div class="logo-name">Consultoria Técnica em Vulcanização</div>
+    </div>
+    <div class="doc-tag">VT-EP</div>
+  </div>
+  <div class="header-sub">
+    📋 <strong style="color:white">Visita Técnica</strong> <span>•</span> Levantamento para Troca de Correia EP
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0% preenchido</div>
+</div>
+
+<div class="container">
+
+  <!-- 1. IDENTIFICAÇÃO DA VISITA -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📌</div>
+      <div class="section-title">1. Identificação da Visita</div>
+    </div>
+    <div class="section-body">
+      <div class="field-row">
+        <div class="field">
+          <label>Data<span class="req">*</span></label>
+          <input type="date" id="data_visita" required>
+        </div>
+        <div class="field">
+          <label>Hora início</label>
+          <input type="time" id="hora_inicio">
+        </div>
+      </div>
+      <div class="field">
+        <label>Empresa / Complexo<span class="req">*</span></label>
+        <input type="text" id="empresa" placeholder="Ex.: Suzano S.A., Vale S.A., Fibria...">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Área / Setor<span class="req">*</span></label>
+          <input type="text" id="area" placeholder="Ex.: Fibra, Utilidades...">
+        </div>
+        <div class="field">
+          <label>Cód. do Equipamento</label>
+          <input type="text" id="cod_equipamento" placeholder="Ex.: CT-001">
+        </div>
+      </div>
+      <div class="field">
+        <label>Responsável técnico CTV<span class="req">*</span></label>
+        <input type="text" id="responsavel" placeholder="Nome do técnico">
+      </div>
+      <div class="field">
+        <label>Contato / Responsável Suzano</label>
+        <input type="text" id="contato_cliente" placeholder="Nome e cargo">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DADOS DO TRANSPORTADOR -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🏗️</div>
+      <div class="section-title">2. Dados do Transportador</div>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Denominação / TAG do transportador<span class="req">*</span></label>
+        <input type="text" id="tag_transportador" placeholder="Ex.: CT-203 — Alimentação Digestor">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Comprimento aproximado (m)</label>
+          <input type="number" id="comprimento" placeholder="0" min="0" step="0.5">
+        </div>
+        <div class="field">
+          <label>Largura da correia (mm)</label>
+          <select id="largura_correia">
+            <option value="">Selecionar</option>
+            <option>400</option>
+            <option>500</option>
+            <option>600</option>
+            <option>650</option>
+            <option>800</option>
+            <option>1000</option>
+            <option>1200</option>
+            <option>1400</option>
+            <option>1600</option>
+            <option>1800</option>
+            <option>2000</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="largura_outro_field" style="display:none">
+        <label>Largura (outro valor em mm)</label>
+        <input type="number" id="largura_outro" placeholder="mm">
+      </div>
+
+      <div class="field">
+        <label>Especificação da correia EP instalada</label>
+        <input type="text" id="especificacao_correia" placeholder="Ex.: EP 800/4 — 6+3 — Classe M">
+        <span class="hint">Preencher se visível na plaqueta ou documentação</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Resistência (N/mm)</label>
+          <input type="number" id="resistencia_ep" placeholder="Ex.: 800" min="0">
+        </div>
+        <div class="field">
+          <label>Nº de lonas</label>
+          <select id="num_lonas">
+            <option value="">—</option>
+            <option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cobertura (superior + inferior mm)</label>
+        <input type="text" id="cobertura" placeholder="Ex.: 6 + 3">
+      </div>
+
+      <div class="field">
+        <label>Disposição do transportador</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'disposicao')">Horizontal</div>
+          <div class="option-btn" onclick="selectOpt(this,'disposicao')">Inclinado</div>
+          <div class="option-btn" onclick="selectOpt(this,'disposicao')">Descendente</div>
+          <div class="option-btn" onclick="selectOpt(this,'disposicao')">Curvo</div>
+        </div>
+      </div>
+
+      <div class="field" id="inclinacao_field" style="display:none">
+        <label>Ângulo de inclinação (°)</label>
+        <input type="number" id="inclinacao" placeholder="Ex.: 18" min="0" max="90">
+      </div>
+
+      <div class="field">
+        <label>Material transportado</label>
+        <input type="text" id="material" placeholder="Ex.: Cavaco de eucalipto, celulose...">
+      </div>
+
+      <div class="field">
+        <label>Capacidade / Vazão</label>
+        <input type="text" id="capacidade" placeholder="Ex.: 800 t/h">
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CONDIÇÕES DE ACESSO E DESMONTAGEM -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔧</div>
+      <div class="section-title">3. Condições de Acesso e Desmontagem</div>
+    </div>
+    <div class="section-body">
+
+      <div class="alert-box info">
+        ℹ️ Avaliar as condições que impactam diretamente o planejamento do serviço e mobilização de equipe.
+      </div>
+
+      <div class="field">
+        <label>Acesso ao equipamento</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'acesso')">Livre</div>
+          <div class="option-btn" onclick="selectOpt(this,'acesso')">Restrito</div>
+          <div class="option-btn" onclick="selectOpt(this,'acesso')">Confinado</div>
+          <div class="option-btn" onclick="selectOpt(this,'acesso')">Altura (&gt;2m)</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Exige Espaço Confinado (NR-33)?</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'confinado')">Sim</div>
+          <div class="option-btn" onclick="selectOpt(this,'confinado')">Não</div>
+          <div class="option-btn" onclick="selectOpt(this,'confinado')">Avaliar</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Exige Trabalho em Altura (NR-35)?</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'altura')">Sim</div>
+          <div class="option-btn" onclick="selectOpt(this,'altura')">Não</div>
+          <div class="option-btn" onclick="selectOpt(this,'altura')">Avaliar</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Disponibilidade de guincho / talha no local</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'guincho')">Sim</div>
+          <div class="option-btn" onclick="selectOpt(this,'guincho')">Não</div>
+          <div class="option-btn" onclick="selectOpt(this,'guincho')">Parcial</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Ponto de energia disponível no local?</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'energia')">220V</div>
+          <div class="option-btn" onclick="selectOpt(this,'energia')">380V</div>
+          <div class="option-btn" onclick="selectOpt(this,'energia')">Ambos</div>
+          <div class="option-btn" onclick="selectOpt(this,'energia')">Nenhum</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Sistema de tensionamento da correia</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'tensionamento')">Gravit.</div>
+          <div class="option-btn" onclick="selectOpt(this,'tensionamento')">Parafuso</div>
+          <div class="option-btn" onclick="selectOpt(this,'tensionamento')">Hidráulico</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Condição do tensor / carro de contrapeso</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'tensor')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'tensor')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'tensor')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'tensor')">N/A</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observações de acesso</label>
+        <textarea id="obs_acesso" placeholder="Descrever restrições, necessidade de andaimes, acesso por escada..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. CONDIÇÕES DA CORREIA INSTALADA -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📏</div>
+      <div class="section-title">4. Condições da Correia Instalada</div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <label>Estado geral da correia</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'estado_correia')">✔ Bom</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'estado_correia')">⚠ Desgaste</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'estado_correia')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'estado_correia')">N/A</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Danos visíveis na carcaça</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="toggleOpt(this)">Rasgos longitudinais</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Rasgos transversais</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Delaminação</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Perfuração</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Ondulação de borda</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Nenhum visível</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Desgaste da cobertura superior</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_sup')">Leve</div>
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_sup')">Moderado</div>
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_sup')">Severo</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Desgaste da cobertura inferior</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_inf')">Leve</div>
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_inf')">Moderado</div>
+          <div class="option-btn" onclick="selectOpt(this,'desgaste_inf')">Severo</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Desvio de correia (tracking)</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'desvio')">Sem desvio</div>
+          <div class="option-btn" onclick="selectOpt(this,'desvio')">Leve</div>
+          <div class="option-btn" onclick="selectOpt(this,'desvio')">Severo</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observações sobre a correia</label>
+        <textarea id="obs_correia" placeholder="Descrever posição dos danos, trecho afetado, estimativa de extensão..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. EMENDAS EXISTENTES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <div class="section-title">5. Emendas Existentes</div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <label>Qtd. de emendas na correia</label>
+        <div class="counter-row">
+          <button class="counter-btn" onclick="changeCounter('emendas',-1)">−</button>
+          <div class="counter-val" id="emendas_val">0</div>
+          <div class="counter-unit">emenda(s)</div>
+          <button class="counter-btn" onclick="changeCounter('emendas',1)">+</button>
+        </div>
+      </div>
+
+      <div class="emenda-list" id="emendaList"></div>
+      <button class="btn-add-emenda" onclick="addEmenda()">+ Registrar condição de emenda</button>
+
+    </div>
+  </div>
+
+  <!-- 6. ESTRUTURA E COMPONENTES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div class="section-title">6. Estrutura e Componentes</div>
+    </div>
+    <div class="section-body">
+
+      <p style="font-size:12px;color:#666;margin-bottom:4px;">Avaliar condição de cada componente:</p>
+
+      <div class="field">
+        <label>Tambor de acionamento</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'t_acion')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'t_acion')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'t_acion')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'t_acion')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tambor de retorno (cauda)</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'t_cauda')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'t_cauda')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'t_cauda')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'t_cauda')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tambores intermediários / de deflexão</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'t_inter')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'t_inter')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'t_inter')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'t_inter')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Rolos de carga (idlers)</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'rolos_carga')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'rolos_carga')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'rolos_carga')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'rolos_carga')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Rolos de retorno</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'rolos_ret')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'rolos_ret')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'rolos_ret')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'rolos_ret')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Raspadores (primário / secundário)</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'raspadores')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'raspadores')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'raspadores')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'raspadores')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Saia de vedação (chute)</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'saia')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'saia')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'saia')">✖ Crítico</div>
+          <div class="rating-btn" data-val="NA" onclick="setRating(this,'saia')">N/A</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Observações sobre componentes</label>
+        <textarea id="obs_componentes" placeholder="Registrar roletes emperrados, tambores com desgaste, quantidade estimada de rolos a trocar..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. LOGÍSTICA E EXECUÇÃO -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🚛</div>
+      <div class="section-title">7. Logística e Execução</div>
+    </div>
+    <div class="section-body">
+
+      <div class="field">
+        <label>Janela de parada disponível</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'janela')">Programada</div>
+          <div class="option-btn" onclick="selectOpt(this,'janela')">Emergencial</div>
+          <div class="option-btn" onclick="selectOpt(this,'janela')">Em definição</div>
+          <div class="option-btn" onclick="selectOpt(this,'janela')">Sem restrição</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Duração estimada parada (h)</label>
+          <input type="number" id="duracao_parada" placeholder="Ex.: 48" min="0">
+        </div>
+        <div class="field">
+          <label>Equipe mínima necessária</label>
+          <input type="number" id="equipe_min" placeholder="Nº pessoas" min="1">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Equipamentos de içamento necessários</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="toggleOpt(this)">Guincho manual</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Talha elétrica</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Guindaste / munck</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Empilhadeira</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Plataforma elevatória</div>
+          <div class="option-btn" onclick="toggleOpt(this)">Não requer</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Local para estocar nova correia (bobina)</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'local_bobina')">No local</div>
+          <div class="option-btn" onclick="selectOpt(this,'local_bobina')">Almoxarifado</div>
+          <div class="option-btn" onclick="selectOpt(this,'local_bobina')">Definir</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Destino da correia usada</label>
+        <div class="options-grid cols-3">
+          <div class="option-btn" onclick="selectOpt(this,'destino_usada')">Descarte cliente</div>
+          <div class="option-btn" onclick="selectOpt(this,'destino_usada')">Retirada CTV</div>
+          <div class="option-btn" onclick="selectOpt(this,'destino_usada')">Definir</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tipo de emenda para a nova correia</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'tipo_emenda')">Vulcanização a quente</div>
+          <div class="option-btn" onclick="selectOpt(this,'tipo_emenda')">Vulcanização a frio</div>
+          <div class="option-btn" onclick="selectOpt(this,'tipo_emenda')">Mecânica (grampo)</div>
+          <div class="option-btn" onclick="selectOpt(this,'tipo_emenda')">A definir</div>
+        </div>
+      </div>
+
+      <div class="alert-box warn" id="alerta_quente" style="display:none">
+        ⚠️ Vulcanização a quente: verificar disponibilidade de prensa e gerador no local.
+      </div>
+
+      <div class="field">
+        <label>Qtd. de emendas na nova correia</label>
+        <div class="counter-row">
+          <button class="counter-btn" onclick="changeCounter('novas_emendas',-1)">−</button>
+          <div class="counter-val" id="novas_emendas_val">1</div>
+          <div class="counter-unit">emenda(s)</div>
+          <button class="counter-btn" onclick="changeCounter('novas_emendas',1)">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observações logísticas</label>
+        <textarea id="obs_logistica" placeholder="Restrições de horário, acesso de veículos, credenciamento necessário..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. FERRAMENTAS CTV -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🧰</div>
+      <div class="section-title">8. Ferramentas — Mobilização CTV</div>
+    </div>
+    <div class="section-body">
+
+      <div class="alert-box info">
+        ℹ️ Toque no item para selecionar. Preencha a quantidade ao lado. Use "+ Adicionar" para incluir itens fora da lista.
+      </div>
+
+      <!-- EPI -->
+      <div class="field">
+        <label>🦺 EPI — 5 Colaboradores</label>
+        <div class="tool-group" id="grp_epi"></div>
+        <div id="manual_epi" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+        <button class="btn-add-emenda" style="margin-top:6px" onclick="addManualTool('epi')">+ Adicionar item</button>
+      </div>
+
+      <!-- CONSUMÍVEIS EMENDA -->
+      <div class="field">
+        <label>🧪 Consumíveis — Emenda a Frio</label>
+        <div class="tool-group" id="grp_consumiveis"></div>
+        <div id="manual_consumiveis" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+        <button class="btn-add-emenda" style="margin-top:6px" onclick="addManualTool('consumiveis')">+ Adicionar item</button>
+      </div>
+
+      <!-- CAIXA DE FERRAMENTAS -->
+      <div class="field">
+        <label>🔧 Caixa de Ferramentas</label>
+        <div class="tool-group" id="grp_caixa"></div>
+        <div id="manual_caixa" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+        <button class="btn-add-emenda" style="margin-top:6px" onclick="addManualTool('caixa')">+ Adicionar item</button>
+      </div>
+
+      <!-- FERRAMENTAS ELÉTRICAS -->
+      <div class="field">
+        <label>⚡ Ferramentas Elétricas — 220V</label>
+        <div class="tool-group" id="grp_eletricas"></div>
+        <div id="manual_eletricas" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+        <button class="btn-add-emenda" style="margin-top:6px" onclick="addManualTool('eletricas')">+ Adicionar item</button>
+      </div>
+
+      <!-- PASSAGEM DE CORREIA -->
+      <div class="field">
+        <label>🔗 Passagem de Correia</label>
+        <div class="tool-group" id="grp_passagem"></div>
+        <div id="manual_passagem" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+        <button class="btn-add-emenda" style="margin-top:6px" onclick="addManualTool('passagem')">+ Adicionar item</button>
+      </div>
+
+      <div class="field">
+        <label>Observações sobre ferramentas</label>
+        <textarea id="obs_ferramentas" placeholder="Itens com quantidade diferente, condição de conservação, itens a verificar antes de mobilizar..."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 9. REGISTRO FOTOGRÁFICO -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📷</div>
+      <div class="section-title">9. Registro Fotográfico</div>
+    </div>
+    <div class="section-body">
+      <p class="hint">Fotografar: plaqueta da correia, danos visíveis, tambores, emendas, ponto de acesso e chute de alimentação.</p>
+      <div class="foto-grid" id="fotoGrid">
+        <!-- Slots gerados dinamicamente -->
+      </div>
+      <button class="btn-export" id="btnBaixarTodasFotos" onclick="baixarTodasFotos()" style="display:none;margin-top:10px;">
+        📦 Baixar todas as fotos — .zip
+      </button>
+    </div>
+  </div>
+
+  <!-- 10. CONSIDERAÇÕES FINAIS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div class="section-title">10. Considerações e Conclusão</div>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Urgência do serviço</label>
+        <div class="options-grid">
+          <div class="option-btn" onclick="selectOpt(this,'urgencia')">Imediata</div>
+          <div class="option-btn" onclick="selectOpt(this,'urgencia')">Curto prazo (até 30 dias)</div>
+          <div class="option-btn" onclick="selectOpt(this,'urgencia')">Médio prazo (1–3 meses)</div>
+          <div class="option-btn" onclick="selectOpt(this,'urgencia')">Planejamento anual</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observações gerais / Conclusão técnica<span class="req">*</span></label>
+        <textarea id="conclusao" rows="5" placeholder="Descrever o diagnóstico geral, riscos identificados, recomendações e próximos passos..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Hora de encerramento da visita</label>
+        <input type="time" id="hora_fim">
+      </div>
+    </div>
+  </div>
+
+  <!-- AÇÕES -->
+  <div class="submit-area">
+    <button class="btn-save" onclick="salvarFormulario()">💾 Salvar localmente</button>
+    <button class="btn-pdf" onclick="gerarPDF()">📑 Gerar relatório PDF</button>
+    <button class="btn-export" onclick="exportarRelatorio()">📄 Exportar resumo (.txt)</button>
+    <button class="btn-email" onclick="enviarPorEmail()">✉️ Enviar por e-mail</button>
+    <div class="saved-msg" id="savedMsg">✔ Dados salvos no dispositivo</div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- MODAL EMAIL -->
+<div class="modal-overlay" id="emailModal" onclick="if(event.target===this) closeEmailModal()">
+  <div class="modal-box">
+    <h3>✉️ Enviar por e-mail</h3>
+    <p class="modal-text">
+      Antes de enviar, baixe o PDF e as fotos (botões acima) — eles ficam na pasta <strong>Downloads</strong> do celular.
+      Ao confirmar, seu app de e-mail abre com o resumo já preenchido. Você precisa <strong>anexar manualmente</strong> o PDF e as fotos da pasta Downloads antes de enviar — o navegador não permite anexar arquivos automaticamente por segurança.
+    </p>
+    <label>E-mail de destino</label>
+    <input type="email" id="emailDestino" placeholder="ctv.mundovulca@gmail.com" value="ctv.mundovulca@gmail.com">
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeEmailModal()">Cancelar</button>
+      <button class="btn-modal-confirm" onclick="confirmarEnvioEmail()">Abrir e-mail</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ──────────────────────────────────────────────
+// ESTADO
+// ──────────────────────────────────────────────
+const state = {
+  ratings: {},
+  counters: { emendas: 0, novas_emendas: 1 },
+  emendas: []
+};
+let emendaCount = 0;
+
+// ──────────────────────────────────────────────
+// OPÇÕES
+// ──────────────────────────────────────────────
+function selectOpt(el, grupo) {
+  document.querySelectorAll(`[onclick*="selectOpt(this,'${grupo}')"]`).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // Lógicas condicionais
+  if (grupo === 'disposicao') {
+    const inc = ['Inclinado','Descendente'].includes(el.textContent.trim());
+    document.getElementById('inclinacao_field').style.display = inc ? 'block' : 'none';
+  }
+  if (grupo === 'tipo_emenda') {
+    document.getElementById('alerta_quente').style.display =
+      el.textContent.includes('quente') ? 'flex' : 'none';
+  }
+  updateProgress();
+}
+
+function toggleOpt(el) {
+  el.classList.toggle('selected');
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────
+// RATINGS
+// ──────────────────────────────────────────────
+function setRating(el, campo) {
+  const row = el.closest('.rating-row');
+  row.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  state.ratings[campo] = el.dataset.val;
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────
+// CONTADORES
+// ──────────────────────────────────────────────
+function changeCounter(campo, delta) {
+  state.counters[campo] = Math.max(0, state.counters[campo] + delta);
+  document.getElementById(campo + '_val').textContent = state.counters[campo];
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────
+// EMENDAS
+// ──────────────────────────────────────────────
+function addEmenda() {
+  emendaCount++;
+  const id = 'emenda_' + emendaCount;
+  const div = document.createElement('div');
+  div.className = 'emenda-card';
+  div.id = id;
+  div.innerHTML = `
+    <div class="emenda-card-header">
+      <span class="emenda-tag">Emenda #${emendaCount}</span>
+      <button class="btn-remove" onclick="removeEmenda('${id}')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="field">
+        <label>Tipo</label>
+        <select>
+          <option value="">Selecionar</option>
+          <option>Vulcanizada a quente</option>
+          <option>Vulcanizada a frio</option>
+          <option>Mecânica (grampo)</option>
+          <option>Desconhecido</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Condição</label>
+        <div class="rating-row">
+          <div class="rating-btn" data-val="OK" onclick="setRating(this,'em_${id}')">✔ OK</div>
+          <div class="rating-btn" data-val="AT" onclick="setRating(this,'em_${id}')">⚠ Atenção</div>
+          <div class="rating-btn" data-val="CR" onclick="setRating(this,'em_${id}')">✖ Crítico</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Observação</label>
+        <input type="text" placeholder="Trinca, descola, levantamento de borda...">
+      </div>
+    </div>`;
+  document.getElementById('emendaList').appendChild(div);
+  updateProgress();
+}
+
+function removeEmenda(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────
+// GERAR PDF (via window.print em nova janela)
+// ──────────────────────────────────────────────
+function gerarPDF() {
+  const d = coletarDados();
+
+  function getSelected(grupo) {
+    const btns = document.querySelectorAll('[onclick*="selectOpt(this,\'' + grupo + '\')"].selected');
+    return btns.length ? btns[0].textContent.trim() : '—';
+  }
+  function getMulti(selector) {
+    const btns = document.querySelectorAll(selector + '.selected');
+    return btns.length ? Array.from(btns).map(b => b.textContent.trim()).join(', ') : '—';
+  }
+  function br(campo) {
+    const map = { OK:'<span class="badge badge-ok">&#10004; OK</span>', AT:'<span class="badge badge-at">&#9888; Atencao</span>', CR:'<span class="badge badge-cr">&#10006; Critico</span>', NA:'<span class="badge badge-na">N/A</span>' };
+    return map[state.ratings[campo]] || '—';
+  }
+
+  const ferramentas = coletarFerramentas();
+  const ferramentasLista = ferramentas.filter(f => !f.manual);
+  const extras = ferramentas.filter(f => f.manual);
+
+  const emendaCards = document.querySelectorAll('#emendaList .emenda-card');
+  let emendaHTML = '';
+  emendaCards.forEach((card, i) => {
+    const tipo = card.querySelector('select')?.value || '—';
+    const obs  = card.querySelector('input[type="text"]')?.value || '—';
+    const cond = card.querySelector('.rating-btn.active')?.textContent.trim() || '—';
+    emendaHTML += '<tr><td>Emenda #' + (i+1) + '</td><td>' + tipo + '</td><td>' + cond + '</td><td>' + obs + '</td></tr>';
+  });
+
+  const fotoSlots = document.querySelectorAll('.foto-slot');
+  let fotosHTML = '<div class="foto-grid-pdf">';
+  fotoSlots.forEach(slot => {
+    const img = slot.querySelector('img');
+    const label = slot.querySelector('.foto-label')?.textContent || '';
+    if (img) fotosHTML += '<div class="foto-item"><img src="' + img.src + '"><p>' + label + '</p></div>';
+  });
+  fotosHTML += '</div>';
+  const temFotos = document.querySelectorAll('.foto-slot img').length > 0;
+
+  const tag = d.tag_transportador || 'S/T';
+  const dataVisita = d.data_visita ? new Date(d.data_visita + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+  const agora = new Date().toLocaleString('pt-BR');
+
+  // Blocos condicionais pré-calculados (evita templates aninhados)
+  const secEmendas = emendaCards.length > 0
+    ? '<table class="emendas"><tr><th>Emenda</th><th>Tipo</th><th>Condicao</th><th>Observacao</th></tr>' + emendaHTML + '</table>'
+    : '<table class="dados"><tr><td>Emendas registradas</td><td>Nenhuma registrada</td></tr></table>';
+
+  const linhasFerramentas = ferramentasLista.map(f =>
+    '<tr><td>' + f.nome + '</td><td style="text-align:center">' + (f.qty || '—') + '</td></tr>'
+  ).join('') + extras.map(f =>
+    '<tr><td>' + f.nome + ' <em style="color:#888;font-size:8pt">(manual)</em></td><td style="text-align:center">' + (f.qty || '—') + '</td></tr>'
+  ).join('');
+
+  const secFerramentas = ferramentasLista.length > 0 || extras.length > 0
+    ? '<table class="emendas"><tr><th>Item</th><th style="width:80px;text-align:center">Qtd</th></tr>' + linhasFerramentas + '</table>'
+    : '<table class="dados"><tr><td>Itens selecionados</td><td>Nenhum selecionado</td></tr></table>';
+
+  const secFotos = temFotos ? '<div class="sec-title">9. REGISTRO FOTOGRAFICO</div>' + fotosHTML : '';
+  const numConclusao = temFotos ? '10' : '9';
+
+  const html = '<!DOCTYPE html>'
+    + '<html lang="pt-BR"><head><meta charset="UTF-8">'
+    + '<title>Relatorio VT - ' + tag + '</title>'
+    + '<style>'
+    + '* { box-sizing: border-box; margin: 0; padding: 0; }'
+    + 'body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1A1A2E; background: white; }'
+    + '.header-pdf { background: #0D1B2A; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: flex-start; }'
+    + '.logo-ctv { font-size: 22pt; font-weight: 900; color: #F47820; letter-spacing: 1px; }'
+    + '.logo-sub { font-size: 8pt; color: #C0C0C0; margin-top: 2px; }'
+    + '.doc-info { text-align: right; font-size: 8pt; color: #C0C0C0; line-height: 1.6; }'
+    + '.doc-num { font-size: 11pt; font-weight: 700; color: #F47820; }'
+    + '.header-line { height: 4px; background: #F47820; }'
+    + '.sec-title { background: #0D1B2A; color: white; font-size: 9pt; font-weight: 700; letter-spacing: 0.5px; padding: 5px 10px; margin-top: 12px; margin-bottom: 0; border-left: 4px solid #F47820; }'
+    + 'table.dados { width: 100%; border-collapse: collapse; font-size: 9pt; }'
+    + 'table.dados td { padding: 5px 8px; border-bottom: 1px solid #EEF0F3; vertical-align: top; }'
+    + 'table.dados td:first-child { font-weight: 700; color: #555; width: 38%; background: #F8F9FA; }'
+    + 'table.dados tr:last-child td { border-bottom: none; }'
+    + '.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 8pt; font-weight: 700; }'
+    + '.badge-ok { background: #E8F5E9; color: #2E7D32; } .badge-at { background: #FFF3E0; color: #E65100; } .badge-cr { background: #FFEBEE; color: #C62828; } .badge-na { background: #F5F5F5; color: #888; }'
+    + 'table.emendas { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 4px; }'
+    + 'table.emendas th { background: #F0F2F5; padding: 4px 8px; text-align: left; font-size: 8pt; color: #555; border: 1px solid #DDE1E7; }'
+    + 'table.emendas td { padding: 4px 8px; border: 1px solid #DDE1E7; vertical-align: top; }'
+    + '.foto-grid-pdf { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }'
+    + '.foto-item { width: 120px; } .foto-item img { width: 120px; height: 90px; object-fit: cover; border: 1px solid #DDE1E7; border-radius: 4px; display: block; }'
+    + '.foto-item p { font-size: 7pt; color: #666; text-align: center; margin-top: 3px; }'
+    + '.conclusao-box { border: 1px solid #DDE1E7; border-left: 4px solid #F47820; border-radius: 4px; padding: 10px 12px; font-size: 9.5pt; line-height: 1.6; margin-top: 4px; background: #FAFBFC; }'
+    + '.footer { margin-top: 20px; padding-top: 8px; border-top: 2px solid #F47820; display: flex; justify-content: space-between; font-size: 7.5pt; color: #888; }'
+    + '.assinatura { margin-top: 30px; display: flex; justify-content: space-around; }'
+    + '.assin-block { text-align: center; } .assin-line { border-top: 1px solid #333; width: 160px; margin: 0 auto 4px; } .assin-label { font-size: 8pt; color: #555; }'
+    + '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { margin: 12mm 14mm; size: A4; } }'
+    + '</style></head><body>'
+    + '<div class="header-pdf"><div>'
+    + '<div class="logo-ctv">CTV</div>'
+    + '<div class="logo-sub">Consultoria Tecnica em Vulcanizacao</div>'
+    + '<div class="logo-sub" style="margin-top:6px;color:#F47820;font-weight:700;">RELATORIO DE VISITA TECNICA - CORREIA EP</div>'
+    + '</div><div class="doc-info">'
+    + '<div class="doc-num">VT-CTV-' + dataVisita.replace(/\//g,'-') + '</div>'
+    + '<div>Data: ' + dataVisita + '</div>'
+    + '<div>Inicio: ' + (d.hora_inicio||'—') + ' | Fim: ' + (d.hora_fim||'—') + '</div>'
+    + '<div style="margin-top:4px;">Responsavel: ' + (d.responsavel||'—') + '</div>'
+    + '<div>CNPJ: 65.601.481/0001-36</div>'
+    + '</div></div><div class="header-line"></div>'
+    + '<div class="sec-title">1. IDENTIFICACAO DA VISITA</div>'
+    + '<table class="dados"><tr><td>Empresa / Complexo</td><td>' + (d.empresa||'—') + '</td></tr>'
+    + '<tr><td>Area / Setor</td><td>' + (d.area||'—') + '</td></tr>'
+    + '<tr><td>Cod. Equipamento</td><td>' + (d.cod_equipamento||'—') + '</td></tr>'
+    + '<tr><td>Responsavel CTV</td><td>' + (d.responsavel||'—') + '</td></tr>'
+    + '<tr><td>Contato / Resp. Suzano</td><td>' + (d.contato_cliente||'—') + '</td></tr></table>'
+    + '<div class="sec-title">2. DADOS DO TRANSPORTADOR</div>'
+    + '<table class="dados">'
+    + '<tr><td>TAG / Denominacao</td><td><strong>' + tag + '</strong></td></tr>'
+    + '<tr><td>Comprimento</td><td>' + (d.comprimento ? d.comprimento + ' m' : '—') + '</td></tr>'
+    + '<tr><td>Largura da correia</td><td>' + (d.largura_correia === 'outro' ? (d.largura_outro||'—') : (d.largura_correia||'—')) + ' mm</td></tr>'
+    + '<tr><td>Especificacao EP</td><td>' + (d.especificacao_correia||'—') + '</td></tr>'
+    + '<tr><td>Resistencia / Lonas</td><td>' + (d.resistencia_ep ? d.resistencia_ep + ' N/mm' : '—') + ' | ' + (d.num_lonas ? d.num_lonas + ' lonas' : '—') + '</td></tr>'
+    + '<tr><td>Cobertura (sup + inf)</td><td>' + (d.cobertura||'—') + ' mm</td></tr>'
+    + '<tr><td>Disposicao</td><td>' + getSelected('disposicao') + (d.inclinacao ? ' — ' + d.inclinacao + 'deg' : '') + '</td></tr>'
+    + '<tr><td>Material transportado</td><td>' + (d.material||'—') + '</td></tr>'
+    + '<tr><td>Capacidade / Vazao</td><td>' + (d.capacidade||'—') + '</td></tr></table>'
+    + '<div class="sec-title">3. CONDICOES DE ACESSO E DESMONTAGEM</div>'
+    + '<table class="dados">'
+    + '<tr><td>Acesso ao equipamento</td><td>' + getSelected('acesso') + '</td></tr>'
+    + '<tr><td>Espaco Confinado (NR-33)</td><td>' + getSelected('confinado') + '</td></tr>'
+    + '<tr><td>Trabalho em Altura (NR-35)</td><td>' + getSelected('altura') + '</td></tr>'
+    + '<tr><td>Guincho / Talha no local</td><td>' + getSelected('guincho') + '</td></tr>'
+    + '<tr><td>Energia disponivel</td><td>' + getSelected('energia') + '</td></tr>'
+    + '<tr><td>Tensionamento</td><td>' + getSelected('tensionamento') + '</td></tr>'
+    + '<tr><td>Condicao do tensor</td><td>' + br('tensor') + '</td></tr>'
+    + '<tr><td>Observacoes</td><td>' + (d.obs_acesso||'—') + '</td></tr></table>'
+    + '<div class="sec-title">4. CONDICOES DA CORREIA INSTALADA</div>'
+    + '<table class="dados">'
+    + '<tr><td>Estado geral</td><td>' + br('estado_correia') + '</td></tr>'
+    + '<tr><td>Desgaste cobertura sup.</td><td>' + getSelected('desgaste_sup') + '</td></tr>'
+    + '<tr><td>Desgaste cobertura inf.</td><td>' + getSelected('desgaste_inf') + '</td></tr>'
+    + '<tr><td>Desvio (tracking)</td><td>' + getSelected('desvio') + '</td></tr>'
+    + '<tr><td>Observacoes</td><td>' + (d.obs_correia||'—') + '</td></tr></table>'
+    + '<div class="sec-title">5. EMENDAS EXISTENTES — Qtd: ' + state.counters.emendas + '</div>'
+    + secEmendas
+    + '<div class="sec-title">6. ESTRUTURA E COMPONENTES</div>'
+    + '<table class="dados">'
+    + '<tr><td>Tambor de acionamento</td><td>' + br('t_acion') + '</td></tr>'
+    + '<tr><td>Tambor de retorno (cauda)</td><td>' + br('t_cauda') + '</td></tr>'
+    + '<tr><td>Tambores intermediarios</td><td>' + br('t_inter') + '</td></tr>'
+    + '<tr><td>Rolos de carga</td><td>' + br('rolos_carga') + '</td></tr>'
+    + '<tr><td>Rolos de retorno</td><td>' + br('rolos_ret') + '</td></tr>'
+    + '<tr><td>Raspadores</td><td>' + br('raspadores') + '</td></tr>'
+    + '<tr><td>Saia de vedacao</td><td>' + br('saia') + '</td></tr>'
+    + '<tr><td>Observacoes</td><td>' + (d.obs_componentes||'—') + '</td></tr></table>'
+    + '<div class="sec-title">7. LOGISTICA E EXECUCAO</div>'
+    + '<table class="dados">'
+    + '<tr><td>Janela de parada</td><td>' + getSelected('janela') + '</td></tr>'
+    + '<tr><td>Duracao estimada parada</td><td>' + (d.duracao_parada ? d.duracao_parada + ' h' : '—') + '</td></tr>'
+    + '<tr><td>Equipe minima</td><td>' + (d.equipe_min ? d.equipe_min + ' pessoas' : '—') + '</td></tr>'
+    + '<tr><td>Tipo de emenda (nova)</td><td>' + getSelected('tipo_emenda') + '</td></tr>'
+    + '<tr><td>Qtd. emendas novas</td><td>' + state.counters.novas_emendas + '</td></tr>'
+    + '<tr><td>Local da bobina</td><td>' + getSelected('local_bobina') + '</td></tr>'
+    + '<tr><td>Destino correia usada</td><td>' + getSelected('destino_usada') + '</td></tr>'
+    + '<tr><td>Observacoes</td><td>' + (d.obs_logistica||'—') + '</td></tr></table>'
+    + '<div class="sec-title">8. FERRAMENTAS - MOBILIZACAO CTV</div>'
+    + secFerramentas
+    + '<table class="dados" style="margin-top:4px"><tr><td>Observacoes</td><td>' + (d.obs_ferramentas||'—') + '</td></tr></table>'
+    + secFotos
+    + '<div class="sec-title">' + numConclusao + '. CONCLUSAO TECNICA</div>'
+    + '<table class="dados"><tr><td>Urgencia do servico</td><td>' + getSelected('urgencia') + '</td></tr></table>'
+    + '<div class="conclusao-box">' + (d.conclusao||'Nao preenchida.').replace(/\n/g,'<br>') + '</div>'
+    + '<div class="assinatura">'
+    + '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>' + (d.responsavel||'Responsavel CTV') + '</strong></div><div class="assin-label">CTV Consultoria Tecnica em Vulcanizacao</div></div>'
+    + '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>' + (d.contato_cliente||'Responsavel Suzano') + '</strong></div><div class="assin-label">Suzano S.A. - Complexo Aracruz/ES</div></div>'
+    + '</div>'
+    + '<div class="footer"><span>CTV Consultoria Tecnica em Vulcanizacao | CNPJ 65.601.481/0001-36 | Serra/ES</span><span>Gerado em: ' + agora + '</span></div>'
+    + '</body></html>';
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Permita pop-ups para gerar o PDF'); return; }
+  win.document.write(html);
+  win.document.close();
+  const s = win.document.createElement('script');
+  s.textContent = 'window.onload = function(){ window.print(); }';
+  win.document.body.appendChild(s);
+}
+
+function badgeRating(val) {
+  const map = {
+    OK:  '<span class="badge badge-ok">✔ OK</span>',
+    AT:  '<span class="badge badge-at">⚠ Atenção</span>',
+    CR:  '<span class="badge badge-cr">✖ Crítico</span>',
+    NA:  '<span class="badge badge-na">N/A</span>',
+  };
+  return map[val] || '—';
+}
+
+
+// ──────────────────────────────────────────────
+// DADOS DAS FERRAMENTAS (da planilha Suzano)
+// ──────────────────────────────────────────────
+const TOOL_DATA = {
+  epi: [
+    'Abafador','Avental de Kevlar','Avental de Raspa','Blusão de Raspa',
+    'Botina','Capacete + Carneira + Jugular','Cinto de Segurança','Colete Refletivo',
+    'Luva de Kevlar (PAR)','Luva Nitrílica (PAR)','Luva de Vaqueta (PAR)',
+    'Mangote de Kevlar (PAR)','Máscara PFF2','Máscara V.O.','Mochila',
+    'Óculos de Segurança','Perneira de Raspa (PAR)','Protetor Facial'
+  ],
+  consumiveis: [
+    'Bainha para Faca','Limpador Químico Bufpal','Catalisador Vipal','Cimento Vipal',
+    'Faca de Escalonar','Escova Emborrachada','Copo de Tungstênio','Faca Olfa',
+    'Garra Triângulo','Garrafa Térmica 5L','Lâmina Faca Olfa','Lona Anti-chama',
+    'Madeirite Naval','Pano Branco (Rolo)','Pincel',
+    'Régua de Polietileno 50×1200mm','Rolo de Dupla Ação (Rodilho)','Trena 50M'
+  ],
+  caixa: [
+    'Caixa de Ferramenta','Esquadro','Torques','Martelo de Borracha','Martelo Bola',
+    'Vassoura de Pelo','Chave Soquete 1/2"','Chave Combinada 17mm','Chave Combinada 19mm',
+    'Chave Combinada 24mm','Chave Inglesa 12"','Soquete 1/2" 17mm','Soquete 1/2" 19mm',
+    'Soquete 1/2" 24mm','Broca 16mm','Broca 12mm','Chave Apertar Grampo 2½"',
+    'Trena 3M','Quebrador de Grampo 2½"','Escova Emborrachada','Copo de Tungstênio',
+    'Linha Fio Urso (Rolo)','Giz Branco (Caixa)','Marcador Industrial'
+  ],
+  eletricas: [
+    'Esmeril Reto 220V','Esmerilhadeira 7" 220V','Chave de Impacto Elétrica 1/2" 220V',
+    'Furadeira 220V','Extensão 32A 220V 25M','Caixa Fuga Terra 32A 220V',
+    'Soprador de Folha 220V','Soprador Térmico 220V','Pirômetro','Termo-Higrômetro',
+    'Rádio','Luminária 220V','Lanterna Recarregável'
+  ],
+  passagem: [
+    'Arruela M16','Corrente de Isolamento (Saco 50M)','Cabo de Aço 30M 1/2"',
+    'Cadeado','Caixa de Bloqueio','Chave Grifo 24"','Chapa de Arraste',
+    'Cinta 1M 2T','Cinta 2M 2T','Clipe 1/2"','Eixo Cambão','Eixo Rodante',
+    'Estropo de Aço 1/2" × 1M','Estropo de Aço 1/2" × 2M',
+    'Estropo de Aço 3/4" × 4M','Estropo de Aço 3/4" × 6M',
+    'Grampo Fera 2½"','Manilha Reta 1"','Manilha Reta 5/8"','Manilha Reta 7/8"',
+    'Par de Braçadeira','Parafuso M16 80mm','Patesca 4T com Olhal','Porca M16',
+    'Rádio','Talha Alavanca 1,5T','Talha Alavanca 3T','Talha de Corrente 3T',
+    'Tirfor 1.600kg + Cabo + Batedor','Corda 50M','Trena 50M','Malão de Ferramentas'
+  ]
+};
+
+function buildToolGroup(groupId, items) {
+  const container = document.getElementById('grp_' + groupId);
+  if (!container) return;
+  container.innerHTML = '';
+  items.forEach((name, idx) => {
+    const row = document.createElement('div');
+    row.className = 'tool-row';
+    row.dataset.group = groupId;
+    row.dataset.name = name;
+    row.innerHTML = `
+      <div class="tool-check" onclick="toggleToolRow(this.closest('.tool-row'))">☐</div>
+      <div class="tool-name" onclick="toggleToolRow(this.closest('.tool-row'))">${name}</div>
+      <input class="tool-qty" type="number" min="0" placeholder="Qtd"
+        onclick="event.stopPropagation()"
+        oninput="if(this.value>0){ this.closest('.tool-row').classList.add('checked'); this.closest('.tool-row').querySelector('.tool-check').textContent='☑'; }">`;
+    container.appendChild(row);
+  });
+}
+
+function toggleToolRow(row) {
+  const isChecked = row.classList.toggle('checked');
+  row.querySelector('.tool-check').textContent = isChecked ? '☑' : '☐';
+  if (!isChecked) row.querySelector('.tool-qty').value = '';
+  updateProgress();
+}
+
+function initToolGroups() {
+  Object.keys(TOOL_DATA).forEach(gid => buildToolGroup(gid, TOOL_DATA[gid]));
+}
+
+let manualToolCount = 0;
+function addManualTool(grupo) {
+  manualToolCount++;
+  const id = 'mtool_' + manualToolCount;
+  const container = document.getElementById('manual_' + grupo);
+  if (!container) return;
+  const wrap = document.createElement('div');
+  wrap.id = id;
+  wrap.className = 'tool-manual-row';
+  wrap.dataset.group = grupo;
+  wrap.innerHTML = `
+    <input type="text" placeholder="Nome do item / material...">
+    <input type="number" min="0" placeholder="Qtd">
+    <button class="btn-rm-manual" onclick="document.getElementById('${id}').remove()">×</button>`;
+  container.appendChild(wrap);
+  wrap.querySelector('input[type="text"]').focus();
+}
+
+function coletarFerramentas() {
+  const lista = [];
+  document.querySelectorAll('.tool-row.checked').forEach(row => {
+    const qty = row.querySelector('.tool-qty')?.value || '';
+    lista.push({ grupo: row.dataset.group, nome: row.dataset.name, qty, manual: false });
+  });
+  document.querySelectorAll('.tool-manual-row').forEach(row => {
+    const nome = row.querySelector('input[type="text"]')?.value.trim();
+    const qty  = row.querySelector('input[type="number"]')?.value || '';
+    if (nome) lista.push({ grupo: row.dataset.group || 'manual', nome, qty, manual: true });
+  });
+  return lista;
+}
+
+const FOTO_LABELS = ['Plaqueta','Correia geral','Dano 1','Dano 2','Tambor acion.','Tambor cauda','Emenda','Chute','Acesso','Extra'];
+
+function initFotos() {
+  const grid = document.getElementById('fotoGrid');
+  FOTO_LABELS.forEach((label, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'foto-slot';
+    slot.id = 'fslot_' + i;
+    slot.innerHTML =
+      '<span class="foto-icon">📷</span>'
+      + '<span class="foto-label">' + label + '</span>'
+      + '<div class="foto-btns">'
+      + '  <button class="foto-btn-cam" onclick="event.stopPropagation();document.getElementById(\'fcam_' + i + '\').click()" title="Câmera">📷</button>'
+      + '  <button class="foto-btn-gal" onclick="event.stopPropagation();document.getElementById(\'fgal_' + i + '\').click()" title="Galeria">🖼️</button>'
+      + '</div>'
+      + '<input type="file" id="fcam_' + i + '" accept="image/*" capture="environment" onchange="previewFoto(this,' + i + ')">'
+      + '<input type="file" id="fgal_' + i + '" accept="image/*" onchange="previewFoto(this,' + i + ')">';
+    grid.appendChild(slot);
+  });
+}
+
+function previewFoto(input, idx) {
+  const slot = document.getElementById('fslot_' + idx);
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const existing = slot.querySelector('img');
+    if (existing) existing.remove();
+    const img = document.createElement('img');
+    img.src = e.target.result;
+    img.dataset.label = slot.querySelector('.foto-label')?.textContent || ('foto_' + idx);
+    slot.insertBefore(img, slot.querySelector('input'));
+
+    if (!slot.querySelector('.foto-remove')) {
+      const btn = document.createElement('button');
+      btn.className = 'foto-remove';
+      btn.textContent = '×';
+      btn.onclick = ev => { ev.stopPropagation(); img.remove(); btn.remove(); dlBtn.remove(); updateDownloadAllBtn(); };
+      slot.appendChild(btn);
+    }
+    if (!slot.querySelector('.foto-download')) {
+      var dlBtn = document.createElement('button');
+      dlBtn.className = 'foto-download';
+      dlBtn.textContent = '⬇';
+      dlBtn.title = 'Baixar esta foto';
+      dlBtn.onclick = ev => { ev.stopPropagation(); baixarFotoUnica(img); };
+      slot.appendChild(dlBtn);
+    }
+    updateDownloadAllBtn();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ──────────────────────────────────────────────
+// DOWNLOAD DE FOTOS
+// ──────────────────────────────────────────────
+function slugify(txt) {
+  return txt.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+
+function baixarFotoUnica(img) {
+  const a = document.createElement('a');
+  a.href = img.src;
+  const label = slugify(img.dataset.label || 'foto');
+  const tag = slugify(document.getElementById('tag_transportador')?.value || 'VT');
+  a.download = 'CTV_' + tag + '_' + label + '.jpg';
+  a.click();
+}
+
+function updateDownloadAllBtn() {
+  const btn = document.getElementById('btnBaixarTodasFotos');
+  if (!btn) return;
+  const count = document.querySelectorAll('.foto-slot img').length;
+  btn.style.display = count > 0 ? 'flex' : 'none';
+  btn.textContent = '📦 Baixar todas as fotos (' + count + ') — .zip';
+}
+
+let jszipLoaded = false;
+function loadJSZip(callback) {
+  if (jszipLoaded || window.JSZip) { jszipLoaded = true; callback(); return; }
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+  script.onload = () => { jszipLoaded = true; callback(); };
+  script.onerror = () => showToast('⚠ Sem internet para gerar o .zip. Baixe as fotos individualmente.');
+  document.head.appendChild(script);
+}
+
+function baixarTodasFotos() {
+  const imgs = document.querySelectorAll('.foto-slot img');
+  if (!imgs.length) { showToast('Nenhuma foto registrada.'); return; }
+
+  loadJSZip(() => {
+    const zip = new JSZip();
+    const tag = slugify(document.getElementById('tag_transportador')?.value || 'VT');
+    const dataVisita = document.getElementById('data_visita')?.value || new Date().toISOString().slice(0,10);
+
+    imgs.forEach((img, i) => {
+      const label = slugify(img.dataset.label || ('foto_' + i));
+      const base64 = img.src.split(',')[1];
+      zip.file('CTV_' + tag + '_' + label + '.jpg', base64, { base64: true });
+    });
+
+    zip.generateAsync({ type: 'blob' }).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'CTV_Fotos_' + tag + '_' + dataVisita.replace(/-/g,'') + '.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📦 ZIP com ' + imgs.length + ' foto(s) baixado!');
+    });
+  });
+}
+
+// ──────────────────────────────────────────────
+// PROGRESS
+// ──────────────────────────────────────────────
+const REQUIRED_IDS = ['data_visita','area','responsavel','tag_transportador','conclusao'];
+
+function updateProgress() {
+  let filled = 0, total = REQUIRED_IDS.length + 3;
+  REQUIRED_IDS.forEach(id => { if (document.getElementById(id)?.value.trim()) filled++; });
+  if (Object.keys(state.ratings).length > 0) filled++;
+  if (document.querySelector('.option-btn.selected')) filled++;
+  if (document.getElementById('obs_correia')?.value.trim()) filled++;
+  const pct = Math.round((filled / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = pct + '% preenchido';
+}
+
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  el.addEventListener('input', updateProgress);
+  el.addEventListener('change', updateProgress);
+});
+
+// ──────────────────────────────────────────────
+// LARGURA OUTRO
+// ──────────────────────────────────────────────
+document.getElementById('largura_correia').addEventListener('change', function() {
+  document.getElementById('largura_outro_field').style.display = this.value === 'outro' ? 'block' : 'none';
+});
+
+// ──────────────────────────────────────────────
+// SALVAR (localStorage)
+// ──────────────────────────────────────────────
+function coletarDados() {
+  const data = {};
+  document.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  data.ratings = state.ratings;
+  data.counters = state.counters;
+  data.opcoes_selecionadas = [];
+  document.querySelectorAll('.option-btn.selected').forEach(el => {
+    data.opcoes_selecionadas.push(el.textContent.trim());
+  });
+  return data;
+}
+
+function salvarFormulario() {
+  try {
+    const dados = coletarDados();
+    dados._salvo_em = new Date().toLocaleString('pt-BR');
+    localStorage.setItem('vt_suzano_ep', JSON.stringify(dados));
+    document.getElementById('savedMsg').style.display = 'block';
+    showToast('✔ Dados salvos com sucesso!');
+  } catch(e) {
+    showToast('⚠ Erro ao salvar. Tente exportar o resumo.');
+  }
+}
+
+function carregarDados() {
+  try {
+    const raw = localStorage.getItem('vt_suzano_ep');
+    if (!raw) return;
+    const dados = JSON.parse(raw);
+    Object.keys(dados).forEach(key => {
+      const el = document.getElementById(key);
+      if (el && ['INPUT','SELECT','TEXTAREA'].includes(el.tagName)) el.value = dados[key];
+    });
+    if (dados._salvo_em) showToast('📂 Rascunho carregado: ' + dados._salvo_em);
+    updateProgress();
+  } catch(e) { /* sem dados salvos */ }
+}
+
+// ──────────────────────────────────────────────
+// EXPORTAR TXT
+// ──────────────────────────────────────────────
+function exportarRelatorio() {
+  const d = coletarDados();
+  const linhas = [
+    '================================================',
+    '   CTV — RELATÓRIO DE VISITA TÉCNICA (EP)',
+    '================================================',
+    `Data: ${d.data_visita || '—'}  |  Início: ${d.hora_inicio || '—'}  |  Fim: ${d.hora_fim || '—'}`,
+    `Empresa: ${d.empresa || '—'}`,
+    `Área: ${d.area || '—'}  |  Cód.: ${d.cod_equipamento || '—'}`,
+    `Responsável CTV: ${d.responsavel || '—'}`,
+    `Contato cliente: ${d.contato_cliente || '—'}`,
+    '',
+    '-- TRANSPORTADOR --',
+    `TAG: ${d.tag_transportador || '—'}`,
+    `Comprimento: ${d.comprimento || '—'} m  |  Largura: ${d.largura_correia || d.largura_outro || '—'} mm`,
+    `Especificação: ${d.especificacao_correia || '—'}`,
+    `EP: ${d.resistencia_ep || '—'} N/mm  |  Lonas: ${d.num_lonas || '—'}  |  Cobertura: ${d.cobertura || '—'}`,
+    `Inclinação: ${d.inclinacao || '—'}°  |  Material: ${d.material || '—'}`,
+    '',
+    '-- ACESSO --',
+    `Energia: N/A  |  Tensionamento: N/A`,
+    `Obs.: ${d.obs_acesso || '—'}`,
+    '',
+    '-- CORREIA INSTALADA --',
+    `Obs.: ${d.obs_correia || '—'}`,
+    '',
+    '-- COMPONENTES --',
+    `Obs.: ${d.obs_componentes || '—'}`,
+    '',
+    '-- FERRAMENTAS CTV --',
+    (() => {
+      const lista = coletarFerramentas();
+      if (!lista.length) return 'Nenhum item selecionado';
+      return lista.map(f => `${f.nome}${f.qty ? ' — Qtd: ' + f.qty : ''}${f.grupo === 'manual' ? ' (manual)' : ''}`).join('\n');
+    })(),
+    `Obs.: ${d.obs_ferramentas || '—'}`,
+    `Parada: ${d.duracao_parada || '—'}h  |  Equipe mín.: ${d.equipe_min || '—'} pessoas`,
+    `Emendas novas: ${state.counters.novas_emendas}`,
+    `Obs.: ${d.obs_logistica || '—'}`,
+    '',
+    '-- CONCLUSÃO --',
+    d.conclusao || '—',
+    '',
+    '================================================',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    '================================================',
+  ];
+  const blob = new Blob([linhas.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const tag = (d.tag_transportador || 'VT').replace(/\s+/g,'-');
+  const dt = (d.data_visita || new Date().toISOString().slice(0,10)).replace(/-/g,'');
+  a.download = `VT-CTV-${tag}-${dt}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📄 Resumo exportado!');
+}
+
+// ──────────────────────────────────────────────
+// ENVIO POR E-MAIL
+// ──────────────────────────────────────────────
+function enviarPorEmail() {
+  document.getElementById('emailModal').classList.add('show');
+}
+
+function closeEmailModal() {
+  document.getElementById('emailModal').classList.remove('show');
+}
+
+function confirmarEnvioEmail() {
+  const destino = document.getElementById('emailDestino').value.trim();
+  if (!destino || !destino.includes('@')) {
+    showToast('⚠ Informe um e-mail válido');
+    return;
+  }
+
+  const d = coletarDados();
+  const tag = d.tag_transportador || 'S/T';
+  const empresa = d.empresa || 'Cliente não informado';
+  const dataVisita = d.data_visita ? new Date(d.data_visita + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+  const assunto = `VT-CTV — ${empresa} — ${tag} — ${dataVisita}`;
+
+  const linhas = [
+    `Relatório de Visita Técnica — CTV Consultoria Técnica em Vulcanização`,
+    ``,
+    `Empresa: ${empresa}`,
+    `Área/Setor: ${d.area || '—'}`,
+    `TAG do transportador: ${tag}`,
+    `Data da visita: ${dataVisita}`,
+    `Responsável CTV: ${d.responsavel || '—'}`,
+    ``,
+    `Conclusão técnica:`,
+    `${d.conclusao || 'Não preenchida.'}`,
+    ``,
+    `---`,
+    `IMPORTANTE: anexe manualmente o PDF e as fotos desta visita`,
+    `(salvos na pasta Downloads do dispositivo) antes de enviar este e-mail.`,
+    ``,
+    `Gerado pelo formulário de Visita Técnica CTV em ${new Date().toLocaleString('pt-BR')}`,
+  ];
+
+  const corpo = linhas.join('\n');
+  const mailtoUrl = `mailto:${encodeURIComponent(destino)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+
+  window.location.href = mailtoUrl;
+  closeEmailModal();
+  showToast('✉️ Abrindo app de e-mail...');
+}
+
+// ──────────────────────────────────────────────
+// TOAST
+// ──────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+initToolGroups();
+initFotos();
+carregarDados();
+
+// Preencher data atual por padrão
+const hoje = new Date().toISOString().slice(0,10);
+if (!document.getElementById('data_visita').value) {
+  document.getElementById('data_visita').value = hoje;
+}
+updateProgress();
+</script>
+</body>
+</html>
