@@ -118,6 +118,12 @@
   .modal h3 { font-size: 17px; margin-bottom: 12px; }
   .mini-del { background: transparent; border: none; color: var(--danger); font-size: 16px; cursor: pointer; padding: 4px 10px; }
 
+  #authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+  #authOverlay.open { display: flex; }
+  .auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+  #modeBanner { background: #FFF6E9; border-color: #F3D9A8; }
+  html[data-dark="1"] #modeBanner { background: #2A2410; border-color: #4a3d12; }
+
   /* ── TELA DE IMPRESSÃO / PDF ── */
   #printOverlay { position: fixed; inset: 0; z-index: 400; background: #fff; display: none; flex-direction: column; }
   #printOverlay.open { display: flex; }
@@ -156,7 +162,23 @@
       <div class="logo-badge">CTV</div>
       <div class="logo-name">Relatório Diário<b id="hdrTitle">de Obra (RDO)</b></div>
     </div>
-    <button class="icon-btn" onclick="toggleDark()" id="darkBtn">🌙</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="userChip" style="display:none;align-items:center;gap:6px;color:var(--silver-light);font-size:12px">
+        <span class="uname" style="max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button class="icon-btn" title="Sair" onclick="logout()" style="width:32px;height:32px;font-size:14px">⏻</button>
+      </span>
+      <button class="icon-btn" onclick="toggleDark()" id="darkBtn">🌙</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LOGIN (modo nuvem) ═══════════ -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="logo-badge" style="display:inline-block;font-size:16px;margin-bottom:14px">CTV</div>
+    <h3 style="margin-bottom:8px">Relatório Diário de Obra</h3>
+    <p class="hint" style="margin-bottom:18px">Entre com sua conta Google para ver e editar os RDOs compartilhados da equipe.</p>
+    <button class="btn btn-primary" onclick="loginGoogle()">Entrar com Google</button>
   </div>
 </div>
 
@@ -164,6 +186,9 @@
 
   <!-- ═══════════ LISTA + CALENDÁRIO ═══════════ -->
   <div class="view active" id="view-list">
+    <div class="card" id="modeBanner" style="display:none">
+      <div class="hint" style="margin:0;color:#8a5a00">📴 Modo local (só neste aparelho). Configure o Firebase para compartilhar em tempo real.</div>
+    </div>
     <div class="card">
       <button class="btn btn-primary" onclick="newRDO()">➕ Novo RDO</button>
     </div>
@@ -191,6 +216,7 @@
     </div>
     <div class="card">
       <div class="section-title">Dados</div>
+      <button class="btn btn-ghost" id="btnMigrar" style="display:none;margin-bottom:10px" onclick="migrarLocalParaNuvem()">☁️ Enviar RDOs locais para a nuvem</button>
       <button class="btn btn-ghost" onclick="openColabModal()" style="margin-bottom:10px">👥 Gerenciar colaboradores</button>
       <button class="btn btn-ghost" onclick="exportAllCSV()" style="margin-bottom:10px">⬇️ Exportar todos (CSV)</button>
       <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Backup (arquivo)</button>
@@ -327,14 +353,64 @@ const WD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const MOFULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-/* ── persistência ── */
-function load() {
+/* ══════════════ CONFIGURAÇÃO FIREBASE (compartilhamento em nuvem) ══════════════
+   Cole aqui os 6 valores do seu projeto Firebase (Project settings → Seus apps → Web).
+   Enquanto estiver com "COLE_AQUI", o app roda em MODO LOCAL (só neste aparelho).
+   Ao preencher, entra em MODO NUVEM (Firestore) com login Google e tempo real. */
+const firebaseConfig = {
+  apiKey: "COLE_AQUI_apiKey",
+  authDomain: "COLE_AQUI.firebaseapp.com",
+  projectId: "COLE_AQUI_projectId",
+  storageBucket: "COLE_AQUI.appspot.com",
+  messagingSenderId: "COLE_AQUI_senderId",
+  appId: "COLE_AQUI_appId"
+};
+function isConfigured() {
+  const k = firebaseConfig.apiKey, p = firebaseConfig.projectId;
+  return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p));
+}
+
+/* ── estado do modo de dados ── */
+let MODE = 'local';        // 'local' | 'cloud'
+let FB = null;             // API do Firebase (modo nuvem)
+let currentUser = null;
+let cloudUnsub = [];
+let booted = false;
+
+/* ── preferência de tema (sempre local, independente do modo) ── */
+function loadDark() { try { db.config.dark = localStorage.getItem('ctv_rdo_dark') === '1'; } catch (e) {} }
+function saveDark() { try { localStorage.setItem('ctv_rdo_dark', db.config.dark ? '1' : '0'); } catch (e) {} }
+
+/* ── modo LOCAL (localStorage) ── */
+function loadLocal() {
   try { const raw = localStorage.getItem(STORE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
   if (!db.rdos) db.rdos = [];
-  if (!db.config) db.config = { dark: false };
+  if (!db.config) db.config = {};
   if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
 }
-function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
+function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
+
+/* ── persistência unificada (a UI chama estas) ── */
+function persistRDO(rdo) {
+  const clean = JSON.parse(JSON.stringify(rdo));
+  const i = db.rdos.findIndex(r => r.id === clean.id);
+  if (i >= 0) db.rdos[i] = clean; else db.rdos.push(clean);
+  if (MODE === 'cloud' && FB) {
+    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'rdos', clean.id), clean).catch(() => showToast('Falha ao salvar na nuvem.'));
+    cacheSnapshot();
+  } else { saveLocal(); }
+}
+function removeRDOStore(id) {
+  db.rdos = db.rdos.filter(r => r.id !== id);
+  if (MODE === 'cloud' && FB) { FB.deleteDoc(FB.doc(FB.fs, 'rdos', id)).catch(() => showToast('Falha ao excluir na nuvem.')); cacheSnapshot(); }
+  else { saveLocal(); }
+}
+function persistColab() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(() => {}); }
+  else { saveLocal(); }
+}
 
 /* ── navegação de views ── */
 function goList() { document.getElementById('view-editor').classList.remove('active'); document.getElementById('view-list').classList.add('active'); document.getElementById('backBtn').style.display = 'none'; document.getElementById('hdrTitle').textContent = 'de Obra (RDO)'; renderList(); renderCalendar(); window.scrollTo(0, 0); }
@@ -479,7 +555,7 @@ function colabOptions(val) {
 function addColaborador(nome) {
   nome = (nome || '').trim(); if (!nome) return false;
   db.config.colaboradores = db.config.colaboradores || [];
-  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) { db.config.colaboradores.push(nome); save(); }
+  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) { db.config.colaboradores.push(nome); persistColab(); }
   return true;
 }
 function nameSelectChanged(sel, section) {
@@ -511,7 +587,7 @@ function addColabFromModal() {
 }
 function removeColab(nome) {
   db.config.colaboradores = (db.config.colaboradores || []).filter(n => n.toLowerCase() !== String(nome).toLowerCase());
-  save(); renderColabModal();
+  persistColab(); renderColabModal();
 }
 
 function collectEditor() {
@@ -533,17 +609,16 @@ function saveRDO() {
   collectEditor();
   if (!cur.data) { showToast('Informe a data do RDO.'); return; }
   cur.atualizadoEm = Date.now();
-  if (editingId) { const i = db.rdos.findIndex(r => r.id === editingId); if (i >= 0) db.rdos[i] = cur; else db.rdos.push(cur); }
-  else { db.rdos.push(cur); editingId = cur.id; }
-  save();
+  persistRDO(cur);
+  editingId = cur.id;
   document.getElementById('hdrTitle').textContent = 'RDO ' + (cur.numero || '');
   showToast('RDO salvo ✔️');
 }
 function deleteRDO() {
   if (!editingId) { goList(); return; }
   if (!confirm('Excluir este RDO?')) return;
-  db.rdos = db.rdos.filter(r => r.id !== editingId);
-  save(); showToast('RDO excluído'); goList();
+  removeRDOStore(editingId);
+  showToast('RDO excluído'); goList();
 }
 
 /* ── assinatura (reaproveitado do app de Visita Técnica) ── */
@@ -633,21 +708,128 @@ function exportBackup() { downloadBlob(new Blob([JSON.stringify(db, null, 2)], {
 function importBackup(input) {
   const f = input.files[0]; if (!f) return;
   const rd = new FileReader();
-  rd.onload = e => { try { const data = JSON.parse(e.target.result); if (!data.rdos) throw 0; if (!confirm('Substituir TODOS os RDOs deste aparelho?')) { input.value=''; return; } db = data; if (!db.config) db.config = { dark: false }; save(); applyDark(); goList(); showToast('Backup restaurado ✔️'); } catch (err) { showToast('Arquivo inválido.'); } input.value = ''; };
+  rd.onload = e => { try { const data = JSON.parse(e.target.result); if (!data.rdos) throw 0;
+    if (MODE === 'cloud' && FB) {
+      if (!confirm('Enviar ' + data.rdos.length + ' RDO(s) do backup para a nuvem?')) { input.value=''; return; }
+      Promise.all(data.rdos.map(r => FB.setDoc(FB.doc(FB.fs,'rdos',r.id), JSON.parse(JSON.stringify(r))))).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
+    } else {
+      if (!confirm('Substituir TODOS os RDOs deste aparelho?')) { input.value=''; return; }
+      db = data; if (!db.config) db.config = {}; saveLocal(); loadDark(); applyDark(); goList(); showToast('Backup restaurado ✔️');
+    }
+  } catch (err) { showToast('Arquivo inválido.'); } input.value = ''; };
   rd.readAsText(f);
 }
 function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 
 /* ── tema / toast ── */
 function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', on ? '#0A1420' : '#0D1B2A'); }
-function toggleDark() { db.config.dark = !db.config.dark; save(); applyDark(); }
+function toggleDark() { db.config.dark = !db.config.dark; saveDark(); applyDark(); }
 let toastTimer = null;
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
 
+/* ══════════════ NUVEM: boot, login, tempo real ══════════════ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  MODE = 'local';
+  loadLocal(); loadDark(); applyDark();
+  updateModeUI();
+  renderList(); renderCalendar();
+}
+function bootCloud(api) {
+  if (booted) return; booted = true;
+  MODE = 'cloud'; FB = api;
+  // preserva os RDOs locais atuais para migração antes de sobrescrever o cache
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_rdo_local_backup')) localStorage.setItem('ctv_rdo_local_backup', raw); } catch (e) {}
+  db = { version: 1, rdos: [], config: {} };
+  loadDark(); applyDark();
+  // primeira pintura a partir do cache (offline), até o Firestore responder
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); } } catch (e) {}
+  if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
+  updateModeUI();
+  renderList(); renderCalendar();
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) { hideAuth(); showUserChip(user); startCloudListeners(); }
+    else { clearCloudListeners(); showAuth(); }
+  });
+}
+function loginGoogle() {
+  if (!FB) return;
+  const provider = new FB.GoogleAuthProvider();
+  FB.signInWithPopup(FB.auth, provider).catch(() => {
+    FB.signInWithRedirect(FB.auth, provider).catch(() => showToast('Falha no login.'));
+  });
+}
+function logout() { if (FB) FB.signOut(FB.auth); }
+function startCloudListeners() {
+  clearCloudListeners();
+  const colRef = FB.doc(FB.fs, 'shared', 'colaboradores');
+  FB.getDoc(colRef).then(s => { if (!s.exists()) FB.setDoc(colRef, { list: DEFAULT_COLAB.slice() }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(colRef, s => {
+    const d = s.data(); db.config.colaboradores = (d && d.list) || DEFAULT_COLAB.slice();
+    if (document.getElementById('colabModalBg').classList.contains('open')) renderColabModal();
+  }, () => {}));
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
+    db.rdos = s.docs.map(d => d.data());
+    cacheSnapshot();
+    if (document.getElementById('view-list').classList.contains('active')) { renderList(); renderCalendar(); }
+  }, err => { console.warn(err); showToast('Sem acesso aos dados — verifique as permissões/seu e-mail.'); }));
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
+function migrarLocalParaNuvem() {
+  if (MODE !== 'cloud' || !FB) { showToast('Disponível no modo nuvem.'); return; }
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem('ctv_rdo_local_backup') || localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
+  const arr = (local && local.rdos) || [];
+  if (!arr.length) { showToast('Nenhum RDO local para enviar.'); return; }
+  if (!confirm('Enviar ' + arr.length + ' RDO(s) deste aparelho para a nuvem?')) return;
+  Promise.all(arr.map(r => FB.setDoc(FB.doc(FB.fs, 'rdos', r.id), JSON.parse(JSON.stringify(r)))))
+    .then(() => showToast('RDOs enviados ✔️')).catch(() => showToast('Falha ao enviar alguns RDOs.'));
+}
+function updateModeUI() {
+  const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
+  const mig = document.getElementById('btnMigrar'); if (mig) mig.style.display = (MODE === 'cloud') ? '' : 'none';
+}
+function showUserChip(user) { const c = document.getElementById('userChip'); if (!c) return; c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; }
+function showAuth() { const c = document.getElementById('userChip'); if (c) c.style.display = 'none'; document.getElementById('authOverlay').classList.add('open'); }
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
 /* ── init ── */
 document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }));
-load(); applyDark(); renderList(); renderCalendar();
+window.__RDO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediato
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {})); }
+</script>
+<script type="module">
+  const R = window.__RDO;
+  if (R && R.wantCloud) {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
+      ]);
+      const app = appMod.initializeApp(R.firebaseConfig);
+      const auth = authMod.getAuth(app);
+      const fs = fsMod.getFirestore(app);
+      try { await fsMod.enableIndexedDbPersistence(fs); } catch (e) {}
+      R.bootCloud({
+        app, auth, fs,
+        GoogleAuthProvider: authMod.GoogleAuthProvider,
+        signInWithPopup: authMod.signInWithPopup,
+        signInWithRedirect: authMod.signInWithRedirect,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        signOut: authMod.signOut,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
+        serverTimestamp: fsMod.serverTimestamp
+      });
+    } catch (e) {
+      console.warn('Firebase indisponível — modo local.', e);
+      R.bootLocal();
+    }
+  }
 </script>
 </body>
 </html>
