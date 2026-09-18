@@ -110,6 +110,13 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .hint { font-size: 12px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
   .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--card); width: 100%; max-width: 720px; margin: 0 auto; border-radius: 18px 18px 0 0; padding: 18px; max-height: 92vh; overflow-y: auto; animation: slideup .22s ease; }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+  .modal h3 { font-size: 17px; margin-bottom: 12px; }
+  .mini-del { background: transparent; border: none; color: var(--danger); font-size: 16px; cursor: pointer; padding: 4px 10px; }
 </style>
 </head>
 <body>
@@ -156,6 +163,7 @@
     </div>
     <div class="card">
       <div class="section-title">Dados</div>
+      <button class="btn btn-ghost" onclick="openColabModal()" style="margin-bottom:10px">👥 Gerenciar colaboradores</button>
       <button class="btn btn-ghost" onclick="exportAllCSV()" style="margin-bottom:10px">⬇️ Exportar todos (CSV)</button>
       <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Backup (arquivo)</button>
       <button class="btn btn-ghost" onclick="document.getElementById('impFile').click()">📂 Restaurar backup</button>
@@ -239,6 +247,21 @@
 
 </div>
 
+<!-- ═══════════ MODAL: COLABORADORES ═══════════ -->
+<div class="modal-bg" id="colabModalBg">
+  <div class="modal">
+    <h3>Colaboradores</h3>
+    <div class="hint" style="margin-bottom:10px">Estes nomes aparecem na lista suspensa do campo "Nome". Você pode adicionar ou remover.</div>
+    <div id="colabModalList" style="max-height:45vh;overflow-y:auto;margin-bottom:12px"></div>
+    <label class="fld">Adicionar novo</label>
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="colabNew" placeholder="Nome do colaborador" style="flex:2">
+      <button class="btn btn-primary" style="flex:1" onclick="addColabFromModal()">Adicionar</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeColabModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -249,13 +272,14 @@ let cur = null;         // RDO em edição
 let editingId = null;
 
 const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
+const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
 const TIPO_LABEL = { sede: 'Sede', externo: 'Externo', arcelor: 'Arcelor' };
 const SEC = {
-  efetivo:     [['nome','Nome','text'],['funcao','Função','func'],['empresa','Empresa','text'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
+  efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['empresa','Empresa','text'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
   alimentacao: [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo','text'],['empresa','Empresa','text'],['liberado','Liberado por','text']],
   paradas:     [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo da paralisação','text'],['area','Área / Equip. aguardado','text'],['liberado','Liberado por','text']],
   atividades:  [['inicio','Início','time'],['fim','Fim','time'],['descricao','Descrição da atividade','area'],['local','Local / Equipamento','text'],['percent','% Concluído','number'],['obs','Obs.','text']],
-  transporte:  [['nome','Nome','text'],['busca','Hora Busca','time'],['deixa','Hora Deixa em Casa','time'],['obs','Obs.','text']]
+  transporte:  [['nome','Nome','nome'],['busca','Hora Busca','time'],['deixa','Hora Deixa em Casa','time'],['obs','Obs.','text']]
 };
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -271,6 +295,7 @@ function load() {
   try { const raw = localStorage.getItem(STORE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
   if (!db.rdos) db.rdos = [];
   if (!db.config) db.config = { dark: false };
+  if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
 }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
 
@@ -369,6 +394,8 @@ function inputFor(section, idx, fdef, val) {
   let input;
   if (type === 'func') {
     input = `<select data-f="${key}"><option value="">—</option>${FUNCOES.map(f => `<option ${f === v ? 'selected' : ''}>${f}</option>`).join('')}</select>`;
+  } else if (type === 'nome') {
+    input = `<select data-f="${key}" onchange="nameSelectChanged(this,'${section}')">${colabOptions(v)}</select>`;
   } else if (type === 'area') {
     input = `<textarea data-f="${key}" placeholder="${label}">${escapeHtml(v)}</textarea>`;
   } else {
@@ -399,6 +426,56 @@ function syncSection(section) {
 }
 function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); }
 function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); }
+
+/* ── colaboradores (lista de nomes) ── */
+function colabList() { return (db.config.colaboradores || []).slice().sort((a, b) => a.localeCompare(b, 'pt')); }
+function colabOptions(val) {
+  const list = colabList();
+  const cur = String(val || '');
+  const has = list.some(n => n.toLowerCase() === cur.toLowerCase());
+  let opts = '<option value="">—</option>';
+  if (cur && !has) opts += `<option value="${escapeAttr(cur)}" selected>${escapeHtml(cur)}</option>`;
+  opts += list.map(n => `<option ${n.toLowerCase() === cur.toLowerCase() ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+  opts += '<option value="__novo__">➕ Novo nome…</option>';
+  return opts;
+}
+function addColaborador(nome) {
+  nome = (nome || '').trim(); if (!nome) return false;
+  db.config.colaboradores = db.config.colaboradores || [];
+  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) { db.config.colaboradores.push(nome); save(); }
+  return true;
+}
+function nameSelectChanged(sel, section) {
+  if (sel.value !== '__novo__') return;
+  const nome = (prompt('Nome do novo colaborador:') || '').trim();
+  if (!nome) { sel.value = ''; return; }
+  addColaborador(nome);
+  const o = document.createElement('option'); o.value = nome; o.textContent = nome;
+  sel.insertBefore(o, sel.querySelector('option[value="__novo__"]'));
+  sel.value = nome;
+  syncSection(section);
+  renderSection(section);
+}
+
+/* ── gerenciar colaboradores (modal) ── */
+function openColabModal() { renderColabModal(); document.getElementById('colabModalBg').classList.add('open'); }
+function closeColabModal() { document.getElementById('colabModalBg').classList.remove('open'); }
+function renderColabModal() {
+  const el = document.getElementById('colabModalList');
+  const list = colabList();
+  el.innerHTML = list.length ? list.map(n => `<div class="entry" style="cursor:default">
+      <div class="entry-main"><div class="top">${escapeHtml(n)}</div></div>
+      <button class="mini-del" onclick="removeColab('${escapeAttr(n).replace(/'/g, "\\'")}')">✕</button>
+    </div>`).join('') : `<div class="empty">Nenhum colaborador. Adicione abaixo.</div>`;
+}
+function addColabFromModal() {
+  const inp = document.getElementById('colabNew');
+  if (addColaborador(inp.value)) { inp.value = ''; renderColabModal(); showToast('Colaborador adicionado ✔️'); }
+}
+function removeColab(nome) {
+  db.config.colaboradores = (db.config.colaboradores || []).filter(n => n.toLowerCase() !== String(nome).toLowerCase());
+  save(); renderColabModal();
+}
 
 function collectEditor() {
   cur.numero = document.getElementById('f_numero').value.trim();
@@ -543,6 +620,7 @@ let toastTimer = null;
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
 
 /* ── init ── */
+document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }));
 load(); applyDark(); renderList(); renderCalendar();
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {})); }
 </script>
