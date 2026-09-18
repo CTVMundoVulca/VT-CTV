@@ -336,7 +336,7 @@
       <div class="row" style="margin-bottom:12px">
         <button class="btn btn-primary" onclick="openSessionModal()">➕ Registo manual</button>
       </div>
-      <label class="fld">Filtrar por contrato</label>
+      <label class="fld">Filtrar por contrato atendido</label>
       <select id="filterContrato" onchange="renderRegistos()"></select>
     </div>
     <div id="registosList"></div>
@@ -370,33 +370,17 @@
       <div class="stat-grid">
         <div class="stat accent"><div class="n" id="stTotal">0h</div><div class="l">Total trabalhado</div></div>
         <div class="stat"><div class="n" id="stDias">0</div><div class="l">Dias com registo</div></div>
-        <div class="stat"><div class="n" id="stPrincipal">0h</div><div class="l">Meu contrato</div></div>
-        <div class="stat"><div class="n" id="stExterno">0h</div><div class="l">Contratos externos</div></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="section-title">Por contrato</div>
+      <div class="section-title">Por contrato atendido</div>
       <div id="reportBars"></div>
     </div>
 
     <div class="card">
       <button class="btn btn-ghost" onclick="exportCSV()">⬇️ Exportar CSV</button>
       <div class="hint">Gera um arquivo .csv com os registos do período selecionado (abre no Excel / Google Sheets).</div>
-    </div>
-  </div>
-
-  <!-- ═══════════ CONTRATOS ═══════════ -->
-  <div class="view" id="view-contratos">
-    <div class="card">
-      <div class="row">
-        <button class="btn btn-primary" onclick="openContratoModal()">➕ Novo contrato externo</button>
-      </div>
-      <div class="hint">O contrato <b>principal</b> é o seu vínculo (CTV). Os <b>externos</b> são contratos/clientes que você atende à parte.</div>
-    </div>
-    <div class="card">
-      <div class="section-title">Contratos</div>
-      <div id="contratosList"></div>
     </div>
     <div class="card">
       <div class="section-title">Dados</div>
@@ -414,7 +398,6 @@
   <button class="active" data-view="ponto" onclick="switchView('ponto')"><span class="ic">⏱️</span>Ponto</button>
   <button data-view="registos" onclick="switchView('registos')"><span class="ic">📋</span>Registos</button>
   <button data-view="relatorios" onclick="switchView('relatorios')"><span class="ic">📊</span>Relatórios</button>
-  <button data-view="contratos" onclick="switchView('contratos')"><span class="ic">🏢</span>Contratos</button>
 </div>
 
 <!-- ═══════════ MODAL: SESSÃO ═══════════ -->
@@ -423,11 +406,7 @@
     <h3 id="sessionModalTitle">Registo manual</h3>
     <input type="hidden" id="sess_id">
     <div class="fld-group">
-      <label class="fld">Contrato</label>
-      <select id="sess_contrato"></select>
-    </div>
-    <div class="fld-group">
-      <label class="fld">Tipo de atendimento</label>
+      <label class="fld">Contrato Atendido</label>
       <select id="sess_tipo"></select>
     </div>
     <div class="fld-group">
@@ -457,30 +436,6 @@
     <div class="row">
       <button class="btn btn-ghost" onclick="closeSessionModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveSession()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ MODAL: CONTRATO ═══════════ -->
-<div class="modal-bg" id="contratoModalBg">
-  <div class="modal">
-    <h3 id="contratoModalTitle">Novo contrato</h3>
-    <input type="hidden" id="ct_id">
-    <div class="fld-group">
-      <label class="fld">Nome do contrato</label>
-      <input type="text" id="ct_nome" placeholder="Ex.: Suzano, Cliente X...">
-    </div>
-    <div class="fld-group">
-      <label class="fld">Tipo</label>
-      <select id="ct_tipo">
-        <option value="externo">Contrato externo</option>
-        <option value="principal">Principal (meu contrato)</option>
-      </select>
-      <div class="hint">Só pode existir um contrato principal. Ao definir outro como principal, o anterior vira externo.</div>
-    </div>
-    <div class="row">
-      <button class="btn btn-ghost" onclick="closeContratoModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveContrato()">Salvar</button>
     </div>
   </div>
 </div>
@@ -521,19 +476,11 @@ function load() {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) db = JSON.parse(raw);
   } catch (e) { console.warn('load falhou', e); }
-  if (!db.contratos) db.contratos = [];
   if (!db.sessoes) db.sessoes = [];
   if (!db.config) db.config = { dark: false };
-  // Primeiro uso: cria contrato principal padrão
-  if (db.contratos.length === 0) {
-    db.contratos.push({ id: uid(), nome: 'Meu contrato (CTV)', tipo: 'principal', ativo: true, criadoEm: Date.now() });
-    save();
-  }
-  // Migração: define tipo de atendimento em registros antigos
+  // Migração: garante um contrato atendido em registros antigos
   let migrou = false;
-  db.sessoes.forEach(s => {
-    if (!s.tipo) { const c = getContrato(s.contratoId); s.tipo = (c && c.tipo === 'principal') ? 'sede' : 'externo'; migrou = true; }
-  });
+  db.sessoes.forEach(s => { if (!s.tipo) { s.tipo = 'externo'; migrou = true; } });
   if (migrou) save();
 }
 
@@ -543,8 +490,6 @@ function save() {
 }
 
 /* ═══════════════════ HELPERS DE TEMPO ═══════════════════ */
-function getContrato(id) { return db.contratos.find(c => c.id === id); }
-
 // Duração trabalhada em ms: (saida||agora) - entrada - pausas
 function workedMs(s, now = Date.now()) {
   if (!s.entrada) return 0;
@@ -609,15 +554,7 @@ function switchView(v) {
   if (v === 'ponto') renderPonto();
   if (v === 'registos') renderRegistos();
   if (v === 'relatorios') renderRelatorios();
-  if (v === 'contratos') renderContratos();
   window.scrollTo(0, 0);
-}
-
-/* ═══════════════════ PONTO (HOJE) ═══════════════════ */
-function contractOptions(selectedId) {
-  return db.contratos.filter(c => c.ativo).map(c =>
-    `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${escapeHtml(c.nome)}${c.tipo === 'principal' ? ' • principal' : ''}</option>`
-  ).join('');
 }
 
 function renderPonto() {
@@ -628,16 +565,12 @@ function renderPonto() {
     // Nenhuma sessão aberta -> iniciar
     card.innerHTML = `
       <div class="section-title">Iniciar registo</div>
-      <label class="fld">Contrato</label>
-      <select id="ponto_contrato">${contractOptions(db.contratos.find(c => c.ativo) ? db.contratos.find(c => c.ativo).id : '')}</select>
-      <div style="height:12px"></div>
-      <label class="fld">Tipo de atendimento</label>
+      <label class="fld">Contrato Atendido</label>
       <select id="ponto_tipo">${tipoOptions(db.config.lastTipo || 'sede')}</select>
       <div style="height:14px"></div>
       <button class="btn btn-success btn-lg" onclick="clockIn()">▶️ Registrar entrada</button>
       <div class="hint">A hora de entrada será a hora atual do aparelho.</div>`;
   } else {
-    const c = getContrato(s.contratoId);
     const paused = isPaused(s);
     card.innerHTML = `
       <div class="timer-wrap">
@@ -647,7 +580,6 @@ function renderPonto() {
         <div class="timer-clock" id="liveClock">00:00:00</div>
         <div class="timer-sub">
           <span class="contract-pill" style="background:${tipoColor(sessTipo(s))};color:#fff">${tipoLabel(sessTipo(s))}</span>
-          <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : 'Contrato removido')}</span>
         </div>
         <div class="timer-sub">Entrada ${timeOf(s.entrada)}${pausaMs(s) > 0 ? ' · pausa ' + fmtHM(pausaMs(s)) : ''}</div>
       </div>
@@ -685,7 +617,6 @@ function renderTodayList() {
 }
 
 function entryRow(s, now) {
-  const c = getContrato(s.contratoId);
   const open = isOpen(s);
   const pm = pausaMs(s, now);
   return `
@@ -693,7 +624,6 @@ function entryRow(s, now) {
       <div class="entry-main">
         <div class="top">
           <span class="contract-pill" style="background:${tipoColor(sessTipo(s))};color:#fff">${tipoLabel(sessTipo(s))}</span>
-          <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : '—')}</span>
           ${open ? '<span style="color:var(--success);font-size:11px;font-weight:800">● EM ANDAMENTO</span>' : ''}
         </div>
         <div class="sub">${timeOf(s.entrada)} → ${s.saida ? timeOf(s.saida) : '...'}${pm > 0 ? ' · pausa ' + fmtHM(pm) : ''}${s.nota ? ' · ' + escapeHtml(s.nota) : ''}</div>
@@ -727,11 +657,9 @@ function stopTick() { if (tickTimer) { clearInterval(tickTimer); tickTimer = nul
 
 function clockIn() {
   if (openSession()) { showToast('Já existe um registo em andamento.'); return; }
-  const contratoId = document.getElementById('ponto_contrato').value;
-  if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
   const tipo = document.getElementById('ponto_tipo').value;
   db.config.lastTipo = tipo;
-  db.sessoes.push({ id: uid(), contratoId, tipo, entrada: Date.now(), saida: null, pausas: [], nota: '' });
+  db.sessoes.push({ id: uid(), tipo, entrada: Date.now(), saida: null, pausas: [], nota: '' });
   save();
   showToast('Entrada registrada ▶️');
   renderPonto();
@@ -760,11 +688,9 @@ function clockOut() {
 
 /* ═══════════════════ MODAL SESSÃO (criar/editar) ═══════════════════ */
 function openSessionModal(id, prefillDate) {
-  const sel = document.getElementById('sess_contrato');
   const editing = !!id;
   let s = editing ? db.sessoes.find(x => x.id === id) : null;
   document.getElementById('sessionModalTitle').textContent = editing ? 'Editar registo' : 'Registo manual';
-  sel.innerHTML = contractOptions(s ? s.contratoId : (db.contratos.find(c => c.ativo) || {}).id);
   document.getElementById('sess_tipo').innerHTML = tipoOptions(s ? sessTipo(s) : (db.config.lastTipo || 'sede'));
   document.getElementById('sess_id').value = id || '';
   if (editing) {
@@ -812,7 +738,6 @@ function updateSessPreview() {
 function saveSession() {
   const p = parseSessInputs();
   if (!p) { showToast('Preencha data e entrada.'); return; }
-  const contratoId = document.getElementById('sess_contrato').value;
   const tipo = document.getElementById('sess_tipo').value;
   const nota = document.getElementById('sess_nota').value.trim();
   const id = document.getElementById('sess_id').value;
@@ -820,11 +745,10 @@ function saveSession() {
   const pausas = p.pausaMin > 0 ? [{ inicio: p.entrada, fim: p.entrada + p.pausaMin }] : [];
   if (id) {
     const s = db.sessoes.find(x => x.id === id);
-    s.contratoId = contratoId; s.tipo = tipo; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
+    s.tipo = tipo; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
   } else {
-    if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
     db.config.lastTipo = tipo;
-    db.sessoes.push({ id: uid(), contratoId, tipo, entrada: p.entrada, saida: p.saida, pausas, nota });
+    db.sessoes.push({ id: uid(), tipo, entrada: p.entrada, saida: p.saida, pausas, nota });
   }
   save();
   closeSessionModal();
@@ -925,12 +849,12 @@ function addForDay() {
 function renderRegistos() {
   const fsel = document.getElementById('filterContrato');
   const cur = fsel.value || 'all';
-  fsel.innerHTML = '<option value="all">Todos os contratos</option>' +
-    db.contratos.map(c => `<option value="${c.id}" ${c.id === cur ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('');
+  fsel.innerHTML = '<option value="all">Todos os contratos atendidos</option>' +
+    TIPOS.map(t => `<option value="${t[0]}" ${t[0] === cur ? 'selected' : ''}>${t[1]}</option>`).join('');
   const filter = fsel.value;
 
   let list = db.sessoes.slice().sort((a, b) => b.entrada - a.entrada);
-  if (filter !== 'all') list = list.filter(s => s.contratoId === filter);
+  if (filter !== 'all') list = list.filter(s => sessTipo(s) === filter);
 
   const cont = document.getElementById('registosList');
   if (!list.length) {
@@ -997,115 +921,34 @@ function renderRelatorios() {
   else lbl = new Date(start).toLocaleDateString('pt-BR') + ' — ' + new Date(end).toLocaleDateString('pt-BR');
   document.getElementById('periodLabel').textContent = lbl;
 
-  let total = 0, principal = 0, externo = 0;
+  let total = 0;
   const dias = new Set();
-  const byContract = {};
+  const byTipo = {};
   list.forEach(s => {
     const w = workedMs(s, now);
     total += w;
     dias.add(dateKey(s.entrada));
-    const c = getContrato(s.contratoId);
-    if (c && c.tipo === 'principal') principal += w; else externo += w;
-    const key = s.contratoId;
-    byContract[key] = (byContract[key] || 0) + w;
+    const t = sessTipo(s);
+    byTipo[t] = (byTipo[t] || 0) + w;
   });
 
   document.getElementById('stTotal').textContent = fmtHM(total);
   document.getElementById('stDias').textContent = dias.size;
-  document.getElementById('stPrincipal').textContent = fmtHM(principal);
-  document.getElementById('stExterno').textContent = fmtHM(externo);
 
   const barsEl = document.getElementById('reportBars');
-  const entries = Object.keys(byContract).map(id => ({ id, ms: byContract[id] })).sort((a, b) => b.ms - a.ms);
+  const entries = TIPOS.map(t => ({ tipo: t[0], nome: t[1], cor: t[2], ms: byTipo[t[0]] || 0 })).filter(e => e.ms > 0).sort((a, b) => b.ms - a.ms);
   if (!entries.length) {
     barsEl.innerHTML = `<div class="empty">Sem registos neste período.</div>`;
   } else {
     const max = Math.max(...entries.map(e => e.ms));
     barsEl.innerHTML = entries.map(e => {
-      const c = getContrato(e.id);
       const pct = max ? (e.ms / max * 100) : 0;
       return `<div class="bar-row">
-        <div class="bt"><span>${escapeHtml(c ? c.nome : 'Contrato removido')}</span><span class="v">${fmtHM(e.ms)}</span></div>
-        <div class="bar-track"><div class="bar-fill ${c && c.tipo === 'principal' ? 'principal' : 'externo'}" style="width:${pct}%"></div></div>
+        <div class="bt"><span>${escapeHtml(e.nome)}</span><span class="v">${fmtHM(e.ms)}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${e.cor}"></div></div>
       </div>`;
     }).join('');
   }
-}
-
-/* ═══════════════════ CONTRATOS ═══════════════════ */
-function renderContratos() {
-  const el = document.getElementById('contratosList');
-  const ordered = db.contratos.slice().sort((a, b) => (a.tipo === 'principal' ? -1 : b.tipo === 'principal' ? 1 : 0) || a.nome.localeCompare(b.nome));
-  el.innerHTML = ordered.map(c => {
-    const count = db.sessoes.filter(s => s.contratoId === c.id).length;
-    return `<div class="entry">
-      <div class="entry-main">
-        <div class="top">
-          <span class="contract-pill ${c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${c.tipo === 'principal' ? 'PRINCIPAL' : 'EXTERNO'}</span>
-          <span>${escapeHtml(c.nome)}</span>
-          ${!c.ativo ? '<span style="font-size:11px;color:var(--text-light)">(inativo)</span>' : ''}
-        </div>
-        <div class="sub">${count} registo${count === 1 ? '' : 's'}</div>
-      </div>
-      <div class="entry-actions">
-        <button class="mini-btn" onclick="toggleAtivo('${c.id}')" title="${c.ativo ? 'Desativar' : 'Reativar'}">${c.ativo ? '🚫' : '✅'}</button>
-        <button class="mini-btn" onclick="openContratoModal('${c.id}')" title="Editar">✏️</button>
-        <button class="mini-btn" onclick="deleteContrato('${c.id}')" title="Excluir">🗑️</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function openContratoModal(id) {
-  const editing = !!id;
-  const c = editing ? getContrato(id) : null;
-  document.getElementById('contratoModalTitle').textContent = editing ? 'Editar contrato' : 'Novo contrato externo';
-  document.getElementById('ct_id').value = id || '';
-  document.getElementById('ct_nome').value = c ? c.nome : '';
-  document.getElementById('ct_tipo').value = c ? c.tipo : 'externo';
-  document.getElementById('contratoModalBg').classList.add('open');
-}
-function closeContratoModal() { document.getElementById('contratoModalBg').classList.remove('open'); }
-function saveContrato() {
-  const id = document.getElementById('ct_id').value;
-  const nome = document.getElementById('ct_nome').value.trim();
-  const tipo = document.getElementById('ct_tipo').value;
-  if (!nome) { showToast('Informe o nome do contrato.'); return; }
-  if (tipo === 'principal') {
-    // rebaixa o principal atual (exceto o próprio)
-    db.contratos.forEach(c => { if (c.tipo === 'principal' && c.id !== id) c.tipo = 'externo'; });
-  }
-  if (id) {
-    const c = getContrato(id);
-    c.nome = nome; c.tipo = tipo;
-  } else {
-    db.contratos.push({ id: uid(), nome, tipo, ativo: true, criadoEm: Date.now() });
-  }
-  save();
-  closeContratoModal();
-  showToast('Contrato salvo ✔️');
-  renderContratos();
-}
-function toggleAtivo(id) {
-  const c = getContrato(id); if (!c) return;
-  c.ativo = !c.ativo; save(); renderContratos();
-}
-function deleteContrato(id) {
-  const count = db.sessoes.filter(s => s.contratoId === id).length;
-  if (count > 0) {
-    showToast('Contrato tem registos — desative em vez de excluir.');
-    return;
-  }
-  if (db.contratos.length <= 1) { showToast('Deve existir ao menos um contrato.'); return; }
-  if (!confirm('Excluir este contrato?')) return;
-  const c = getContrato(id);
-  db.contratos = db.contratos.filter(x => x.id !== id);
-  // garante que continue existindo um principal
-  if (c.tipo === 'principal' && !db.contratos.some(x => x.tipo === 'principal') && db.contratos.length) {
-    db.contratos[0].tipo = 'principal';
-  }
-  save();
-  showToast('Contrato excluído');
-  renderContratos();
 }
 
 /* ═══════════════════ EXPORTAR CSV ═══════════════════ */
@@ -1117,16 +960,14 @@ function exportCSV() {
   const now = Date.now();
   const list = periodSessions().slice().sort((a, b) => a.entrada - b.entrada);
   if (!list.length) { showToast('Sem registos no período.'); return; }
-  const header = ['Data', 'Dia', 'Contrato', 'Tipo', 'Entrada', 'Saida', 'Pausa (min)', 'Horas trabalhadas', 'Horas (decimal)', 'Observacao'];
+  const header = ['Data', 'Dia', 'Contrato Atendido', 'Entrada', 'Saida', 'Pausa (min)', 'Horas trabalhadas', 'Horas (decimal)', 'Observacao'];
   const rows = list.map(s => {
-    const c = getContrato(s.contratoId);
     const w = workedMs(s, now);
     const d = new Date(s.entrada);
     return [
       d.toLocaleDateString('pt-BR'),
       WD[d.getDay()],
-      c ? c.nome : '—',
-      c ? (c.tipo === 'principal' ? 'Principal' : 'Externo') : '—',
+      tipoLabel(sessTipo(s)),
       timeOf(s.entrada),
       s.saida ? timeOf(s.saida) : '',
       Math.round(pausaMs(s, s.saida || now) / 60000),
@@ -1137,7 +978,7 @@ function exportCSV() {
   });
   const totalMs = list.reduce((a, s) => a + workedMs(s, now), 0);
   rows.push('');
-  rows.push(['', '', '', '', '', '', 'TOTAL', fmtHM(totalMs), fmtDecimalH(totalMs), ''].map(csvCell).join(';'));
+  rows.push(['', '', '', '', '', 'TOTAL', fmtHM(totalMs), fmtDecimalH(totalMs), ''].map(csvCell).join(';'));
   const csv = '﻿' + header.join(';') + '\n' + rows.join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   downloadBlob(blob, 'horarios_ctv_' + dateKey(Date.now()) + '.csv');
@@ -1157,7 +998,7 @@ function importBackup(input) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data.contratos || !data.sessoes) throw new Error('formato');
+      if (!data.sessoes) throw new Error('formato');
       if (!confirm('Isto substituirá TODOS os dados atuais deste aparelho. Continuar?')) { input.value = ''; return; }
       db = data;
       if (!db.config) db.config = { dark: false };
