@@ -46,7 +46,7 @@
   .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: var(--gap); box-shadow: 0 1px 3px rgba(0,0,0,.06); border: 1px solid var(--border); }
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--orange); font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
   label.fld { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-light); margin-bottom: 5px; }
-  select, input[type=text], input[type=date], input[type=time], input[type=number], textarea {
+  select, input[type=text], input[type=email], input[type=password], input[type=date], input[type=time], input[type=number], textarea {
     width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 9px; font-size: 15px; font-family: inherit; background: var(--bg); color: var(--text);
   }
   textarea { resize: vertical; min-height: 58px; }
@@ -176,9 +176,13 @@
 <div id="authOverlay">
   <div class="auth-card">
     <div class="logo-badge" style="display:inline-block;font-size:16px;margin-bottom:14px">CTV</div>
-    <h3 style="margin-bottom:8px">Relatório Diário de Obra</h3>
-    <p class="hint" style="margin-bottom:18px">Entre com sua conta Google para ver e editar os RDOs compartilhados da equipe.</p>
-    <button class="btn btn-primary" onclick="loginGoogle()">Entrar com Google</button>
+    <h3 style="margin-bottom:6px">Relatório Diário de Obra</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px">Entre com seu e-mail e senha. Se ainda não tem conta, toque em "Criar conta".</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="loginEmail()" style="margin-bottom:8px">Entrar</button>
+    <button class="btn btn-ghost" onclick="registerEmail()" style="margin-bottom:10px">Criar conta</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
   </div>
 </div>
 
@@ -217,6 +221,7 @@
     <div class="card">
       <div class="section-title">Dados</div>
       <button class="btn btn-ghost" id="btnMigrar" style="display:none;margin-bottom:10px" onclick="migrarLocalParaNuvem()">☁️ Enviar RDOs locais para a nuvem</button>
+      <button class="btn btn-ghost" id="btnSenha" style="display:none;margin-bottom:10px" onclick="alterarSenha()">🔑 Alterar minha senha</button>
       <button class="btn btn-ghost" onclick="openColabModal()" style="margin-bottom:10px">👥 Gerenciar colaboradores</button>
       <button class="btn btn-ghost" onclick="exportAllCSV()" style="margin-bottom:10px">⬇️ Exportar todos (CSV)</button>
       <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Backup (arquivo)</button>
@@ -753,11 +758,48 @@ function bootCloud(api) {
     else { clearCloudListeners(); showAuth(); }
   });
 }
-function loginGoogle() {
+function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
+function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
+function traduzAuth(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('invalid-email')) return 'E-mail inválido.';
+  if (c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Use "Entrar".';
+  if (c.includes('weak-password')) return 'Senha fraca (mín. 6 caracteres).';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('invalid-login')) return 'E-mail ou senha incorretos.';
+  if (c.includes('user-not-found')) return 'Conta não encontrada. Toque em "Criar conta".';
+  if (c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde e tente de novo.';
+  if (c.includes('network')) return 'Sem conexão. Verifique a internet.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+function loginEmail() {
   if (!FB) return;
-  const provider = new FB.GoogleAuthProvider();
-  FB.signInWithPopup(FB.auth, provider).catch(() => {
-    FB.signInWithRedirect(FB.auth, provider).catch(() => showToast('Falha no login.'));
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || !pass) { authError('Preencha e-mail e senha.'); return; }
+  FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function registerEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || pass.length < 6) { authError('Informe e-mail e senha de ao menos 6 caracteres.'); return; }
+  FB.createUserWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function resetSenha() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { authError('Digite seu e-mail no campo acima para enviar o link.'); return; }
+  FB.sendPasswordResetEmail(FB.auth, email).then(() => authInfo('Enviamos um link para redefinir a senha no seu e-mail.')).catch(err => authError(traduzAuth(err)));
+}
+function alterarSenha() {
+  if (!FB || !currentUser) return;
+  const nova = prompt('Nova senha (mín. 6 caracteres):');
+  if (!nova) return;
+  if (nova.length < 6) { showToast('Senha muito curta (mín. 6).'); return; }
+  FB.updatePassword(currentUser, nova).then(() => showToast('Senha alterada ✔️')).catch(err => {
+    if (err && err.code && err.code.includes('recent-login')) {
+      FB.sendPasswordResetEmail(FB.auth, currentUser.email).then(() => showToast('Por segurança, enviamos um link de troca ao seu e-mail.')).catch(() => showToast('Entre novamente para trocar a senha.'));
+    } else showToast('Não foi possível alterar a senha.');
   });
 }
 function logout() { if (FB) FB.signOut(FB.auth); }
@@ -790,8 +832,8 @@ function updateModeUI() {
   const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
   const mig = document.getElementById('btnMigrar'); if (mig) mig.style.display = (MODE === 'cloud') ? '' : 'none';
 }
-function showUserChip(user) { const c = document.getElementById('userChip'); if (!c) return; c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; }
-function showAuth() { const c = document.getElementById('userChip'); if (c) c.style.display = 'none'; document.getElementById('authOverlay').classList.add('open'); }
+function showUserChip(user) { const c = document.getElementById('userChip'); if (c) { c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; } const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = ''; }
+function showAuth() { const c = document.getElementById('userChip'); if (c) c.style.display = 'none'; const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none'; document.getElementById('authOverlay').classList.add('open'); }
 function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
 
 /* ── init ── */
@@ -816,9 +858,10 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', () => naviga
       try { await fsMod.enableIndexedDbPersistence(fs); } catch (e) {}
       R.bootCloud({
         app, auth, fs,
-        GoogleAuthProvider: authMod.GoogleAuthProvider,
-        signInWithPopup: authMod.signInWithPopup,
-        signInWithRedirect: authMod.signInWithRedirect,
+        signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+        createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
+        sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+        updatePassword: authMod.updatePassword,
         onAuthStateChanged: authMod.onAuthStateChanged,
         signOut: authMod.signOut,
         collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
