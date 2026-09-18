@@ -52,6 +52,7 @@
     font-size: 15px;
     min-height: 100vh;
     padding-bottom: 78px;
+    overflow-x: hidden;
   }
 
   /* ── HEADER ── */
@@ -255,7 +256,7 @@
   .cal-head .nav-btn:active { background: var(--orange); color: #fff; }
   .cal-title { font-weight: 800; font-size: 15px; text-align: center; flex: 1; }
   .cal-title small { display: block; font-size: 11px; font-weight: 600; color: var(--orange); }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
   .cal-wd { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; padding-bottom: 2px; }
   .cal-cell {
     position: relative; aspect-ratio: 1 / 1; border-radius: 8px;
