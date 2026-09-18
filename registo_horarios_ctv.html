@@ -242,6 +242,40 @@
 
   .hint { font-size: 12px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
   .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── CALENDÁRIO ── */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-head .nav-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 9px; font-size: 17px; cursor: pointer; display: grid; place-items: center; }
+  .cal-head .nav-btn:active { background: var(--orange); color: #fff; }
+  .cal-title { font-weight: 800; font-size: 15px; text-align: center; flex: 1; }
+  .cal-title small { display: block; font-size: 11px; font-weight: 600; color: var(--orange); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-wd { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; padding-bottom: 2px; }
+  .cal-cell {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; cursor: pointer; overflow: hidden; color: var(--text);
+  }
+  .cal-cell.empty { background: transparent; border: none; cursor: default; }
+  .cal-cell:active { transform: scale(.94); }
+  .cal-cell .cal-d { line-height: 1; }
+  .cal-cell .cal-h { font-size: 9px; font-weight: 700; opacity: .95; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .cal-cell .cal-badge {
+    position: absolute; top: 2px; right: 3px; font-size: 8px; font-weight: 800;
+    background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; min-width: 13px; height: 13px;
+    display: grid; place-items: center; padding: 0 2px;
+  }
+  .cal-cell.d-weekend { background: #F0F0F0; }
+  html[data-dark="1"] .cal-cell.d-weekend { background: #202B37; }
+  .cal-cell.d-principal { background: var(--orange); color: #fff; border-color: transparent; }
+  .cal-cell.d-externo { background: #0070C0; color: #fff; border-color: transparent; }
+  .cal-cell.d-misto { background: #1E8449; color: #fff; border-color: transparent; }
+  .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
+  html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; font-size: 11px; color: var(--text-light); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 </style>
 </head>
 <body>
@@ -262,6 +296,24 @@
   <div class="view active" id="view-ponto">
     <div class="card" id="clockCard">
       <!-- preenchido por renderPonto() -->
+    </div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="nav-btn" onclick="calShift(-1)" aria-label="Mês anterior">‹</button>
+        <div class="cal-title"><span id="calTitle">—</span><small id="calMonthTotal">0h 00min</small></div>
+        <button class="nav-btn" onclick="calShift(1)" aria-label="Próximo mês">›</button>
+      </div>
+      <div class="cal-grid" id="calWeekdays">
+        <div class="cal-wd">Seg</div><div class="cal-wd">Ter</div><div class="cal-wd">Qua</div>
+        <div class="cal-wd">Qui</div><div class="cal-wd">Sex</div><div class="cal-wd">Sáb</div><div class="cal-wd">Dom</div>
+      </div>
+      <div class="cal-grid" id="calGrid" style="margin-top:4px"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--orange)"></i>Principal</span>
+        <span><i style="background:#0070C0"></i>Externo</span>
+        <span><i style="background:#1E8449"></i>Misto</span>
+        <span><i style="background:#F0F0F0;border:1px solid var(--border)"></i>Fim de semana</span>
+      </div>
     </div>
     <div class="card">
       <div class="day-head">Hoje <span id="todayTotal">0h 00min</span></div>
@@ -420,6 +472,18 @@
   </div>
 </div>
 
+<!-- ═══════════ MODAL: DIA ═══════════ -->
+<div class="modal-bg" id="dayModalBg">
+  <div class="modal">
+    <h3 id="dayModalTitle">Dia</h3>
+    <div id="dayModalTotal" class="hint" style="margin-top:-8px;margin-bottom:12px"></div>
+    <div id="dayModalList"></div>
+    <div class="divider"></div>
+    <button class="btn btn-primary" onclick="addForDay()">➕ Adicionar registro neste dia</button>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="closeDayModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -493,6 +557,13 @@ function timeOf(ts) { const d = new Date(ts); return pad(d.getHours()) + ':' + p
 function dateKey(ts) { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MOFULL = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+function fmtHShort(ms) {
+  const tm = Math.floor(ms / 60000);
+  if (tm <= 0) return '';
+  const h = Math.floor(tm / 60), m = tm % 60;
+  return h + 'h' + (m ? pad(m) : '');
+}
 function dateLabel(ts) {
   const d = new Date(ts);
   const hoje = dateKey(Date.now());
@@ -560,6 +631,7 @@ function renderPonto() {
     startTick();
   }
 
+  renderCalendar();
   renderTodayList();
 }
 
@@ -654,7 +726,7 @@ function clockOut() {
 }
 
 /* ═══════════════════ MODAL SESSÃO (criar/editar) ═══════════════════ */
-function openSessionModal(id) {
+function openSessionModal(id, prefillDate) {
   const sel = document.getElementById('sess_contrato');
   const editing = !!id;
   let s = editing ? db.sessoes.find(x => x.id === id) : null;
@@ -668,7 +740,7 @@ function openSessionModal(id) {
     document.getElementById('sess_pausa').value = Math.round(pausaMs(s, s.saida || Date.now()) / 60000);
     document.getElementById('sess_nota').value = s.nota || '';
   } else {
-    document.getElementById('sess_data').value = dateKey(Date.now());
+    document.getElementById('sess_data').value = prefillDate || dateKey(Date.now());
     document.getElementById('sess_entrada').value = '';
     document.getElementById('sess_saida').value = '';
     document.getElementById('sess_pausa').value = 0;
@@ -733,6 +805,83 @@ function deleteSession(id) {
 function refreshCurrent() {
   const active = document.querySelector('.nav button.active').dataset.view;
   switchView(active);
+}
+
+/* ═══════════════════ CALENDÁRIO ═══════════════════ */
+let calYear = null, calMonth = null;
+function initCal() {
+  if (calYear === null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); }
+}
+function calShift(delta) {
+  initCal();
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+function sessionsByDay() {
+  const map = {};
+  db.sessoes.forEach(s => { const k = dateKey(s.entrada); (map[k] = map[k] || []).push(s); });
+  return map;
+}
+function renderCalendar() {
+  initCal();
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = (first.getDay() + 6) % 7; // segunda = 0
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const map = sessionsByDay();
+  const now = Date.now();
+  const todayK = dateKey(now);
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<div class="cal-cell empty"></div>';
+  let monthTotal = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const k = calYear + '-' + pad(calMonth + 1) + '-' + pad(d);
+    const list = map[k] || [];
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const weekend = (dow === 0 || dow === 6);
+    let cls = 'cal-cell';
+    let dayMs = 0;
+    if (list.length) {
+      const tipos = new Set(list.map(s => { const c = getContrato(s.contratoId); return c ? c.tipo : 'externo'; }));
+      if (tipos.has('principal') && tipos.size > 1) cls += ' d-misto';
+      else if (tipos.has('principal')) cls += ' d-principal';
+      else cls += ' d-externo';
+      list.forEach(s => { dayMs += workedMs(s, now); });
+      monthTotal += dayMs;
+    } else if (weekend) { cls += ' d-weekend'; }
+    if (k === todayK) cls += ' d-today';
+    const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
+    const dur = dayMs > 0 ? `<span class="cal-h">${fmtHShort(dayMs)}</span>` : '';
+    cells += `<div class="${cls}" onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+  document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
+  document.getElementById('calMonthTotal').textContent = fmtHM(monthTotal);
+}
+
+let dayModalKey = null;
+function openDayModal(k) {
+  dayModalKey = k;
+  const now = Date.now();
+  const list = db.sessoes.filter(s => dateKey(s.entrada) === k).sort((a, b) => a.entrada - b.entrada);
+  const [y, m, d] = k.split('-').map(Number);
+  const ref = new Date(y, m - 1, d);
+  document.getElementById('dayModalTitle').textContent = WD[ref.getDay()] + ', ' + d + ' ' + MO[m - 1] + ' ' + y;
+  const total = list.reduce((a, s) => a + workedMs(s, now), 0);
+  document.getElementById('dayModalTotal').textContent = list.length
+    ? (list.length + ' registo' + (list.length === 1 ? '' : 's') + ' · ' + fmtHM(total))
+    : 'Nenhum registo neste dia.';
+  document.getElementById('dayModalList').innerHTML = list.length
+    ? list.map(s => entryRow(s, now)).join('')
+    : `<div class="empty"><span class="big">🗓️</span>Sem registos.</div>`;
+  document.getElementById('dayModalBg').classList.add('open');
+}
+function closeDayModal() { document.getElementById('dayModalBg').classList.remove('open'); dayModalKey = null; }
+function addForDay() {
+  const k = dayModalKey;
+  closeDayModal();
+  openSessionModal(null, k);
 }
 
 /* ═══════════════════ REGISTOS ═══════════════════ */
