@@ -446,7 +446,7 @@
     </div>
     <div class="fld-group">
       <label class="fld">Pausa / intervalo (minutos)</label>
-      <input type="number" id="sess_pausa" min="0" step="1" value="0" inputmode="numeric">
+      <input type="number" id="sess_pausa" min="0" step="1" value="60" inputmode="numeric">
       <div class="hint">Tempo total de pausas a descontar (ex.: almoço, deslocamento).</div>
     </div>
     <div class="fld-group">
@@ -777,7 +777,7 @@ function openSessionModal(id, prefillDate) {
     document.getElementById('sess_data').value = prefillDate || dateKey(Date.now());
     document.getElementById('sess_entrada').value = '';
     document.getElementById('sess_saida').value = '';
-    document.getElementById('sess_pausa').value = 0;
+    document.getElementById('sess_pausa').value = 60;
     document.getElementById('sess_nota').value = '';
   }
   updateSessPreview();
