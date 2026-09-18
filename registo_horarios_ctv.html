@@ -275,9 +275,10 @@
   }
   .cal-cell.d-weekend { background: #F0F0F0; }
   html[data-dark="1"] .cal-cell.d-weekend { background: #202B37; }
-  .cal-cell.d-principal { background: var(--orange); color: #fff; border-color: transparent; }
-  .cal-cell.d-externo { background: #0070C0; color: #fff; border-color: transparent; }
-  .cal-cell.d-misto { background: #1E8449; color: #fff; border-color: transparent; }
+  .cal-cell.d-sede { background: #0070C0; color: #fff; border-color: transparent; }
+  .cal-cell.d-suzano { background: #1E8449; color: #fff; border-color: transparent; }
+  .cal-cell.d-externo { background: #F47820; color: #fff; border-color: transparent; }
+  .cal-cell.d-amt { background: #E53935; color: #fff; border-color: transparent; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
   html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
   .cal-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; font-size: 11px; color: var(--text-light); }
@@ -316,9 +317,10 @@
       </div>
       <div class="cal-grid" id="calGrid" style="margin-top:4px"></div>
       <div class="cal-legend">
-        <span><i style="background:var(--orange)"></i>Principal</span>
-        <span><i style="background:#0070C0"></i>Externo</span>
-        <span><i style="background:#1E8449"></i>Misto</span>
+        <span><i style="background:#0070C0"></i>Sede</span>
+        <span><i style="background:#1E8449"></i>Suzano</span>
+        <span><i style="background:#F47820"></i>Externo</span>
+        <span><i style="background:#E53935"></i>AMT</span>
         <span><i style="background:#F0F0F0;border:1px solid var(--border)"></i>Fim de semana</span>
       </div>
     </div>
@@ -425,6 +427,10 @@
       <select id="sess_contrato"></select>
     </div>
     <div class="fld-group">
+      <label class="fld">Tipo de atendimento</label>
+      <select id="sess_tipo"></select>
+    </div>
+    <div class="fld-group">
       <label class="fld">Data</label>
       <input type="date" id="sess_data">
     </div>
@@ -503,6 +509,13 @@ let tickTimer = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
+/* Tipos de atendimento (ordem = ordem da legenda) */
+const TIPOS = [['sede', 'Sede', '#0070C0'], ['suzano', 'Suzano', '#1E8449'], ['externo', 'Externo', '#F47820'], ['amt', 'AMT', '#E53935']];
+function tipoColor(t) { const f = TIPOS.find(x => x[0] === t); return f ? f[2] : '#0070C0'; }
+function tipoLabel(t) { const f = TIPOS.find(x => x[0] === t); return f ? f[1] : 'Sede'; }
+function sessTipo(s) { return s.tipo || 'externo'; }
+function tipoOptions(sel) { return TIPOS.map(t => `<option value="${t[0]}" ${t[0] === sel ? 'selected' : ''}>${t[1]}</option>`).join(''); }
+
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
@@ -516,6 +529,12 @@ function load() {
     db.contratos.push({ id: uid(), nome: 'Meu contrato (CTV)', tipo: 'principal', ativo: true, criadoEm: Date.now() });
     save();
   }
+  // Migração: define tipo de atendimento em registros antigos
+  let migrou = false;
+  db.sessoes.forEach(s => {
+    if (!s.tipo) { const c = getContrato(s.contratoId); s.tipo = (c && c.tipo === 'principal') ? 'sede' : 'externo'; migrou = true; }
+  });
+  if (migrou) save();
 }
 
 function save() {
@@ -611,6 +630,9 @@ function renderPonto() {
       <div class="section-title">Iniciar registo</div>
       <label class="fld">Contrato</label>
       <select id="ponto_contrato">${contractOptions(db.contratos.find(c => c.ativo) ? db.contratos.find(c => c.ativo).id : '')}</select>
+      <div style="height:12px"></div>
+      <label class="fld">Tipo de atendimento</label>
+      <select id="ponto_tipo">${tipoOptions(db.config.lastTipo || 'sede')}</select>
       <div style="height:14px"></div>
       <button class="btn btn-success btn-lg" onclick="clockIn()">▶️ Registrar entrada</button>
       <div class="hint">A hora de entrada será a hora atual do aparelho.</div>`;
@@ -624,6 +646,7 @@ function renderPonto() {
         </div>
         <div class="timer-clock" id="liveClock">00:00:00</div>
         <div class="timer-sub">
+          <span class="contract-pill" style="background:${tipoColor(sessTipo(s))};color:#fff">${tipoLabel(sessTipo(s))}</span>
           <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : 'Contrato removido')}</span>
         </div>
         <div class="timer-sub">Entrada ${timeOf(s.entrada)}${pausaMs(s) > 0 ? ' · pausa ' + fmtHM(pausaMs(s)) : ''}</div>
@@ -669,6 +692,7 @@ function entryRow(s, now) {
     <div class="entry">
       <div class="entry-main">
         <div class="top">
+          <span class="contract-pill" style="background:${tipoColor(sessTipo(s))};color:#fff">${tipoLabel(sessTipo(s))}</span>
           <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : '—')}</span>
           ${open ? '<span style="color:var(--success);font-size:11px;font-weight:800">● EM ANDAMENTO</span>' : ''}
         </div>
@@ -705,7 +729,9 @@ function clockIn() {
   if (openSession()) { showToast('Já existe um registo em andamento.'); return; }
   const contratoId = document.getElementById('ponto_contrato').value;
   if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
-  db.sessoes.push({ id: uid(), contratoId, entrada: Date.now(), saida: null, pausas: [], nota: '' });
+  const tipo = document.getElementById('ponto_tipo').value;
+  db.config.lastTipo = tipo;
+  db.sessoes.push({ id: uid(), contratoId, tipo, entrada: Date.now(), saida: null, pausas: [], nota: '' });
   save();
   showToast('Entrada registrada ▶️');
   renderPonto();
@@ -739,6 +765,7 @@ function openSessionModal(id, prefillDate) {
   let s = editing ? db.sessoes.find(x => x.id === id) : null;
   document.getElementById('sessionModalTitle').textContent = editing ? 'Editar registo' : 'Registo manual';
   sel.innerHTML = contractOptions(s ? s.contratoId : (db.contratos.find(c => c.ativo) || {}).id);
+  document.getElementById('sess_tipo').innerHTML = tipoOptions(s ? sessTipo(s) : (db.config.lastTipo || 'sede'));
   document.getElementById('sess_id').value = id || '';
   if (editing) {
     document.getElementById('sess_data').value = dateKey(s.entrada);
@@ -786,16 +813,18 @@ function saveSession() {
   const p = parseSessInputs();
   if (!p) { showToast('Preencha data e entrada.'); return; }
   const contratoId = document.getElementById('sess_contrato').value;
+  const tipo = document.getElementById('sess_tipo').value;
   const nota = document.getElementById('sess_nota').value.trim();
   const id = document.getElementById('sess_id').value;
   // representa a pausa como um único intervalo fechado dentro da sessão
   const pausas = p.pausaMin > 0 ? [{ inicio: p.entrada, fim: p.entrada + p.pausaMin }] : [];
   if (id) {
     const s = db.sessoes.find(x => x.id === id);
-    s.contratoId = contratoId; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
+    s.contratoId = contratoId; s.tipo = tipo; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
   } else {
     if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
-    db.sessoes.push({ id: uid(), contratoId, entrada: p.entrada, saida: p.saida, pausas, nota });
+    db.config.lastTipo = tipo;
+    db.sessoes.push({ id: uid(), contratoId, tipo, entrada: p.entrada, saida: p.saida, pausas, nota });
   }
   save();
   closeSessionModal();
@@ -850,12 +879,13 @@ function renderCalendar() {
     let cls = 'cal-cell';
     let dayMs = 0;
     if (list.length) {
-      const tipos = new Set(list.map(s => { const c = getContrato(s.contratoId); return c ? c.tipo : 'externo'; }));
-      if (tipos.has('principal') && tipos.size > 1) cls += ' d-misto';
-      else if (tipos.has('principal')) cls += ' d-principal';
-      else cls += ' d-externo';
-      list.forEach(s => { dayMs += workedMs(s, now); });
+      // colore pelo tipo de atendimento dominante (maior tempo) do dia
+      const byTipo = {};
+      list.forEach(s => { const w = workedMs(s, now); dayMs += w; const t = sessTipo(s); byTipo[t] = (byTipo[t] || 0) + w; });
       monthTotal += dayMs;
+      let best = null, bestMs = -1;
+      Object.keys(byTipo).forEach(t => { if (byTipo[t] > bestMs) { bestMs = byTipo[t]; best = t; } });
+      if (best) cls += ' d-' + best;
     } else if (weekend) { cls += ' d-weekend'; }
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
