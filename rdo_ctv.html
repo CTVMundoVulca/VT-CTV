@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RDO CTV">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>RDO — CTV</title>
+<style>
+  :root {
+    --navy: #0D1B2A; --navy-mid: #162436; --navy-soft: #1E2F45;
+    --orange: #F47820; --orange-light: #FF8F35;
+    --silver: #C0C0C0; --silver-light: #E8E8E8; --white: #fff;
+    --text: #1A1A2E; --text-light: #555;
+    --danger: #E53935; --success: #2E7D32; --warn: #F9A825;
+    --card: #fff; --bg: #F0F2F5; --border: #E2E5EA;
+    --radius: 12px; --gap: 16px;
+    --azul: #0070C0; --verde-esc: #1E8449;
+  }
+  html[data-dark="1"] {
+    --navy: #0A1420; --card: #17222F; --bg: #0F1822; --text: #EAECEF;
+    --text-light: #9AA5B1; --silver-light: #2A3644; --border: #26323F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; min-height: 100vh; }
+
+  .header { background: var(--navy); padding: 14px 16px 12px; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--orange); }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .logo-area { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .logo-badge { background: var(--orange); color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .5px; padding: 5px 10px; border-radius: 6px; }
+  .logo-name { color: var(--silver-light); font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .logo-name b { color: #fff; display: block; font-size: 15px; }
+  .icon-btn { background: var(--navy-soft); color: var(--silver-light); border: none; width: 38px; height: 38px; border-radius: 9px; font-size: 17px; cursor: pointer; display: grid; place-items: center; }
+  .icon-btn:active { background: var(--orange); color: #fff; }
+  .back-btn { background: var(--navy-soft); color: #fff; border: none; padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  .content { padding: var(--gap); max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
+  .view { display: none; } .view.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: var(--gap); box-shadow: 0 1px 3px rgba(0,0,0,.06); border: 1px solid var(--border); }
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--orange); font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  label.fld { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-light); margin-bottom: 5px; }
+  select, input[type=text], input[type=date], input[type=time], input[type=number], textarea {
+    width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 9px; font-size: 15px; font-family: inherit; background: var(--bg); color: var(--text);
+  }
+  textarea { resize: vertical; min-height: 58px; }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--orange); border-color: var(--orange); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 .full { grid-column: 1 / -1; }
+  .fld-group { margin-bottom: 12px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; background: var(--navy-soft); color: #fff; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--orange); }
+  .btn-success { background: var(--success); }
+  .btn-danger { background: var(--danger); }
+  .btn-ghost { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+  .btn-sm { padding: 9px 12px; font-size: 13px; width: auto; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+
+  /* linhas dinâmicas */
+  .rdo-row { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: var(--bg); position: relative; }
+  .rdo-row .rownum { position: absolute; top: -8px; left: 10px; background: var(--navy-soft); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+  .rdo-row .del { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: var(--danger); font-size: 16px; cursor: pointer; }
+  .add-row { border: 1px dashed var(--border); background: transparent; color: var(--orange); font-weight: 700; }
+
+  /* lista de RDOs */
+  .entry { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .entry:last-child { border-bottom: none; }
+  .entry-main { flex: 1; min-width: 0; }
+  .entry-main .top { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .entry-main .sub { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #fff; }
+  .p-sede { background: var(--azul); } .p-externo { background: var(--orange); } .p-arcelor { background: var(--danger); }
+  .empty { text-align: center; color: var(--text-light); padding: 26px 10px; font-size: 14px; }
+  .empty .big { font-size: 34px; display: block; margin-bottom: 8px; opacity: .6; }
+
+  /* calendário */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-head .nav-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 9px; font-size: 17px; cursor: pointer; }
+  .cal-title { font-weight: 800; font-size: 15px; text-align: center; flex: 1; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-wd { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
+  .cal-cell { position: relative; aspect-ratio: 1/1; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); display: grid; place-items: center; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text); }
+  .cal-cell.empty { background: transparent; border: none; cursor: default; }
+  .cal-cell:active { transform: scale(.94); }
+  .cal-cell.d-sede { background: var(--azul); color: #fff; border-color: transparent; }
+  .cal-cell.d-externo { background: var(--orange); color: #fff; border-color: transparent; }
+  .cal-cell.d-arcelor { background: var(--danger); color: #fff; border-color: transparent; }
+  .cal-cell.d-multi { background: var(--verde-esc); color: #fff; border-color: transparent; }
+  .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
+  html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
+  .cal-cell .cal-badge { position: absolute; top: 2px; right: 3px; font-size: 8px; font-weight: 800; background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; min-width: 13px; height: 13px; display: grid; place-items: center; padding: 0 2px; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 9px 13px; margin-top: 12px; font-size: 11px; color: var(--text-light); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  /* assinatura */
+  .sig-box { border: 1px dashed var(--border); border-radius: 10px; background: var(--bg); position: relative; margin-bottom: 8px; }
+  .sig-box canvas { width: 100%; height: 140px; display: block; touch-action: none; }
+  .sig-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-light); font-size: 13px; pointer-events: none; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--navy); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; z-index: 300; opacity: 0; pointer-events: none; transition: all .25s ease; box-shadow: 0 4px 16px rgba(0,0,0,.3); max-width: 90%; text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .hint { font-size: 12px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="logo-area">
+      <button class="back-btn" id="backBtn" onclick="goList()" style="display:none">‹ RDOs</button>
+      <div class="logo-badge">CTV</div>
+      <div class="logo-name">Relatório Diário<b id="hdrTitle">de Obra (RDO)</b></div>
+    </div>
+    <button class="icon-btn" onclick="toggleDark()" id="darkBtn">🌙</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ═══════════ LISTA + CALENDÁRIO ═══════════ -->
+  <div class="view active" id="view-list">
+    <div class="card">
+      <button class="btn btn-primary" onclick="newRDO()">➕ Novo RDO</button>
+    </div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="nav-btn" onclick="calShift(-1)">‹</button>
+        <div class="cal-title" id="calTitle">—</div>
+        <button class="nav-btn" onclick="calShift(1)">›</button>
+      </div>
+      <div class="cal-grid" style="margin-bottom:4px">
+        <div class="cal-wd">Seg</div><div class="cal-wd">Ter</div><div class="cal-wd">Qua</div>
+        <div class="cal-wd">Qui</div><div class="cal-wd">Sex</div><div class="cal-wd">Sáb</div><div class="cal-wd">Dom</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--azul)"></i>Sede</span>
+        <span><i style="background:var(--orange)"></i>Externo</span>
+        <span><i style="background:var(--danger)"></i>Arcelor</span>
+        <span><i style="background:var(--verde-esc)"></i>Múltiplos</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">RDOs</div>
+      <div id="rdoList"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Dados</div>
+      <button class="btn btn-ghost" onclick="exportAllCSV()" style="margin-bottom:10px">⬇️ Exportar todos (CSV)</button>
+      <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Backup (arquivo)</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('impFile').click()">📂 Restaurar backup</button>
+      <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importBackup(this)">
+      <div class="hint">Os RDOs ficam salvos apenas neste aparelho (offline). Faça backup para não perder.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ EDITOR ═══════════ -->
+  <div class="view" id="view-editor">
+    <div class="card">
+      <div class="section-title">Cabeçalho</div>
+      <div class="grid2">
+        <div><label class="fld">Nº RDO</label><input type="number" id="f_numero" inputmode="numeric"></div>
+        <div><label class="fld">Data</label><input type="date" id="f_data"></div>
+        <div><label class="fld">Cliente / Contrato</label><input type="text" id="f_cliente" placeholder="Ex.: Suzano"></div>
+        <div><label class="fld">Local / Facilidade</label><input type="text" id="f_local" placeholder="Ex.: Aracruz"></div>
+        <div><label class="fld">Responsável Técnico</label><input type="text" id="f_responsavel"></div>
+        <div><label class="fld">Ordem de Manutenção</label><input type="text" id="f_om"></div>
+        <div><label class="fld">ADM / Turno</label><input type="text" id="f_adm"></div>
+        <div><label class="fld">Tipo de atendimento</label>
+          <select id="f_tipo">
+            <option value="sede">Sede (azul)</option>
+            <option value="externo">Externo (laranja)</option>
+            <option value="arcelor">Arcelor (vermelho)</option>
+          </select>
+        </div>
+        <div class="full"><label class="fld">Complemento (opcional — permite vários RDOs no mesmo dia)</label><input type="text" id="f_titulo" placeholder="Ex.: Correia 801"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Efetivo de mão de obra <button class="btn btn-sm btn-primary" onclick="addRow('efetivo')">+ Pessoa</button></div>
+      <div id="sec-efetivo"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Horário de alimentação <button class="btn btn-sm btn-primary" onclick="addRow('alimentacao')">+ Linha</button></div>
+      <div id="sec-alimentacao"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Tempos parados (aguard. liberação) <button class="btn btn-sm btn-primary" onclick="addRow('paradas')">+ Linha</button></div>
+      <div id="sec-paradas"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Atividades executadas <button class="btn btn-sm btn-primary" onclick="addRow('atividades')">+ Atividade</button></div>
+      <div id="sec-atividades"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Ocorrências / observações gerais</div>
+      <textarea id="f_ocorrencias" placeholder="Anote ocorrências do dia..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Gestão de horários — transporte <button class="btn btn-sm btn-primary" onclick="addRow('transporte')">+ Linha</button></div>
+      <div id="sec-transporte"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Assinaturas</div>
+      <label class="fld">Responsável Técnico (Benetech / CTV)</label>
+      <div class="sig-box"><canvas id="sig_benetech"></canvas><div class="sig-ph" id="ph_benetech">Assine aqui</div></div>
+      <div class="row" style="margin-bottom:16px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('benetech')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('benetech')">Confirmar</button></div>
+      <label class="fld">Fiscal / Representante do Cliente</label>
+      <div class="sig-box"><canvas id="sig_fiscal"></canvas><div class="sig-ph" id="ph_fiscal">Assine aqui</div></div>
+      <div class="row"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('fiscal')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('fiscal')">Confirmar</button></div>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-success" onclick="saveRDO()" style="margin-bottom:10px">💾 Salvar RDO</button>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn btn-primary" onclick="gerarPDF()">📄 Gerar PDF</button>
+        <button class="btn btn-ghost" onclick="exportOneCSV()">⬇️ CSV</button>
+      </div>
+      <button class="btn btn-danger" onclick="deleteRDO()">🗑️ Excluir RDO</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const STORE_KEY = 'ctv_rdo_v1';
+let db = { version: 1, rdos: [], config: { dark: false } };
+let cur = null;         // RDO em edição
+let editingId = null;
+
+const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
+const TIPO_LABEL = { sede: 'Sede', externo: 'Externo', arcelor: 'Arcelor' };
+const SEC = {
+  efetivo:     [['nome','Nome','text'],['funcao','Função','func'],['empresa','Empresa','text'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
+  alimentacao: [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo','text'],['empresa','Empresa','text'],['liberado','Liberado por','text']],
+  paradas:     [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo da paralisação','text'],['area','Área / Equip. aguardado','text'],['liberado','Liberado por','text']],
+  atividades:  [['inicio','Início','time'],['fim','Fim','time'],['descricao','Descrição da atividade','area'],['local','Local / Equipamento','text'],['percent','% Concluído','number'],['obs','Obs.','text']],
+  transporte:  [['nome','Nome','text'],['busca','Hora Busca','time'],['deixa','Hora Deixa em Casa','time'],['obs','Obs.','text']]
+};
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function escapeAttr(s) { return escapeHtml(s); }
+const WD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MOFULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+/* ── persistência ── */
+function load() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
+  if (!db.rdos) db.rdos = [];
+  if (!db.config) db.config = { dark: false };
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
+
+/* ── navegação de views ── */
+function goList() { document.getElementById('view-editor').classList.remove('active'); document.getElementById('view-list').classList.add('active'); document.getElementById('backBtn').style.display = 'none'; document.getElementById('hdrTitle').textContent = 'de Obra (RDO)'; renderList(); renderCalendar(); window.scrollTo(0, 0); }
+function goEditor() { document.getElementById('view-list').classList.remove('active'); document.getElementById('view-editor').classList.add('active'); document.getElementById('backBtn').style.display = ''; window.scrollTo(0, 0); }
+
+/* ── lista ── */
+function renderList() {
+  const el = document.getElementById('rdoList');
+  const list = db.rdos.slice().sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.criadoEm || 0) - (a.criadoEm || 0));
+  if (!list.length) { el.innerHTML = `<div class="empty"><span class="big">📄</span>Nenhum RDO ainda. Toque em "Novo RDO".</div>`; return; }
+  el.innerHTML = list.map(r => {
+    const dt = r.data ? r.data.split('-').reverse().join('/') : 's/ data';
+    return `<div class="entry" onclick="openRDO('${r.id}')">
+      <div class="entry-main">
+        <div class="top">
+          <span class="pill p-${r.tipo || 'externo'}">${TIPO_LABEL[r.tipo] || 'Externo'}</span>
+          <span>RDO ${r.numero || '—'} · ${dt}</span>
+        </div>
+        <div class="sub">${escapeHtml([r.cliente, r.local, r.titulo].filter(Boolean).join(' · ') || '—')} · ${(r.efetivo||[]).length} pessoa(s), ${(r.atividades||[]).length} atividade(s)</div>
+      </div>
+      <div style="color:var(--orange);font-size:20px;font-weight:800">›</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── calendário ── */
+let calYear = null, calMonth = null;
+function initCal() { if (calYear === null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
+function calShift(delta) { initCal(); calMonth += delta; if (calMonth < 0) { calMonth = 11; calYear--; } if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+function rdosByDay() { const m = {}; db.rdos.forEach(r => { if (r.data) (m[r.data] = m[r.data] || []).push(r); }); return m; }
+function renderCalendar() {
+  initCal();
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const map = rdosByDay();
+  const todayK = new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate());
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<div class="cal-cell empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const k = calYear + '-' + pad(calMonth + 1) + '-' + pad(d);
+    const list = map[k] || [];
+    let cls = 'cal-cell';
+    if (list.length) {
+      const tipos = new Set(list.map(r => r.tipo || 'externo'));
+      if (list.length > 1 || tipos.size > 1) cls += ' d-multi';
+      else cls += ' d-' + [...tipos][0];
+    }
+    if (k === todayK) cls += ' d-today';
+    const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
+    cells += `<div class="${cls}" onclick="openDay('${k}')">${d}${badge}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+  document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
+}
+function openDay(k) {
+  const list = db.rdos.filter(r => r.data === k);
+  if (list.length === 1) { openRDO(list[0].id); return; }
+  if (list.length === 0) { newRDO(k); return; }
+  // vários: abre o primeiro (lista já mostra os demais)
+  openRDO(list[0].id);
+  showToast(list.length + ' RDOs neste dia — veja a lista abaixo.');
+}
+
+/* ── CRUD ── */
+function blankRDO(dateKey) {
+  const today = dateKey || (new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate()));
+  const nextNum = db.rdos.reduce((mx, r) => Math.max(mx, parseInt(r.numero, 10) || 0), 0) + 1;
+  return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', adm: '', tipo: 'externo', titulo: '',
+    efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, transporte: [], criadoEm: Date.now() };
+}
+function newRDO(dateKey) { cur = blankRDO(dateKey); editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor(); }
+function openRDO(id) { const r = db.rdos.find(x => x.id === id); if (!r) return; cur = JSON.parse(JSON.stringify(r)); editingId = id; fillEditor(); document.getElementById('hdrTitle').textContent = 'RDO ' + (r.numero || ''); goEditor(); }
+
+function fillEditor() {
+  document.getElementById('f_numero').value = cur.numero || '';
+  document.getElementById('f_data').value = cur.data || '';
+  document.getElementById('f_cliente').value = cur.cliente || '';
+  document.getElementById('f_local').value = cur.local || '';
+  document.getElementById('f_responsavel').value = cur.responsavel || '';
+  document.getElementById('f_om').value = cur.om || '';
+  document.getElementById('f_adm').value = cur.adm || '';
+  document.getElementById('f_tipo').value = cur.tipo || 'externo';
+  document.getElementById('f_titulo').value = cur.titulo || '';
+  document.getElementById('f_ocorrencias').value = cur.ocorrencias || '';
+  Object.keys(SEC).forEach(renderSection);
+  ['benetech','fiscal'].forEach(id => { initSignature(id); const src = id === 'benetech' ? cur.assBenetech : cur.assFiscal; restoreSignature(id, src); });
+}
+
+/* ── seções dinâmicas ── */
+function inputFor(section, idx, fdef, val) {
+  const [key, label, type] = fdef;
+  const v = val == null ? '' : val;
+  let input;
+  if (type === 'func') {
+    input = `<select data-f="${key}"><option value="">—</option>${FUNCOES.map(f => `<option ${f === v ? 'selected' : ''}>${f}</option>`).join('')}</select>`;
+  } else if (type === 'area') {
+    input = `<textarea data-f="${key}" placeholder="${label}">${escapeHtml(v)}</textarea>`;
+  } else {
+    const t = (type === 'time') ? 'time' : (type === 'number' ? 'number' : 'text');
+    input = `<input type="${t}" data-f="${key}" value="${escapeAttr(v)}" placeholder="${label}">`;
+  }
+  const full = (type === 'area' || key === 'descricao') ? ' full' : '';
+  return `<div class="${full ? 'full' : ''}"><label class="fld">${label}</label>${input}</div>`;
+}
+function rowHTML(section, idx, data) {
+  const fields = SEC[section].map(fd => inputFor(section, idx, fd, data ? data[fd[0]] : '')).join('');
+  return `<div class="rdo-row"><span class="rownum">${idx + 1}</span><button class="del" onclick="removeRow('${section}',${idx})">✕</button><div class="grid2">${fields}</div></div>`;
+}
+function renderSection(section) {
+  const el = document.getElementById('sec-' + section);
+  const arr = cur[section] || [];
+  el.innerHTML = arr.map((d, i) => rowHTML(section, i, d)).join('') +
+    `<button class="btn add-row" onclick="addRow('${section}')">+ adicionar</button>`;
+}
+function syncSection(section) {
+  const el = document.getElementById('sec-' + section);
+  const rows = [...el.querySelectorAll('.rdo-row')];
+  cur[section] = rows.map(r => {
+    const o = {};
+    r.querySelectorAll('[data-f]').forEach(inp => { o[inp.dataset.f] = inp.value; });
+    return o;
+  });
+}
+function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); }
+function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); }
+
+function collectEditor() {
+  cur.numero = document.getElementById('f_numero').value.trim();
+  cur.data = document.getElementById('f_data').value;
+  cur.cliente = document.getElementById('f_cliente').value.trim();
+  cur.local = document.getElementById('f_local').value.trim();
+  cur.responsavel = document.getElementById('f_responsavel').value.trim();
+  cur.om = document.getElementById('f_om').value.trim();
+  cur.adm = document.getElementById('f_adm').value.trim();
+  cur.tipo = document.getElementById('f_tipo').value;
+  cur.titulo = document.getElementById('f_titulo').value.trim();
+  cur.ocorrencias = document.getElementById('f_ocorrencias').value.trim();
+  Object.keys(SEC).forEach(syncSection);
+  cur.assBenetech = getSigDataURL('benetech') || cur.assBenetech || null;
+  cur.assFiscal = getSigDataURL('fiscal') || cur.assFiscal || null;
+}
+function saveRDO() {
+  collectEditor();
+  if (!cur.data) { showToast('Informe a data do RDO.'); return; }
+  cur.atualizadoEm = Date.now();
+  if (editingId) { const i = db.rdos.findIndex(r => r.id === editingId); if (i >= 0) db.rdos[i] = cur; else db.rdos.push(cur); }
+  else { db.rdos.push(cur); editingId = cur.id; }
+  save();
+  document.getElementById('hdrTitle').textContent = 'RDO ' + (cur.numero || '');
+  showToast('RDO salvo ✔️');
+}
+function deleteRDO() {
+  if (!editingId) { goList(); return; }
+  if (!confirm('Excluir este RDO?')) return;
+  db.rdos = db.rdos.filter(r => r.id !== editingId);
+  save(); showToast('RDO excluído'); goList();
+}
+
+/* ── assinatura (reaproveitado do app de Visita Técnica) ── */
+const sigState = { benetech: false, fiscal: false };
+function initSignature(id) {
+  const canvas = document.getElementById('sig_' + id); if (!canvas) return;
+  canvas.width = 800; canvas.height = 220;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#0D1B2A'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let drawing = false;
+  function pos(e) { const r = canvas.getBoundingClientRect(); const s = e.touches ? e.touches[0] : e; return { x: (s.clientX - r.left) * (canvas.width / r.width), y: (s.clientY - r.top) * (canvas.height / r.height) }; }
+  function start(e) { e.preventDefault(); drawing = true; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none'; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function move(e) { if (!drawing) return; e.preventDefault(); const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+  function stop() { if (drawing) { drawing = false; sigState[id] = true; } }
+  canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = stop; canvas.onmouseleave = stop;
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', stop);
+  sigState[id] = false;
+}
+function restoreSignature(id, dataURL) {
+  if (!dataURL) return;
+  const canvas = document.getElementById('sig_' + id); if (!canvas) return;
+  const img = new Image();
+  img.onload = () => { canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none'; sigState[id] = true; };
+  img.src = dataURL;
+}
+function limparAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); sigState[id] = false; if (id === 'benetech') cur.assBenetech = null; else cur.assFiscal = null; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = ''; }
+function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; if (id === 'benetech') cur.assBenetech = c.toDataURL('image/png'); else cur.assFiscal = c.toDataURL('image/png'); showToast('Assinatura confirmada ✔️'); }
+function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? c.toDataURL('image/png') : null; }
+
+/* ── PDF (window.print em nova janela) ── */
+function tbl(title, headers, rows) {
+  if (!rows.length) return '';
+  return `<h3>${title}</h3><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c || '')}</td>`).join('')}</tr>`).join('') + `</tbody></table>`;
+}
+function gerarPDF() {
+  collectEditor();
+  const r = cur;
+  const dt = r.data ? r.data.split('-').reverse().join('/') : '';
+  const css = `body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:12px;padding:0;margin:0}
+    h1{background:#0D1B2A;color:#fff;font-size:16px;padding:12px 14px;margin:0;border-bottom:3px solid #F47820}
+    .meta{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 14px;font-size:12px}
+    .meta div{min-width:150px}.meta b{color:#555}
+    h3{background:#F0F2F5;color:#0D1B2A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;margin:12px 14px 4px}
+    table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:11px}
+    th,td{border:1px solid #ccc;padding:5px 6px;text-align:left;vertical-align:top}
+    th{background:#0D1B2A;color:#fff;font-weight:600}
+    .obs{padding:6px 14px;font-size:12px;white-space:pre-wrap}
+    .assin{display:flex;justify-content:space-around;gap:20px;padding:24px 14px}
+    .assin div{flex:1;text-align:center}.assin img{max-width:100%;height:70px;object-fit:contain}
+    .assin .ln{border-top:1px solid #333;margin-top:4px;padding-top:4px;font-size:11px;color:#333}
+    @media print{ body{-webkit-print-color-adjust:exact;print-color-adjust:exact} @page{margin:10mm;size:A4} }`;
+  let html = `<h1>RELATÓRIO DIÁRIO DE OBRA (RDO)${r.titulo ? ' — ' + escapeHtml(r.titulo) : ''}</h1>
+    <div class="meta">
+      <div><b>Nº RDO:</b> ${escapeHtml(r.numero)}</div><div><b>Data:</b> ${dt}</div>
+      <div><b>Cliente/Contrato:</b> ${escapeHtml(r.cliente)}</div><div><b>Local:</b> ${escapeHtml(r.local)}</div>
+      <div><b>Resp. Técnico:</b> ${escapeHtml(r.responsavel)}</div><div><b>Ordem Manut.:</b> ${escapeHtml(r.om)}</div>
+      <div><b>ADM/Turno:</b> ${escapeHtml(r.adm)}</div><div><b>Atendimento:</b> ${TIPO_LABEL[r.tipo] || ''}</div>
+    </div>`;
+  html += tbl('Efetivo de mão de obra', ['Nome','Função','Empresa','Entrada','Saída','Obs.'], (r.efetivo||[]).map(x => [x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
+  html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
+  html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
+  html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','% Concl.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.percent,x.obs]));
+  if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
+  html += tbl('Gestão de horários — transporte', ['Nome','Hora Busca','Hora Deixa','Obs.'], (r.transporte||[]).map(x => [x.nome,x.busca,x.deixa,x.obs]));
+  html += `<div class="assin">
+    <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech/CTV)</div></div>
+    <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div></div>
+  </div>`;
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Permita pop-ups para gerar o PDF.'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>RDO ${escapeHtml(r.numero)} - ${dt}</title><style>${css}</style></head><body>${html}<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ── CSV ── */
+function csvCell(v) { const s = String(v == null ? '' : v); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function rdoToCSVBlock(r) {
+  const dt = r.data ? r.data.split('-').reverse().join('/') : '';
+  const L = [];
+  L.push(['RDO', r.numero, 'Data', dt, 'Cliente', r.cliente, 'Local', r.local, 'Atendimento', TIPO_LABEL[r.tipo]||''].map(csvCell).join(';'));
+  const sec = (title, headers, rows) => { if (!rows.length) return; L.push(''); L.push(csvCell(title)); L.push(headers.map(csvCell).join(';')); rows.forEach(row => L.push(row.map(csvCell).join(';'))); };
+  sec('Efetivo', ['Nome','Funcao','Empresa','Entrada','Saida','Obs'], (r.efetivo||[]).map(x=>[x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
+  sec('Alimentacao', ['Inicio','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x=>[x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
+  sec('Tempos parados', ['Inicio','Fim','Motivo','Area/Equip','Liberado por'], (r.paradas||[]).map(x=>[x.inicio,x.fim,x.motivo,x.area,x.liberado]));
+  sec('Atividades', ['Inicio','Fim','Descricao','Local/Equip','% Concluido','Obs'], (r.atividades||[]).map(x=>[x.inicio,x.fim,x.descricao,x.local,x.percent,x.obs]));
+  if (r.ocorrencias) { L.push(''); L.push('Ocorrencias'); L.push(csvCell(r.ocorrencias)); }
+  sec('Transporte', ['Nome','Hora Busca','Hora Deixa','Obs'], (r.transporte||[]).map(x=>[x.nome,x.busca,x.deixa,x.obs]));
+  return L.join('\n');
+}
+function exportOneCSV() { collectEditor(); const csv = '﻿' + rdoToCSVBlock(cur); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'rdo_' + (cur.numero || 's') + '_' + (cur.data || '') + '.csv'); showToast('CSV exportado ⬇️'); }
+function exportAllCSV() { if (!db.rdos.length) { showToast('Nenhum RDO.'); return; } const csv = '﻿' + db.rdos.slice().sort((a,b)=>(a.data||'').localeCompare(b.data||'')).map(rdoToCSVBlock).join('\n\n================\n\n'); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'rdos_ctv_todos.csv'); showToast('CSV (todos) exportado ⬇️'); }
+
+/* ── backup ── */
+function exportBackup() { downloadBlob(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }), 'backup_rdo_ctv.json'); showToast('Backup gerado 💾'); }
+function importBackup(input) {
+  const f = input.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = e => { try { const data = JSON.parse(e.target.result); if (!data.rdos) throw 0; if (!confirm('Substituir TODOS os RDOs deste aparelho?')) { input.value=''; return; } db = data; if (!db.config) db.config = { dark: false }; save(); applyDark(); goList(); showToast('Backup restaurado ✔️'); } catch (err) { showToast('Arquivo inválido.'); } input.value = ''; };
+  rd.readAsText(f);
+}
+function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+
+/* ── tema / toast ── */
+function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', on ? '#0A1420' : '#0D1B2A'); }
+function toggleDark() { db.config.dark = !db.config.dark; save(); applyDark(); }
+let toastTimer = null;
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+
+/* ── init ── */
+load(); applyDark(); renderList(); renderCalendar();
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {})); }
+</script>
+</body>
+</html>
