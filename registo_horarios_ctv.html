@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<title>Registo de Horários — CTV</title>
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --navy-mid: #162436;
+    --navy-soft: #1E2F45;
+    --orange: #F47820;
+    --orange-light: #FF8F35;
+    --silver: #C0C0C0;
+    --silver-light: #E8E8E8;
+    --white: #FFFFFF;
+    --text: #1A1A2E;
+    --text-light: #555;
+    --danger: #E53935;
+    --success: #2E7D32;
+    --warn: #F9A825;
+    --card: #FFFFFF;
+    --bg: #F0F2F5;
+    --border: #E2E5EA;
+    --radius: 12px;
+    --gap: 16px;
+  }
+
+  html[data-dark="1"] {
+    --navy: #0A1420;
+    --card: #17222F;
+    --bg: #0F1822;
+    --text: #EAECEF;
+    --text-light: #9AA5B1;
+    --silver-light: #2A3644;
+    --border: #26323F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    min-height: 100vh;
+    padding-bottom: 78px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    padding: 16px 18px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--orange);
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    background: var(--orange);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .logo-name { color: var(--silver-light); font-size: 13px; line-height: 1.2; }
+  .logo-name b { color: #fff; display: block; font-size: 15px; }
+  .icon-btn {
+    background: var(--navy-soft);
+    color: var(--silver-light);
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .icon-btn:active { background: var(--orange); color: #fff; }
+
+  /* ── CONTENT ── */
+  .content { padding: var(--gap); max-width: 640px; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: var(--gap);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    border: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-light);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  label.fld { display: block; font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; }
+  select, input[type=text], input[type=date], input[type=time], input[type=number], textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--orange); border-color: var(--orange); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    background: var(--navy-soft);
+    color: #fff;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--orange); }
+  .btn-success { background: var(--success); }
+  .btn-danger { background: var(--danger); }
+  .btn-ghost { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+  .btn-sm { padding: 9px 12px; font-size: 13px; width: auto; }
+  .btn-lg { padding: 18px; font-size: 18px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  /* ── PONTO / TIMER ── */
+  .timer-wrap { text-align: center; padding: 8px 0 4px; }
+  .timer-status { font-size: 13px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; }
+  .timer-status.on { color: var(--success); }
+  .timer-status.paused { color: var(--warn); }
+  .timer-status.off { color: var(--text-light); }
+  .timer-clock { font-size: 46px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; line-height: 1.1; }
+  .timer-sub { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+  .live-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--success); margin-right: 6px; animation: pulse 1.4s infinite; vertical-align: middle; }
+  .live-dot.paused { background: var(--warn); animation: none; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  .contract-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  }
+  .pill-principal { background: rgba(244,120,32,.15); color: var(--orange); }
+  .pill-externo { background: rgba(30,47,69,.12); color: var(--text-light); }
+  html[data-dark="1"] .pill-externo { background: rgba(192,192,192,.12); color: var(--silver); }
+
+  /* ── LISTS ── */
+  .entry {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry-main { flex: 1; min-width: 0; }
+  .entry-main .top { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .entry-main .sub { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+  .entry-dur { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .entry-actions { display: flex; gap: 4px; }
+  .mini-btn { background: transparent; border: none; font-size: 17px; cursor: pointer; padding: 4px 6px; border-radius: 8px; color: var(--text-light); }
+  .mini-btn:active { background: var(--bg); }
+
+  .day-head { font-size: 13px; font-weight: 800; color: var(--text); margin: 4px 0 2px; display: flex; justify-content: space-between; align-items: baseline; }
+  .day-head span { font-size: 13px; color: var(--orange); font-weight: 800; }
+
+  .empty { text-align: center; color: var(--text-light); padding: 26px 10px; font-size: 14px; }
+  .empty .big { font-size: 34px; display: block; margin-bottom: 8px; opacity: .6; }
+
+  /* ── STATS ── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+  }
+  .stat .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .stat.accent .n { color: var(--orange); }
+
+  .bar-row { margin-bottom: 12px; }
+  .bar-row .bt { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .bar-row .bt .v { font-variant-numeric: tabular-nums; color: var(--text-light); }
+  .bar-track { height: 9px; background: var(--bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; background: var(--orange); border-radius: 999px; }
+  .bar-fill.principal { background: var(--orange); }
+  .bar-fill.externo { background: var(--navy-soft); }
+
+  /* ── SEGMENTED / CHIPS ── */
+  .seg { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 12px; }
+  .seg button { flex: 1; border: none; background: transparent; padding: 9px 4px; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--text-light); cursor: pointer; }
+  .seg button.active { background: var(--card); color: var(--orange); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+
+  /* ── BOTTOM NAV ── */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .nav button {
+    flex: 1; background: none; border: none; padding: 9px 4px 8px; cursor: pointer;
+    color: var(--text-light); font-size: 10.5px; font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .nav button .ic { font-size: 20px; line-height: 1; }
+  .nav button.active { color: var(--orange); }
+
+  /* ── MODAL ── */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--card); width: 100%; max-width: 640px; margin: 0 auto;
+    border-radius: 18px 18px 0 0; padding: 18px; max-height: 92vh; overflow-y: auto;
+    animation: slideup .22s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+  .modal h3 { font-size: 17px; margin-bottom: 14px; }
+  .modal .fld-group { margin-bottom: 14px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--navy); color: #fff; padding: 12px 20px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; z-index: 300; opacity: 0; pointer-events: none;
+    transition: all .25s ease; box-shadow: 0 4px 16px rgba(0,0,0,.3); max-width: 90%; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .hint { font-size: 12px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── CALENDÁRIO ── */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-head .nav-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 9px; font-size: 17px; cursor: pointer; display: grid; place-items: center; }
+  .cal-head .nav-btn:active { background: var(--orange); color: #fff; }
+  .cal-title { font-weight: 800; font-size: 15px; text-align: center; flex: 1; }
+  .cal-title small { display: block; font-size: 11px; font-weight: 600; color: var(--orange); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-wd { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; padding-bottom: 2px; }
+  .cal-cell {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; cursor: pointer; overflow: hidden; color: var(--text);
+  }
+  .cal-cell.empty { background: transparent; border: none; cursor: default; }
+  .cal-cell:active { transform: scale(.94); }
+  .cal-cell .cal-d { line-height: 1; }
+  .cal-cell .cal-h { font-size: 9px; font-weight: 700; opacity: .95; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .cal-cell .cal-badge {
+    position: absolute; top: 2px; right: 3px; font-size: 8px; font-weight: 800;
+    background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; min-width: 13px; height: 13px;
+    display: grid; place-items: center; padding: 0 2px;
+  }
+  .cal-cell.d-weekend { background: #F0F0F0; }
+  html[data-dark="1"] .cal-cell.d-weekend { background: #202B37; }
+  .cal-cell.d-principal { background: var(--orange); color: #fff; border-color: transparent; }
+  .cal-cell.d-externo { background: #0070C0; color: #fff; border-color: transparent; }
+  .cal-cell.d-misto { background: #1E8449; color: #fff; border-color: transparent; }
+  .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
+  html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; font-size: 11px; color: var(--text-light); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="logo-area">
+      <div class="logo-badge">CTV</div>
+      <div class="logo-name">Registo de<b>Horários</b></div>
+    </div>
+    <button class="icon-btn" onclick="toggleDark()" title="Tema" id="darkBtn">🌙</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ═══════════ PONTO (HOJE) ═══════════ -->
+  <div class="view active" id="view-ponto">
+    <div class="card" id="clockCard">
+      <!-- preenchido por renderPonto() -->
+    </div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="nav-btn" onclick="calShift(-1)" aria-label="Mês anterior">‹</button>
+        <div class="cal-title"><span id="calTitle">—</span><small id="calMonthTotal">0h 00min</small></div>
+        <button class="nav-btn" onclick="calShift(1)" aria-label="Próximo mês">›</button>
+      </div>
+      <div class="cal-grid" id="calWeekdays">
+        <div class="cal-wd">Seg</div><div class="cal-wd">Ter</div><div class="cal-wd">Qua</div>
+        <div class="cal-wd">Qui</div><div class="cal-wd">Sex</div><div class="cal-wd">Sáb</div><div class="cal-wd">Dom</div>
+      </div>
+      <div class="cal-grid" id="calGrid" style="margin-top:4px"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--orange)"></i>Principal</span>
+        <span><i style="background:#0070C0"></i>Externo</span>
+        <span><i style="background:#1E8449"></i>Misto</span>
+        <span><i style="background:#F0F0F0;border:1px solid var(--border)"></i>Fim de semana</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="day-head">Hoje <span id="todayTotal">0h 00min</span></div>
+      <div id="todayList"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ REGISTOS ═══════════ -->
+  <div class="view" id="view-registos">
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn btn-primary" onclick="openSessionModal()">➕ Registo manual</button>
+      </div>
+      <label class="fld">Filtrar por contrato</label>
+      <select id="filterContrato" onchange="renderRegistos()"></select>
+    </div>
+    <div id="registosList"></div>
+  </div>
+
+  <!-- ═══════════ RELATÓRIOS ═══════════ -->
+  <div class="view" id="view-relatorios">
+    <div class="card">
+      <div class="section-title">Período</div>
+      <div class="seg" id="periodSeg">
+        <button data-p="week" class="active" onclick="setPeriod('week')">Semana</button>
+        <button data-p="month" onclick="setPeriod('month')">Mês</button>
+        <button data-p="all" onclick="setPeriod('all')">Tudo</button>
+        <button data-p="custom" onclick="setPeriod('custom')">Personalizado</button>
+      </div>
+      <div class="row" id="customRange" style="display:none">
+        <div>
+          <label class="fld">De</label>
+          <input type="date" id="rangeStart" onchange="renderRelatorios()">
+        </div>
+        <div>
+          <label class="fld">Até</label>
+          <input type="date" id="rangeEnd" onchange="renderRelatorios()">
+        </div>
+      </div>
+      <div class="hint" id="periodLabel"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Resumo</div>
+      <div class="stat-grid">
+        <div class="stat accent"><div class="n" id="stTotal">0h</div><div class="l">Total trabalhado</div></div>
+        <div class="stat"><div class="n" id="stDias">0</div><div class="l">Dias com registo</div></div>
+        <div class="stat"><div class="n" id="stPrincipal">0h</div><div class="l">Meu contrato</div></div>
+        <div class="stat"><div class="n" id="stExterno">0h</div><div class="l">Contratos externos</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Por contrato</div>
+      <div id="reportBars"></div>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇️ Exportar CSV</button>
+      <div class="hint">Gera um arquivo .csv com os registos do período selecionado (abre no Excel / Google Sheets).</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CONTRATOS ═══════════ -->
+  <div class="view" id="view-contratos">
+    <div class="card">
+      <div class="row">
+        <button class="btn btn-primary" onclick="openContratoModal()">➕ Novo contrato externo</button>
+      </div>
+      <div class="hint">O contrato <b>principal</b> é o seu vínculo (CTV). Os <b>externos</b> são contratos/clientes que você atende à parte.</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Contratos</div>
+      <div id="contratosList"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Dados</div>
+      <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Fazer backup (arquivo)</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">📂 Restaurar backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importBackup(this)">
+      <div class="hint">Os dados ficam salvos apenas neste aparelho. Faça backup para não perder ao trocar de celular ou limpar o navegador.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ BOTTOM NAV ═══════════ -->
+<div class="nav">
+  <button class="active" data-view="ponto" onclick="switchView('ponto')"><span class="ic">⏱️</span>Ponto</button>
+  <button data-view="registos" onclick="switchView('registos')"><span class="ic">📋</span>Registos</button>
+  <button data-view="relatorios" onclick="switchView('relatorios')"><span class="ic">📊</span>Relatórios</button>
+  <button data-view="contratos" onclick="switchView('contratos')"><span class="ic">🏢</span>Contratos</button>
+</div>
+
+<!-- ═══════════ MODAL: SESSÃO ═══════════ -->
+<div class="modal-bg" id="sessionModalBg">
+  <div class="modal">
+    <h3 id="sessionModalTitle">Registo manual</h3>
+    <input type="hidden" id="sess_id">
+    <div class="fld-group">
+      <label class="fld">Contrato</label>
+      <select id="sess_contrato"></select>
+    </div>
+    <div class="fld-group">
+      <label class="fld">Data</label>
+      <input type="date" id="sess_data">
+    </div>
+    <div class="row fld-group">
+      <div>
+        <label class="fld">Entrada</label>
+        <input type="time" id="sess_entrada">
+      </div>
+      <div>
+        <label class="fld">Saída</label>
+        <input type="time" id="sess_saida">
+      </div>
+    </div>
+    <div class="fld-group">
+      <label class="fld">Pausa / intervalo (minutos)</label>
+      <input type="number" id="sess_pausa" min="0" step="1" value="0" inputmode="numeric">
+      <div class="hint">Tempo total de pausas a descontar (ex.: almoço, deslocamento).</div>
+    </div>
+    <div class="fld-group">
+      <label class="fld">Observação (opcional)</label>
+      <textarea id="sess_nota" placeholder="Ex.: atividade realizada, local..."></textarea>
+    </div>
+    <div class="hint" id="sessDurPreview" style="margin-bottom:12px"></div>
+    <div class="row">
+      <button class="btn btn-ghost" onclick="closeSessionModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSession()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: CONTRATO ═══════════ -->
+<div class="modal-bg" id="contratoModalBg">
+  <div class="modal">
+    <h3 id="contratoModalTitle">Novo contrato</h3>
+    <input type="hidden" id="ct_id">
+    <div class="fld-group">
+      <label class="fld">Nome do contrato</label>
+      <input type="text" id="ct_nome" placeholder="Ex.: Suzano, Cliente X...">
+    </div>
+    <div class="fld-group">
+      <label class="fld">Tipo</label>
+      <select id="ct_tipo">
+        <option value="externo">Contrato externo</option>
+        <option value="principal">Principal (meu contrato)</option>
+      </select>
+      <div class="hint">Só pode existir um contrato principal. Ao definir outro como principal, o anterior vira externo.</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-ghost" onclick="closeContratoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveContrato()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: DIA ═══════════ -->
+<div class="modal-bg" id="dayModalBg">
+  <div class="modal">
+    <h3 id="dayModalTitle">Dia</h3>
+    <div id="dayModalTotal" class="hint" style="margin-top:-8px;margin-bottom:12px"></div>
+    <div id="dayModalList"></div>
+    <div class="divider"></div>
+    <button class="btn btn-primary" onclick="addForDay()">➕ Adicionar registro neste dia</button>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="closeDayModal()">Fechar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ═══════════════════ ESTADO / PERSISTÊNCIA ═══════════════════ */
+const STORE_KEY = 'ctv_ponto_v1';
+let db = { version: 1, contratos: [], sessoes: [], config: { dark: false } };
+let tickTimer = null;
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) db = JSON.parse(raw);
+  } catch (e) { console.warn('load falhou', e); }
+  if (!db.contratos) db.contratos = [];
+  if (!db.sessoes) db.sessoes = [];
+  if (!db.config) db.config = { dark: false };
+  // Primeiro uso: cria contrato principal padrão
+  if (db.contratos.length === 0) {
+    db.contratos.push({ id: uid(), nome: 'Meu contrato (CTV)', tipo: 'principal', ativo: true, criadoEm: Date.now() });
+    save();
+  }
+}
+
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
+  catch (e) { showToast('Erro ao salvar (armazenamento cheio?)'); }
+}
+
+/* ═══════════════════ HELPERS DE TEMPO ═══════════════════ */
+function getContrato(id) { return db.contratos.find(c => c.id === id); }
+
+// Duração trabalhada em ms: (saida||agora) - entrada - pausas
+function workedMs(s, now = Date.now()) {
+  if (!s.entrada) return 0;
+  const fim = s.saida ? s.saida : now;
+  let ms = fim - s.entrada;
+  ms -= pausaMs(s, now);
+  return Math.max(0, ms);
+}
+function pausaMs(s, now = Date.now()) {
+  if (!s.pausas || !s.pausas.length) return 0;
+  return s.pausas.reduce((acc, p) => {
+    const pf = p.fim ? p.fim : now;
+    return acc + Math.max(0, pf - p.inicio);
+  }, 0);
+}
+function isOpen(s) { return !s.saida; }
+function isPaused(s) { return isOpen(s) && s.pausas && s.pausas.length && !s.pausas[s.pausas.length - 1].fim; }
+function openSession() { return db.sessoes.find(isOpen) || null; }
+
+function fmtHM(ms) {
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h + 'h ' + String(m).padStart(2, '0') + 'min';
+}
+function fmtHMS(ms) {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+function fmtDecimalH(ms) { return (ms / 3600000).toFixed(2).replace('.', ','); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function timeOf(ts) { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function dateKey(ts) { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MOFULL = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+function fmtHShort(ms) {
+  const tm = Math.floor(ms / 60000);
+  if (tm <= 0) return '';
+  const h = Math.floor(tm / 60), m = tm % 60;
+  return h + 'h' + (m ? pad(m) : '');
+}
+function dateLabel(ts) {
+  const d = new Date(ts);
+  const hoje = dateKey(Date.now());
+  const k = dateKey(ts);
+  if (k === hoje) return 'Hoje';
+  const ont = new Date(); ont.setDate(ont.getDate() - 1);
+  if (k === dateKey(ont.getTime())) return 'Ontem';
+  return WD[d.getDay()] + ', ' + d.getDate() + ' ' + MO[d.getMonth()];
+}
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+/* ═══════════════════ NAVEGAÇÃO ═══════════════════ */
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  if (v === 'ponto') renderPonto();
+  if (v === 'registos') renderRegistos();
+  if (v === 'relatorios') renderRelatorios();
+  if (v === 'contratos') renderContratos();
+  window.scrollTo(0, 0);
+}
+
+/* ═══════════════════ PONTO (HOJE) ═══════════════════ */
+function contractOptions(selectedId) {
+  return db.contratos.filter(c => c.ativo).map(c =>
+    `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${escapeHtml(c.nome)}${c.tipo === 'principal' ? ' • principal' : ''}</option>`
+  ).join('');
+}
+
+function renderPonto() {
+  const s = openSession();
+  const card = document.getElementById('clockCard');
+
+  if (!s) {
+    // Nenhuma sessão aberta -> iniciar
+    card.innerHTML = `
+      <div class="section-title">Iniciar registo</div>
+      <label class="fld">Contrato</label>
+      <select id="ponto_contrato">${contractOptions(db.contratos.find(c => c.ativo) ? db.contratos.find(c => c.ativo).id : '')}</select>
+      <div style="height:14px"></div>
+      <button class="btn btn-success btn-lg" onclick="clockIn()">▶️ Registrar entrada</button>
+      <div class="hint">A hora de entrada será a hora atual do aparelho.</div>`;
+  } else {
+    const c = getContrato(s.contratoId);
+    const paused = isPaused(s);
+    card.innerHTML = `
+      <div class="timer-wrap">
+        <div class="timer-status ${paused ? 'paused' : 'on'}">
+          <span class="live-dot ${paused ? 'paused' : ''}"></span>${paused ? 'Em pausa' : 'Trabalhando'}
+        </div>
+        <div class="timer-clock" id="liveClock">00:00:00</div>
+        <div class="timer-sub">
+          <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : 'Contrato removido')}</span>
+        </div>
+        <div class="timer-sub">Entrada ${timeOf(s.entrada)}${pausaMs(s) > 0 ? ' · pausa ' + fmtHM(pausaMs(s)) : ''}</div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="row" style="margin-bottom:10px">
+        ${paused
+          ? `<button class="btn btn-primary" onclick="resumeBreak()">▶️ Retomar</button>`
+          : `<button class="btn btn-ghost" onclick="startBreak()">⏸️ Pausar</button>`}
+        <button class="btn btn-danger" onclick="clockOut()">⏹️ Encerrar</button>
+      </div>`;
+    startTick();
+  }
+
+  renderCalendar();
+  renderTodayList();
+}
+
+function renderTodayList() {
+  const today = dateKey(Date.now());
+  const list = db.sessoes
+    .filter(s => dateKey(s.entrada) === today)
+    .sort((a, b) => a.entrada - b.entrada);
+  const el = document.getElementById('todayList');
+  const now = Date.now();
+  let total = 0;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><span class="big">🕐</span>Nenhum registo hoje ainda.</div>`;
+  } else {
+    el.innerHTML = list.map(s => {
+      total += workedMs(s, now);
+      return entryRow(s, now);
+    }).join('');
+  }
+  document.getElementById('todayTotal').textContent = fmtHM(total);
+}
+
+function entryRow(s, now) {
+  const c = getContrato(s.contratoId);
+  const open = isOpen(s);
+  const pm = pausaMs(s, now);
+  return `
+    <div class="entry">
+      <div class="entry-main">
+        <div class="top">
+          <span class="contract-pill ${c && c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${escapeHtml(c ? c.nome : '—')}</span>
+          ${open ? '<span style="color:var(--success);font-size:11px;font-weight:800">● EM ANDAMENTO</span>' : ''}
+        </div>
+        <div class="sub">${timeOf(s.entrada)} → ${s.saida ? timeOf(s.saida) : '...'}${pm > 0 ? ' · pausa ' + fmtHM(pm) : ''}${s.nota ? ' · ' + escapeHtml(s.nota) : ''}</div>
+      </div>
+      <div class="entry-dur">${fmtHM(workedMs(s, now))}</div>
+      <div class="entry-actions">
+        <button class="mini-btn" onclick="openSessionModal('${s.id}')" title="Editar">✏️</button>
+        <button class="mini-btn" onclick="deleteSession('${s.id}')" title="Excluir">🗑️</button>
+      </div>
+    </div>`;
+}
+
+function startTick() {
+  stopTick();
+  const upd = () => {
+    const s = openSession();
+    if (!s) { stopTick(); return; }
+    const clk = document.getElementById('liveClock');
+    if (clk) clk.textContent = fmtHMS(workedMs(s));
+    const tt = document.getElementById('todayTotal');
+    if (tt) {
+      const today = dateKey(Date.now());
+      const now = Date.now();
+      tt.textContent = fmtHM(db.sessoes.filter(x => dateKey(x.entrada) === today).reduce((a, x) => a + workedMs(x, now), 0));
+    }
+  };
+  upd();
+  tickTimer = setInterval(upd, 1000);
+}
+function stopTick() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+function clockIn() {
+  if (openSession()) { showToast('Já existe um registo em andamento.'); return; }
+  const contratoId = document.getElementById('ponto_contrato').value;
+  if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
+  db.sessoes.push({ id: uid(), contratoId, entrada: Date.now(), saida: null, pausas: [], nota: '' });
+  save();
+  showToast('Entrada registrada ▶️');
+  renderPonto();
+}
+function startBreak() {
+  const s = openSession(); if (!s) return;
+  if (isPaused(s)) return;
+  s.pausas.push({ inicio: Date.now(), fim: null });
+  save(); renderPonto();
+}
+function resumeBreak() {
+  const s = openSession(); if (!s) return;
+  const last = s.pausas[s.pausas.length - 1];
+  if (last && !last.fim) { last.fim = Date.now(); save(); renderPonto(); }
+}
+function clockOut() {
+  const s = openSession(); if (!s) return;
+  if (isPaused(s)) resumeBreak(); // encerra pausa aberta
+  const cur = openSession();
+  cur.saida = Date.now();
+  save();
+  stopTick();
+  showToast('Saída registrada — ' + fmtHM(workedMs(cur, cur.saida)));
+  renderPonto();
+}
+
+/* ═══════════════════ MODAL SESSÃO (criar/editar) ═══════════════════ */
+function openSessionModal(id, prefillDate) {
+  const sel = document.getElementById('sess_contrato');
+  const editing = !!id;
+  let s = editing ? db.sessoes.find(x => x.id === id) : null;
+  document.getElementById('sessionModalTitle').textContent = editing ? 'Editar registo' : 'Registo manual';
+  sel.innerHTML = contractOptions(s ? s.contratoId : (db.contratos.find(c => c.ativo) || {}).id);
+  document.getElementById('sess_id').value = id || '';
+  if (editing) {
+    document.getElementById('sess_data').value = dateKey(s.entrada);
+    document.getElementById('sess_entrada').value = timeOf(s.entrada);
+    document.getElementById('sess_saida').value = s.saida ? timeOf(s.saida) : '';
+    document.getElementById('sess_pausa').value = Math.round(pausaMs(s, s.saida || Date.now()) / 60000);
+    document.getElementById('sess_nota').value = s.nota || '';
+  } else {
+    document.getElementById('sess_data').value = prefillDate || dateKey(Date.now());
+    document.getElementById('sess_entrada').value = '';
+    document.getElementById('sess_saida').value = '';
+    document.getElementById('sess_pausa').value = 0;
+    document.getElementById('sess_nota').value = '';
+  }
+  updateSessPreview();
+  ['sess_data', 'sess_entrada', 'sess_saida', 'sess_pausa'].forEach(fid =>
+    document.getElementById(fid).oninput = updateSessPreview);
+  document.getElementById('sessionModalBg').classList.add('open');
+}
+function closeSessionModal() { document.getElementById('sessionModalBg').classList.remove('open'); }
+
+function parseSessInputs() {
+  const data = document.getElementById('sess_data').value;
+  const ent = document.getElementById('sess_entrada').value;
+  const sai = document.getElementById('sess_saida').value;
+  const pausaMin = Math.max(0, parseInt(document.getElementById('sess_pausa').value || '0', 10));
+  if (!data || !ent) return null;
+  let entrada = new Date(data + 'T' + ent + ':00').getTime();
+  let saida = null;
+  if (sai) {
+    saida = new Date(data + 'T' + sai + ':00').getTime();
+    if (saida < entrada) saida += 24 * 3600 * 1000; // vira-noite
+  }
+  return { entrada, saida, pausaMin: pausaMin * 60000 };
+}
+function updateSessPreview() {
+  const p = parseSessInputs();
+  const el = document.getElementById('sessDurPreview');
+  if (!p) { el.textContent = 'Preencha data e entrada.'; return; }
+  if (!p.saida) { el.textContent = 'Sem saída: ficará em andamento.'; return; }
+  const worked = Math.max(0, (p.saida - p.entrada) - p.pausaMin);
+  el.innerHTML = 'Duração trabalhada: <b>' + fmtHM(worked) + '</b>' + (p.pausaMin ? ' (pausa ' + fmtHM(p.pausaMin) + ')' : '');
+}
+function saveSession() {
+  const p = parseSessInputs();
+  if (!p) { showToast('Preencha data e entrada.'); return; }
+  const contratoId = document.getElementById('sess_contrato').value;
+  const nota = document.getElementById('sess_nota').value.trim();
+  const id = document.getElementById('sess_id').value;
+  // representa a pausa como um único intervalo fechado dentro da sessão
+  const pausas = p.pausaMin > 0 ? [{ inicio: p.entrada, fim: p.entrada + p.pausaMin }] : [];
+  if (id) {
+    const s = db.sessoes.find(x => x.id === id);
+    s.contratoId = contratoId; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
+  } else {
+    if (!contratoId) { showToast('Cadastre um contrato primeiro.'); return; }
+    db.sessoes.push({ id: uid(), contratoId, entrada: p.entrada, saida: p.saida, pausas, nota });
+  }
+  save();
+  closeSessionModal();
+  showToast('Registo salvo ✔️');
+  refreshCurrent();
+}
+function deleteSession(id) {
+  if (!confirm('Excluir este registo?')) return;
+  db.sessoes = db.sessoes.filter(s => s.id !== id);
+  save();
+  showToast('Registo excluído');
+  refreshCurrent();
+}
+function refreshCurrent() {
+  const active = document.querySelector('.nav button.active').dataset.view;
+  switchView(active);
+}
+
+/* ═══════════════════ CALENDÁRIO ═══════════════════ */
+let calYear = null, calMonth = null;
+function initCal() {
+  if (calYear === null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); }
+}
+function calShift(delta) {
+  initCal();
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+function sessionsByDay() {
+  const map = {};
+  db.sessoes.forEach(s => { const k = dateKey(s.entrada); (map[k] = map[k] || []).push(s); });
+  return map;
+}
+function renderCalendar() {
+  initCal();
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = (first.getDay() + 6) % 7; // segunda = 0
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const map = sessionsByDay();
+  const now = Date.now();
+  const todayK = dateKey(now);
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<div class="cal-cell empty"></div>';
+  let monthTotal = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const k = calYear + '-' + pad(calMonth + 1) + '-' + pad(d);
+    const list = map[k] || [];
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const weekend = (dow === 0 || dow === 6);
+    let cls = 'cal-cell';
+    let dayMs = 0;
+    if (list.length) {
+      const tipos = new Set(list.map(s => { const c = getContrato(s.contratoId); return c ? c.tipo : 'externo'; }));
+      if (tipos.has('principal') && tipos.size > 1) cls += ' d-misto';
+      else if (tipos.has('principal')) cls += ' d-principal';
+      else cls += ' d-externo';
+      list.forEach(s => { dayMs += workedMs(s, now); });
+      monthTotal += dayMs;
+    } else if (weekend) { cls += ' d-weekend'; }
+    if (k === todayK) cls += ' d-today';
+    const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
+    const dur = dayMs > 0 ? `<span class="cal-h">${fmtHShort(dayMs)}</span>` : '';
+    cells += `<div class="${cls}" onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+  document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
+  document.getElementById('calMonthTotal').textContent = fmtHM(monthTotal);
+}
+
+let dayModalKey = null;
+function openDayModal(k) {
+  dayModalKey = k;
+  const now = Date.now();
+  const list = db.sessoes.filter(s => dateKey(s.entrada) === k).sort((a, b) => a.entrada - b.entrada);
+  const [y, m, d] = k.split('-').map(Number);
+  const ref = new Date(y, m - 1, d);
+  document.getElementById('dayModalTitle').textContent = WD[ref.getDay()] + ', ' + d + ' ' + MO[m - 1] + ' ' + y;
+  const total = list.reduce((a, s) => a + workedMs(s, now), 0);
+  document.getElementById('dayModalTotal').textContent = list.length
+    ? (list.length + ' registo' + (list.length === 1 ? '' : 's') + ' · ' + fmtHM(total))
+    : 'Nenhum registo neste dia.';
+  document.getElementById('dayModalList').innerHTML = list.length
+    ? list.map(s => entryRow(s, now)).join('')
+    : `<div class="empty"><span class="big">🗓️</span>Sem registos.</div>`;
+  document.getElementById('dayModalBg').classList.add('open');
+}
+function closeDayModal() { document.getElementById('dayModalBg').classList.remove('open'); dayModalKey = null; }
+function addForDay() {
+  const k = dayModalKey;
+  closeDayModal();
+  openSessionModal(null, k);
+}
+
+/* ═══════════════════ REGISTOS ═══════════════════ */
+function renderRegistos() {
+  const fsel = document.getElementById('filterContrato');
+  const cur = fsel.value || 'all';
+  fsel.innerHTML = '<option value="all">Todos os contratos</option>' +
+    db.contratos.map(c => `<option value="${c.id}" ${c.id === cur ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('');
+  const filter = fsel.value;
+
+  let list = db.sessoes.slice().sort((a, b) => b.entrada - a.entrada);
+  if (filter !== 'all') list = list.filter(s => s.contratoId === filter);
+
+  const cont = document.getElementById('registosList');
+  if (!list.length) {
+    cont.innerHTML = `<div class="card"><div class="empty"><span class="big">📋</span>Nenhum registo encontrado.</div></div>`;
+    return;
+  }
+  const now = Date.now();
+  const groups = {};
+  list.forEach(s => { const k = dateKey(s.entrada); (groups[k] = groups[k] || []).push(s); });
+  cont.innerHTML = Object.keys(groups).map(k => {
+    const items = groups[k];
+    const dayTotal = items.reduce((a, s) => a + workedMs(s, now), 0);
+    return `<div class="card">
+      <div class="day-head">${dateLabel(items[0].entrada)} <span>${fmtHM(dayTotal)}</span></div>
+      ${items.sort((a, b) => a.entrada - b.entrada).map(s => entryRow(s, now)).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════ RELATÓRIOS ═══════════════════ */
+let curPeriod = 'week';
+function setPeriod(p) {
+  curPeriod = p;
+  document.querySelectorAll('#periodSeg button').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  document.getElementById('customRange').style.display = (p === 'custom') ? 'flex' : 'none';
+  if (p === 'custom') {
+    if (!document.getElementById('rangeStart').value) {
+      const d = new Date(); d.setDate(d.getDate() - 7);
+      document.getElementById('rangeStart').value = dateKey(d.getTime());
+      document.getElementById('rangeEnd').value = dateKey(Date.now());
+    }
+  }
+  renderRelatorios();
+}
+function periodRange() {
+  const now = new Date();
+  let start, end = new Date(); end.setHours(23, 59, 59, 999);
+  if (curPeriod === 'week') {
+    start = new Date(); const dow = (start.getDay() + 6) % 7; // segunda=0
+    start.setDate(start.getDate() - dow); start.setHours(0, 0, 0, 0);
+  } else if (curPeriod === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  } else if (curPeriod === 'all') {
+    start = new Date(0);
+  } else { // custom
+    const s = document.getElementById('rangeStart').value;
+    const e = document.getElementById('rangeEnd').value;
+    start = s ? new Date(s + 'T00:00:00') : new Date(0);
+    end = e ? new Date(e + 'T23:59:59') : new Date();
+  }
+  return { start: start.getTime(), end: end.getTime() };
+}
+function periodSessions() {
+  const { start, end } = periodRange();
+  return db.sessoes.filter(s => s.entrada >= start && s.entrada <= end);
+}
+function renderRelatorios() {
+  const { start, end } = periodRange();
+  const now = Date.now();
+  const list = periodSessions();
+  // label
+  let lbl = '';
+  if (curPeriod === 'all') lbl = 'Todos os registos';
+  else lbl = new Date(start).toLocaleDateString('pt-BR') + ' — ' + new Date(end).toLocaleDateString('pt-BR');
+  document.getElementById('periodLabel').textContent = lbl;
+
+  let total = 0, principal = 0, externo = 0;
+  const dias = new Set();
+  const byContract = {};
+  list.forEach(s => {
+    const w = workedMs(s, now);
+    total += w;
+    dias.add(dateKey(s.entrada));
+    const c = getContrato(s.contratoId);
+    if (c && c.tipo === 'principal') principal += w; else externo += w;
+    const key = s.contratoId;
+    byContract[key] = (byContract[key] || 0) + w;
+  });
+
+  document.getElementById('stTotal').textContent = fmtHM(total);
+  document.getElementById('stDias').textContent = dias.size;
+  document.getElementById('stPrincipal').textContent = fmtHM(principal);
+  document.getElementById('stExterno').textContent = fmtHM(externo);
+
+  const barsEl = document.getElementById('reportBars');
+  const entries = Object.keys(byContract).map(id => ({ id, ms: byContract[id] })).sort((a, b) => b.ms - a.ms);
+  if (!entries.length) {
+    barsEl.innerHTML = `<div class="empty">Sem registos neste período.</div>`;
+  } else {
+    const max = Math.max(...entries.map(e => e.ms));
+    barsEl.innerHTML = entries.map(e => {
+      const c = getContrato(e.id);
+      const pct = max ? (e.ms / max * 100) : 0;
+      return `<div class="bar-row">
+        <div class="bt"><span>${escapeHtml(c ? c.nome : 'Contrato removido')}</span><span class="v">${fmtHM(e.ms)}</span></div>
+        <div class="bar-track"><div class="bar-fill ${c && c.tipo === 'principal' ? 'principal' : 'externo'}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ═══════════════════ CONTRATOS ═══════════════════ */
+function renderContratos() {
+  const el = document.getElementById('contratosList');
+  const ordered = db.contratos.slice().sort((a, b) => (a.tipo === 'principal' ? -1 : b.tipo === 'principal' ? 1 : 0) || a.nome.localeCompare(b.nome));
+  el.innerHTML = ordered.map(c => {
+    const count = db.sessoes.filter(s => s.contratoId === c.id).length;
+    return `<div class="entry">
+      <div class="entry-main">
+        <div class="top">
+          <span class="contract-pill ${c.tipo === 'principal' ? 'pill-principal' : 'pill-externo'}">${c.tipo === 'principal' ? 'PRINCIPAL' : 'EXTERNO'}</span>
+          <span>${escapeHtml(c.nome)}</span>
+          ${!c.ativo ? '<span style="font-size:11px;color:var(--text-light)">(inativo)</span>' : ''}
+        </div>
+        <div class="sub">${count} registo${count === 1 ? '' : 's'}</div>
+      </div>
+      <div class="entry-actions">
+        <button class="mini-btn" onclick="toggleAtivo('${c.id}')" title="${c.ativo ? 'Desativar' : 'Reativar'}">${c.ativo ? '🚫' : '✅'}</button>
+        <button class="mini-btn" onclick="openContratoModal('${c.id}')" title="Editar">✏️</button>
+        <button class="mini-btn" onclick="deleteContrato('${c.id}')" title="Excluir">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openContratoModal(id) {
+  const editing = !!id;
+  const c = editing ? getContrato(id) : null;
+  document.getElementById('contratoModalTitle').textContent = editing ? 'Editar contrato' : 'Novo contrato externo';
+  document.getElementById('ct_id').value = id || '';
+  document.getElementById('ct_nome').value = c ? c.nome : '';
+  document.getElementById('ct_tipo').value = c ? c.tipo : 'externo';
+  document.getElementById('contratoModalBg').classList.add('open');
+}
+function closeContratoModal() { document.getElementById('contratoModalBg').classList.remove('open'); }
+function saveContrato() {
+  const id = document.getElementById('ct_id').value;
+  const nome = document.getElementById('ct_nome').value.trim();
+  const tipo = document.getElementById('ct_tipo').value;
+  if (!nome) { showToast('Informe o nome do contrato.'); return; }
+  if (tipo === 'principal') {
+    // rebaixa o principal atual (exceto o próprio)
+    db.contratos.forEach(c => { if (c.tipo === 'principal' && c.id !== id) c.tipo = 'externo'; });
+  }
+  if (id) {
+    const c = getContrato(id);
+    c.nome = nome; c.tipo = tipo;
+  } else {
+    db.contratos.push({ id: uid(), nome, tipo, ativo: true, criadoEm: Date.now() });
+  }
+  save();
+  closeContratoModal();
+  showToast('Contrato salvo ✔️');
+  renderContratos();
+}
+function toggleAtivo(id) {
+  const c = getContrato(id); if (!c) return;
+  c.ativo = !c.ativo; save(); renderContratos();
+}
+function deleteContrato(id) {
+  const count = db.sessoes.filter(s => s.contratoId === id).length;
+  if (count > 0) {
+    showToast('Contrato tem registos — desative em vez de excluir.');
+    return;
+  }
+  if (db.contratos.length <= 1) { showToast('Deve existir ao menos um contrato.'); return; }
+  if (!confirm('Excluir este contrato?')) return;
+  const c = getContrato(id);
+  db.contratos = db.contratos.filter(x => x.id !== id);
+  // garante que continue existindo um principal
+  if (c.tipo === 'principal' && !db.contratos.some(x => x.tipo === 'principal') && db.contratos.length) {
+    db.contratos[0].tipo = 'principal';
+  }
+  save();
+  showToast('Contrato excluído');
+  renderContratos();
+}
+
+/* ═══════════════════ EXPORTAR CSV ═══════════════════ */
+function csvCell(v) {
+  const s = String(v == null ? '' : v);
+  return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function exportCSV() {
+  const now = Date.now();
+  const list = periodSessions().slice().sort((a, b) => a.entrada - b.entrada);
+  if (!list.length) { showToast('Sem registos no período.'); return; }
+  const header = ['Data', 'Dia', 'Contrato', 'Tipo', 'Entrada', 'Saida', 'Pausa (min)', 'Horas trabalhadas', 'Horas (decimal)', 'Observacao'];
+  const rows = list.map(s => {
+    const c = getContrato(s.contratoId);
+    const w = workedMs(s, now);
+    const d = new Date(s.entrada);
+    return [
+      d.toLocaleDateString('pt-BR'),
+      WD[d.getDay()],
+      c ? c.nome : '—',
+      c ? (c.tipo === 'principal' ? 'Principal' : 'Externo') : '—',
+      timeOf(s.entrada),
+      s.saida ? timeOf(s.saida) : '',
+      Math.round(pausaMs(s, s.saida || now) / 60000),
+      fmtHM(w),
+      fmtDecimalH(w),
+      s.nota || ''
+    ].map(csvCell).join(';');
+  });
+  const totalMs = list.reduce((a, s) => a + workedMs(s, now), 0);
+  rows.push('');
+  rows.push(['', '', '', '', '', '', 'TOTAL', fmtHM(totalMs), fmtDecimalH(totalMs), ''].map(csvCell).join(';'));
+  const csv = '﻿' + header.join(';') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, 'horarios_ctv_' + dateKey(Date.now()) + '.csv');
+  showToast('CSV exportado ⬇️');
+}
+
+/* ═══════════════════ BACKUP ═══════════════════ */
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  downloadBlob(blob, 'backup_horarios_ctv_' + dateKey(Date.now()) + '.json');
+  showToast('Backup gerado 💾');
+}
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.contratos || !data.sessoes) throw new Error('formato');
+      if (!confirm('Isto substituirá TODOS os dados atuais deste aparelho. Continuar?')) { input.value = ''; return; }
+      db = data;
+      if (!db.config) db.config = { dark: false };
+      save();
+      applyDark();
+      showToast('Backup restaurado ✔️');
+      switchView('ponto');
+    } catch (err) {
+      showToast('Arquivo inválido.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ═══════════════════ TEMA / TOAST ═══════════════════ */
+function applyDark() {
+  const on = !!db.config.dark;
+  document.documentElement.setAttribute('data-dark', on ? '1' : '0');
+  document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙';
+  const tc = document.querySelector('meta[name=theme-color]');
+  if (tc) tc.setAttribute('content', on ? '#0A1420' : '#0D1B2A');
+}
+function toggleDark() { db.config.dark = !db.config.dark; save(); applyDark(); }
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* fecha modal ao tocar no fundo */
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+/* ═══════════════════ INIT ═══════════════════ */
+load();
+applyDark();
+renderPonto();
+</script>
+</body>
+</html>
