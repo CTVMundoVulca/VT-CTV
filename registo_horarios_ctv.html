@@ -112,7 +112,7 @@
     margin-bottom: 10px;
   }
   label.fld { display: block; font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; }
-  select, input[type=text], input[type=date], input[type=time], input[type=number], textarea {
+  select, input[type=text], input[type=email], input[type=password], input[type=date], input[type=time], input[type=number], textarea {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
@@ -229,6 +229,11 @@
   /* ── MODAL ── */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; }
   .modal-bg.open { display: flex; }
+  #authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+  #authOverlay.open { display: flex; }
+  .auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+  #modeBanner { background: #FFF6E9; border-color: #F3D9A8; }
+  html[data-dark="1"] #modeBanner { background: #2A2410; border-color: #4a3d12; }
   .modal {
     background: var(--card); width: 100%; max-width: 640px; margin: 0 auto;
     border-radius: 18px 18px 0 0; padding: 18px; max-height: 92vh; overflow-y: auto;
@@ -294,7 +299,27 @@
       <div class="logo-badge">CTV</div>
       <div class="logo-name">Registo de<b>Horários</b></div>
     </div>
-    <button class="icon-btn" onclick="toggleDark()" title="Tema" id="darkBtn">🌙</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="userChip" style="display:none;align-items:center;gap:6px;color:var(--silver-light);font-size:12px">
+        <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button class="icon-btn" title="Sair" onclick="logout()" style="width:32px;height:32px;font-size:14px">⏻</button>
+      </span>
+      <button class="icon-btn" onclick="toggleDark()" title="Tema" id="darkBtn">🌙</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LOGIN (modo nuvem) ═══════════ -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="logo-badge" style="display:inline-block;font-size:16px;margin-bottom:14px">CTV</div>
+    <h3 style="margin-bottom:6px">Registo de Horários</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px">Entre com seu e-mail e senha. Cada pessoa vê só o próprio ponto.</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="loginEmail()" style="margin-bottom:8px">Entrar</button>
+    <button class="btn btn-ghost" onclick="registerEmail()" style="margin-bottom:10px">Criar conta</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
   </div>
 </div>
 
@@ -302,6 +327,15 @@
 
   <!-- ═══════════ PONTO (HOJE) ═══════════ -->
   <div class="view active" id="view-ponto">
+    <div class="card" id="modeBanner" style="display:none">
+      <div class="hint" style="margin:0;color:#8a5a00">📴 Modo local (só neste aparelho).</div>
+    </div>
+    <div class="card" id="syncCard" style="display:none;padding:11px 14px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+        <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+        <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+      </div>
+    </div>
     <div class="card" id="clockCard">
       <!-- preenchido por renderPonto() -->
     </div>
@@ -384,10 +418,12 @@
     </div>
     <div class="card">
       <div class="section-title">Dados</div>
+      <button class="btn btn-ghost" id="btnMigrar" style="display:none;margin-bottom:10px" onclick="migrarLocalParaNuvem()">☁️ Enviar registros locais para a nuvem</button>
+      <button class="btn btn-ghost" id="btnSenha" style="display:none;margin-bottom:10px" onclick="alterarSenha()">🔑 Alterar minha senha</button>
       <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Fazer backup (arquivo)</button>
       <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">📂 Restaurar backup</button>
       <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importBackup(this)">
-      <div class="hint">Os dados ficam salvos apenas neste aparelho. Faça backup para não perder ao trocar de celular ou limpar o navegador.</div>
+      <div class="hint">No modo nuvem, cada pessoa vê só o próprio ponto (sincronizado entre os aparelhos dela). Faça backup para segurança.</div>
     </div>
   </div>
 
@@ -471,23 +507,56 @@ function tipoLabel(t) { const f = TIPOS.find(x => x[0] === t); return f ? f[1] :
 function sessTipo(s) { return s.tipo || 'externo'; }
 function tipoOptions(sel) { return TIPOS.map(t => `<option value="${t[0]}" ${t[0] === sel ? 'selected' : ''}>${t[1]}</option>`).join(''); }
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) db = JSON.parse(raw);
-  } catch (e) { console.warn('load falhou', e); }
+/* ══════════════ FIREBASE (nuvem privada por usuário) — mesmo projeto do RDO ══════════════
+   Com a config preenchida, o Hora entra em MODO NUVEM: cada pessoa faz login e vê
+   só o PRÓPRIO ponto, sincronizado entre os aparelhos dela. Sem config → modo local. */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
+  authDomain: "rdo-benetech.firebaseapp.com",
+  projectId: "rdo-benetech",
+  storageBucket: "rdo-benetech.firebasestorage.app",
+  messagingSenderId: "784889553730",
+  appId: "1:784889553730:web:d0dcaad912a793a80f1edb"
+};
+function isConfigured() { const k = firebaseConfig.apiKey, p = firebaseConfig.projectId; return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p)); }
+
+let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], booted = false;
+
+function loadDark() { try { db.config.dark = localStorage.getItem('ctv_ponto_dark') === '1'; } catch (e) {} }
+function saveDark() { try { localStorage.setItem('ctv_ponto_dark', db.config.dark ? '1' : '0'); } catch (e) {} }
+
+function loadLocal() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
   if (!db.sessoes) db.sessoes = [];
-  if (!db.config) db.config = { dark: false };
-  // Migração: garante um contrato atendido em registros antigos
+  if (!db.config) db.config = {};
   let migrou = false;
   db.sessoes.forEach(s => { if (!s.tipo) { s.tipo = 'externo'; migrou = true; } });
-  if (migrou) save();
+  if (migrou) saveLocal();
 }
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (armazenamento cheio?)'); } }
+function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
+function save() { if (MODE === 'cloud') cacheSnapshot(); else saveLocal(); }
 
-function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
-  catch (e) { showToast('Erro ao salvar (armazenamento cheio?)'); }
+/* persistência por sessão (a UI chama estas) */
+function persistSession(s) {
+  if (!s) return;
+  const clean = JSON.parse(JSON.stringify(s));
+  const i = db.sessoes.findIndex(x => x.id === clean.id);
+  if (i >= 0) db.sessoes[i] = clean; else db.sessoes.push(clean);
+  if (MODE === 'cloud' && FB && currentUser) {
+    FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', clean.id), clean)
+      .then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    cacheSnapshot(); if (!navigator.onLine) setSync('offline');
+  } else saveLocal();
 }
+function removeSession(id) {
+  db.sessoes = db.sessoes.filter(x => x.id !== id);
+  if (MODE === 'cloud' && FB && currentUser) {
+    FB.deleteDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    cacheSnapshot();
+  } else saveLocal();
+}
+function onWriteError(err) { const c = (err && err.code) || ''; if (c.includes('permission-denied')) setSync('denied'); else if (!navigator.onLine || c.includes('unavailable')) setSync('offline'); else setSync('error', c); }
 
 /* ═══════════════════ HELPERS DE TEMPO ═══════════════════ */
 // Duração trabalhada em ms: (saida||agora) - entrada - pausas
@@ -659,8 +728,9 @@ function clockIn() {
   if (openSession()) { showToast('Já existe um registo em andamento.'); return; }
   const tipo = document.getElementById('ponto_tipo').value;
   db.config.lastTipo = tipo;
-  db.sessoes.push({ id: uid(), tipo, entrada: Date.now(), saida: null, pausas: [], nota: '' });
-  save();
+  const s = { id: uid(), tipo, entrada: Date.now(), saida: null, pausas: [], nota: '' };
+  db.sessoes.push(s);
+  persistSession(s);
   showToast('Entrada registrada ▶️');
   renderPonto();
 }
@@ -668,19 +738,19 @@ function startBreak() {
   const s = openSession(); if (!s) return;
   if (isPaused(s)) return;
   s.pausas.push({ inicio: Date.now(), fim: null });
-  save(); renderPonto();
+  persistSession(s); renderPonto();
 }
 function resumeBreak() {
   const s = openSession(); if (!s) return;
   const last = s.pausas[s.pausas.length - 1];
-  if (last && !last.fim) { last.fim = Date.now(); save(); renderPonto(); }
+  if (last && !last.fim) { last.fim = Date.now(); persistSession(s); renderPonto(); }
 }
 function clockOut() {
   const s = openSession(); if (!s) return;
   if (isPaused(s)) resumeBreak(); // encerra pausa aberta
   const cur = openSession();
   cur.saida = Date.now();
-  save();
+  persistSession(cur);
   stopTick();
   showToast('Saída registrada — ' + fmtHM(workedMs(cur, cur.saida)));
   renderPonto();
@@ -743,22 +813,24 @@ function saveSession() {
   const id = document.getElementById('sess_id').value;
   // representa a pausa como um único intervalo fechado dentro da sessão
   const pausas = p.pausaMin > 0 ? [{ inicio: p.entrada, fim: p.entrada + p.pausaMin }] : [];
+  let alvo;
   if (id) {
     const s = db.sessoes.find(x => x.id === id);
     s.tipo = tipo; s.entrada = p.entrada; s.saida = p.saida; s.pausas = pausas; s.nota = nota;
+    alvo = s;
   } else {
     db.config.lastTipo = tipo;
-    db.sessoes.push({ id: uid(), tipo, entrada: p.entrada, saida: p.saida, pausas, nota });
+    alvo = { id: uid(), tipo, entrada: p.entrada, saida: p.saida, pausas, nota };
+    db.sessoes.push(alvo);
   }
-  save();
+  persistSession(alvo);
   closeSessionModal();
   showToast('Registo salvo ✔️');
   refreshCurrent();
 }
 function deleteSession(id) {
   if (!confirm('Excluir este registo?')) return;
-  db.sessoes = db.sessoes.filter(s => s.id !== id);
-  save();
+  removeSession(id);
   showToast('Registo excluído');
   refreshCurrent();
 }
@@ -999,13 +1071,13 @@ function importBackup(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.sessoes) throw new Error('formato');
-      if (!confirm('Isto substituirá TODOS os dados atuais deste aparelho. Continuar?')) { input.value = ''; return; }
-      db = data;
-      if (!db.config) db.config = { dark: false };
-      save();
-      applyDark();
-      showToast('Backup restaurado ✔️');
-      switchView('ponto');
+      if (MODE === 'cloud' && FB && currentUser) {
+        if (!confirm('Enviar ' + data.sessoes.length + ' registro(s) do backup para a sua conta na nuvem?')) { input.value = ''; return; }
+        Promise.all(data.sessoes.map(s => FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', s.id), JSON.parse(JSON.stringify(s))))).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
+      } else {
+        if (!confirm('Isto substituirá TODOS os dados atuais deste aparelho. Continuar?')) { input.value = ''; return; }
+        db = data; if (!db.config) db.config = {}; saveLocal(); loadDark(); applyDark(); switchView('ponto'); showToast('Backup restaurado ✔️');
+      }
     } catch (err) {
       showToast('Arquivo inválido.');
     }
@@ -1030,7 +1102,7 @@ function applyDark() {
   const tc = document.querySelector('meta[name=theme-color]');
   if (tc) tc.setAttribute('content', on ? '#0A1420' : '#0D1B2A');
 }
-function toggleDark() { db.config.dark = !db.config.dark; save(); applyDark(); }
+function toggleDark() { db.config.dark = !db.config.dark; saveDark(); applyDark(); }
 
 let toastTimer = null;
 function showToast(msg) {
@@ -1045,10 +1117,101 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
 });
 
+/* ═══════════════════ NUVEM: boot, login, tempo real ═══════════════════ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  MODE = 'local';
+  loadLocal(); loadDark(); applyDark();
+  updateModeUI();
+  renderPonto();
+}
+function bootCloud(api) {
+  if (booted) return; booted = true;
+  MODE = 'cloud'; FB = api;
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_ponto_local_backup')) localStorage.setItem('ctv_ponto_local_backup', raw); } catch (e) {}
+  db = { version: 1, sessoes: [], config: {} };
+  loadDark(); applyDark();
+  updateModeUI();
+  renderPonto();
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) { hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+    else { clearCloudListeners(); db.sessoes = []; renderPonto(); showAuth(); }
+  });
+  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+function startCloudListeners() {
+  clearCloudListeners();
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'users', currentUser.uid, 'sessoes'), s => {
+    db.sessoes = s.docs.map(d => d.data());
+    cacheSnapshot();
+    setSync(navigator.onLine ? 'ok' : 'offline');
+    renderPonto();
+    const active = document.querySelector('.nav button.active');
+    if (active && active.dataset.view !== 'ponto') switchView(active.dataset.view);
+  }, err => { const c = (err && err.code) || ''; if (c.includes('permission-denied')) setSync('denied'); else setSync('error', c); }));
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
+function migrarLocalParaNuvem() {
+  if (MODE !== 'cloud' || !FB || !currentUser) { showToast('Disponível no modo nuvem.'); return; }
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem('ctv_ponto_local_backup') || 'null'); } catch (e) {}
+  const arr = (local && local.sessoes) || [];
+  if (!arr.length) { showToast('Nenhum registro local para enviar.'); return; }
+  if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a sua conta na nuvem?')) return;
+  Promise.all(arr.map(s => FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', s.id), JSON.parse(JSON.stringify(s)))))
+    .then(() => showToast('Registros enviados ✔️')).catch(() => showToast('Falha ao enviar alguns registros.'));
+}
+function updateModeUI() {
+  const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
+  const mig = document.getElementById('btnMigrar'); if (mig) mig.style.display = (MODE === 'cloud') ? '' : 'none';
+}
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard'); if (!card) return;
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const dot = document.getElementById('syncDot'), txt = document.getElementById('syncText');
+  const email = currentUser ? (currentUser.email || '') : '';
+  let color = '#2E7D32', msg = '';
+  if (state === 'ok') { color = '#2E7D32'; msg = 'Sincronizado na sua conta' + (email ? (' · ' + email) : ''); }
+  else if (state === 'connecting') { color = '#999'; msg = 'Conectando…' + (email ? (' · ' + email) : ''); }
+  else if (state === 'offline') { color = '#F9A825'; msg = 'Offline — salvo neste aparelho; sincroniza ao voltar a internet.'; }
+  else if (state === 'denied') { color = '#E53935'; msg = 'Sem permissão de acesso. Verifique a regra do Firestore para "users".'; }
+  else if (state === 'error') { color = '#E53935'; msg = 'Falha ao salvar na nuvem' + (extra ? (' (' + extra + ')') : '') + '.'; }
+  dot.style.background = color; txt.textContent = msg;
+}
+/* ── login (e-mail/senha) ── */
+function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
+function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
+function traduzAuth(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('invalid-email')) return 'E-mail inválido.';
+  if (c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Use "Entrar".';
+  if (c.includes('weak-password')) return 'Senha fraca (mín. 6 caracteres).';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('invalid-login')) return 'E-mail ou senha incorretos.';
+  if (c.includes('user-not-found')) return 'Conta não encontrada. Toque em "Criar conta".';
+  if (c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde e tente de novo.';
+  if (c.includes('network')) return 'Sem conexão. Verifique a internet.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+function loginEmail() { if (!FB) return; const email = document.getElementById('authEmail').value.trim(); const pass = document.getElementById('authPass').value; if (!email || !pass) { authError('Preencha e-mail e senha.'); return; } FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err))); }
+function registerEmail() { if (!FB) return; const email = document.getElementById('authEmail').value.trim(); const pass = document.getElementById('authPass').value; if (!email || pass.length < 6) { authError('Informe e-mail e senha de ao menos 6 caracteres.'); return; } FB.createUserWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err))); }
+function resetSenha() { if (!FB) return; const email = document.getElementById('authEmail').value.trim(); if (!email) { authError('Digite seu e-mail no campo acima para enviar o link.'); return; } FB.sendPasswordResetEmail(FB.auth, email).then(() => authInfo('Enviamos um link para redefinir a senha no seu e-mail.')).catch(err => authError(traduzAuth(err))); }
+function alterarSenha() { if (!FB || !currentUser) return; const nova = prompt('Nova senha (mín. 6 caracteres):'); if (!nova) return; if (nova.length < 6) { showToast('Senha muito curta (mín. 6).'); return; } FB.updatePassword(currentUser, nova).then(() => showToast('Senha alterada ✔️')).catch(err => { if (err && err.code && err.code.includes('recent-login')) { FB.sendPasswordResetEmail(FB.auth, currentUser.email).then(() => showToast('Por segurança, enviamos um link de troca ao seu e-mail.')).catch(() => showToast('Entre novamente para trocar a senha.')); } else showToast('Não foi possível alterar a senha.'); }); }
+function logout() { if (FB) FB.signOut(FB.auth); }
+function showUserChip(user) { const c = document.getElementById('userChip'); if (c) { c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; } const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = ''; }
+function showAuth() { const c = document.getElementById('userChip'); if (c) c.style.display = 'none'; const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none'; document.getElementById('authOverlay').classList.add('open'); }
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
+/* fecha modal ao tocar no fundo */
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
 /* ═══════════════════ INIT ═══════════════════ */
-load();
-applyDark();
-renderPonto();
+window.__PONTO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+if (!window.__PONTO.wantCloud) bootLocal();
 
 /* ── PWA: registra o service worker para funcionar offline ── */
 if ('serviceWorker' in navigator) {
@@ -1056,6 +1219,37 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(() => {});
   });
 }
+</script>
+<script type="module">
+  const R = window.__PONTO;
+  if (R && R.wantCloud) {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
+      ]);
+      const app = appMod.initializeApp(R.firebaseConfig);
+      const auth = authMod.getAuth(app);
+      const fs = fsMod.getFirestore(app);
+      try { await fsMod.enableIndexedDbPersistence(fs); } catch (e) {}
+      R.bootCloud({
+        app, auth, fs,
+        signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+        createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
+        sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+        updatePassword: authMod.updatePassword,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        signOut: authMod.signOut,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot
+      });
+    } catch (e) {
+      console.warn('Firebase indisponível — modo local.', e);
+      R.bootLocal();
+    }
+  }
 </script>
 </body>
 </html>
