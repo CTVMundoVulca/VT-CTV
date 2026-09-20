@@ -193,6 +193,12 @@
     <div class="card" id="modeBanner" style="display:none">
       <div class="hint" style="margin:0;color:#8a5a00">📴 Modo local (só neste aparelho). Configure o Firebase para compartilhar em tempo real.</div>
     </div>
+    <div class="card" id="syncCard" style="display:none;padding:11px 14px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+        <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+        <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+      </div>
+    </div>
     <div class="card">
       <button class="btn btn-primary" onclick="newRDO()">➕ Novo RDO</button>
     </div>
@@ -403,17 +409,26 @@ function persistRDO(rdo) {
   if (i >= 0) db.rdos[i] = clean; else db.rdos.push(clean);
   if (MODE === 'cloud' && FB) {
     clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
-    FB.setDoc(FB.doc(FB.fs, 'rdos', clean.id), clean).catch(() => showToast('Falha ao salvar na nuvem.'));
+    FB.setDoc(FB.doc(FB.fs, 'rdos', clean.id), clean)
+      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .catch(err => onWriteError(err));
     cacheSnapshot();
+    if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); }
 }
 function removeRDOStore(id) {
   db.rdos = db.rdos.filter(r => r.id !== id);
-  if (MODE === 'cloud' && FB) { FB.deleteDoc(FB.doc(FB.fs, 'rdos', id)).catch(() => showToast('Falha ao excluir na nuvem.')); cacheSnapshot(); }
+  if (MODE === 'cloud' && FB) { FB.deleteDoc(FB.doc(FB.fs, 'rdos', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err)); cacheSnapshot(); }
   else { saveLocal(); }
 }
+function onWriteError(err) {
+  const code = (err && err.code) || '';
+  if (code.includes('permission-denied')) setSync('denied');
+  else if (!navigator.onLine || code.includes('unavailable')) setSync('offline');
+  else setSync('error', code);
+}
 function persistColab() {
-  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(() => {}); }
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(err => onWriteError(err)); }
   else { saveLocal(); }
 }
 
@@ -754,9 +769,25 @@ function bootCloud(api) {
   renderList(); renderCalendar();
   FB.onAuthStateChanged(FB.auth, user => {
     currentUser = user;
-    if (user) { hideAuth(); showUserChip(user); startCloudListeners(); }
+    if (user) { hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
     else { clearCloudListeners(); showAuth(); }
   });
+  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard'); if (!card) return;
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const dot = document.getElementById('syncDot'), txt = document.getElementById('syncText');
+  const email = currentUser ? (currentUser.email || '') : '';
+  let color = '#2E7D32', msg = '';
+  if (state === 'ok') { color = '#2E7D32'; msg = 'Sincronizado na nuvem' + (email ? (' · ' + email) : ''); }
+  else if (state === 'connecting') { color = '#999'; msg = 'Conectando…' + (email ? (' · ' + email) : ''); }
+  else if (state === 'offline') { color = '#F9A825'; msg = 'Offline — salvo neste aparelho; sincroniza ao voltar a internet.'; }
+  else if (state === 'denied') { color = '#E53935'; msg = 'SEM PERMISSÃO de acesso aos dados. Verifique a regra do Firestore e se entrou com um e-mail autorizado' + (email ? (' — você: ' + email) : '') + '.'; }
+  else if (state === 'error') { color = '#E53935'; msg = 'Falha ao salvar na nuvem' + (extra ? (' (' + extra + ')') : '') + '.'; }
+  dot.style.background = color; txt.textContent = msg;
 }
 function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
 function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
@@ -814,8 +845,13 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
     db.rdos = s.docs.map(d => d.data());
     cacheSnapshot();
+    setSync(navigator.onLine ? 'ok' : 'offline');
     if (document.getElementById('view-list').classList.contains('active')) { renderList(); renderCalendar(); }
-  }, err => { console.warn(err); showToast('Sem acesso aos dados — verifique as permissões/seu e-mail.'); }));
+  }, err => {
+    console.warn(err);
+    const code = (err && err.code) || '';
+    if (code.includes('permission-denied')) setSync('denied'); else setSync('error', code);
+  }));
 }
 function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
 function migrarLocalParaNuvem() {
