@@ -1212,13 +1212,6 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 /* ═══════════════════ INIT ═══════════════════ */
 window.__PONTO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
 if (!window.__PONTO.wantCloud) bootLocal();
-
-/* ── PWA: registra o service worker para funcionar offline ── */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
-  });
-}
 </script>
 <script type="module">
   const R = window.__PONTO;
@@ -1251,5 +1244,6 @@ if ('serviceWorker' in navigator) {
     }
   }
 </script>
+<script src="app-update.js"></script>
 </body>
 </html>

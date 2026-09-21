@@ -2440,12 +2440,7 @@ setTimeout(() => {
   if (!document.getElementById('geo_coords')?.value) capturarGPS();
 }, 1200);
 
-/* PWA: registra o service worker para funcionar offline */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
-  });
-}
 </script>
+<script src="app-update.js"></script>
 </body>
 </html>

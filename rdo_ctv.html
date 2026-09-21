@@ -858,7 +858,6 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
 document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }));
 window.__RDO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
 if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediato
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {})); }
 </script>
 <script type="module">
   const R = window.__RDO;
@@ -892,5 +891,6 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', () => naviga
     }
   }
 </script>
+<script src="app-update.js"></script>
 </body>
 </html>
