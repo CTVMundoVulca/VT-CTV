@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1A3C34">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Transportadores">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>CTV · Transportadores Suzano – Aracruz</title>
+<style>
+:root{
+  --pine:#1A3C34;--pine-d:#112822;--teal:#2A8C6E;--teal-s:#E6F5F0;
+  --amber:#D4870E;--amber-s:#FFF5E0;--bg:#F3F5F4;--card:#FFFFFF;
+  --ink:#151F1C;--ink2:#5D706A;--line:#D5DDD9;
+  --ok:#2E7D32;--ok-s:#E4F1E5;--warn:#B45309;--warn-s:#FCF0DF;
+  --red:#C0392B;--red-s:#FDE8E5;--mono:'Consolas','Roboto Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px}
+
+header{background:var(--pine);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(17,40,34,.3)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand .logo{font-weight:800;font-size:21px;letter-spacing:.5px}
+.brand .logo span{color:var(--teal)}
+.brand small{opacity:.7;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+.lockbtn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:6px}
+.lockbtn.on{background:var(--teal);border-color:var(--teal);font-weight:700}
+.searchrow{display:flex;gap:8px;margin:12px 0}
+.searchrow input{flex:1;border:none;border-radius:10px;padding:12px 14px;font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:6px 14px;font-size:13px}
+.chip.on{background:#fff;color:var(--pine);font-weight:700;border-color:#fff}
+
+.toolbar{display:flex;gap:8px;align-items:center;padding:12px 16px 4px;flex-wrap:wrap}
+.toolbar select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;font-size:14px}
+.count{margin-left:auto;font-size:13px;color:var(--ink2)}
+
+main{padding:8px 16px 90px;max-width:760px;margin:0 auto}
+.tagcard{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--pine);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.tagcard.anomalia{border-left-color:var(--red);background:#FEF9F8}
+.tagcard .tag{font-weight:800;font-size:14px;letter-spacing:.2px;min-width:0;word-break:break-all;color:var(--pine)}
+.tagcard .meta{flex:1;font-size:13px;color:var(--ink2);line-height:1.45}
+.tagcard .meta b{color:var(--ink);font-weight:700}
+.dias{display:inline-flex;align-items:center;gap:4px;font-weight:800;font-size:13px;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.dias.green{background:var(--ok-s);color:var(--ok)}
+.dias.amber{background:var(--amber-s);color:var(--amber)}
+.dias.red{background:var(--red-s);color:var(--red)}
+.dias.none{background:#eee;color:var(--ink2);font-weight:400;font-size:12px}
+.photocount{font-size:11px;color:var(--teal);font-weight:700}
+.anomcount{font-size:11px;color:var(--red);font-weight:700}
+.anombox{background:var(--card);border:1px solid var(--red);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.anombox h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px}
+.anomitem{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.anomitem:last-child{border-bottom:none}
+.anomitem .asev{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.asev.critica{background:var(--red)}
+.asev.moderada{background:var(--amber)}
+.asev.leve{background:var(--ok)}
+.anomitem .abody{flex:1;font-size:13px;line-height:1.5}
+.anomitem .abody b{color:var(--ink);display:block;font-size:14px}
+.anomitem .abody .atipo{color:var(--red);font-weight:700}
+.anomitem .adate{font-size:11px;color:var(--ink2)}
+.anomitem .adel{background:none;border:none;color:var(--red);font-size:14px;padding:4px;display:none}
+.anomitem .aresolve{background:var(--ok);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;display:none}
+.editing .anomitem .adel{display:block}
+.editing .anomitem .aresolve{display:inline-block}
+.anomresolvida{opacity:.5}
+.anomresolvida .abody b{text-decoration:line-through}
+.anomadd{border:2px dashed var(--red);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:16px;cursor:pointer;color:var(--red);font-weight:700;font-size:14px;gap:6px;margin-top:8px}
+.anomadd:hover{background:var(--red-s)}
+.anomalert{background:var(--red-s);border:1px solid var(--red);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.anomalert .aicon{font-size:24px}
+.anomalert .atxt{flex:1;font-size:14px;line-height:1.45;color:var(--red)}
+.anomalert .atxt b{color:var(--ink)}
+.anomfilter{border:1px solid var(--red);color:var(--red);background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700}
+.anomfilter.on{background:var(--red);color:#fff}
+.empty{text-align:center;color:var(--ink2);padding:48px 16px;line-height:1.6}
+
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:30;overflow-y:auto;display:none}
+.overlay.open{display:block}
+.fichahead{background:var(--pine);color:#fff;padding:14px 16px;position:sticky;top:0;display:flex;align-items:center;gap:12px;z-index:5}
+.fichahead .back{background:transparent;border:none;color:#fff;font-size:24px;line-height:1;padding:4px 8px 4px 0}
+.fichahead h2{font-size:17px;font-weight:800;letter-spacing:.3px}
+.fichahead .sub{font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+.fichabody{max-width:760px;margin:0 auto;padding:16px}
+
+.specplate{background:var(--pine-d);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+.specplate::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:repeating-linear-gradient(45deg,var(--teal) 0 14px,var(--pine-d) 14px 28px)}
+.specplate .pl-title{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;opacity:.7;margin:6px 0 12px;display:flex;align-items:center;gap:8px}
+.specedit{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-left:auto}
+.specedit:hover{background:rgba(255,255,255,.25)}
+.specform{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.specform h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink2);margin-bottom:10px}
+.sfgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sfgrid .fld input{text-align:right;font-family:var(--mono)}
+.sfnote{font-size:12px;color:var(--ink2);margin-top:10px;line-height:1.5}
+.specgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.spec{border-left:2px solid var(--teal);padding-left:10px}
+.spec .lab{font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.7}
+.spec .val{font-family:var(--mono);font-size:20px;font-weight:700;margin-top:2px}
+.spec .unit{font-size:12px;font-weight:400;opacity:.7}
+
+.section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.section h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink2);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.kv:last-child{border-bottom:none}
+.kv .k{font-size:13px;color:var(--ink2)}
+.kv .v{font-weight:700;text-align:right}
+
+.diasbox{background:linear-gradient(135deg,var(--pine-d),var(--pine));color:#fff;border-radius:12px;padding:18px;margin-bottom:14px;text-align:center}
+.diasbox .bignum{font-family:var(--mono);font-size:52px;font-weight:800;line-height:1}
+.diasbox .biglabel{font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-top:4px}
+.diasbox .lastdate{font-size:14px;margin-top:8px;opacity:.9}
+.diasbox.none{background:#ddd;color:var(--ink2)}
+.diasbox.none .bignum{font-size:28px}
+
+.histbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.histbox h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink2);margin-bottom:8px}
+.histitem{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.histitem:last-child{border-bottom:none}
+.histitem .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.histitem .hdate{font-weight:700;font-size:14px;min-width:90px}
+.histitem .hresp{font-size:13px;color:var(--ink2);flex:1}
+.histitem .hdias{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.histitem .hdel{background:none;border:none;color:var(--red);font-size:16px;padding:4px;display:none}
+.editing .histitem .hdel{display:block}
+.histempty{font-size:14px;color:var(--ink2);padding:8px 0}
+
+/* --- Galeria de fotos --- */
+.photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+.photocard{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#fff;position:relative}
+.photocard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:zoom-in}
+.photocard .pcap{padding:6px 10px;font-size:12px;line-height:1.4;color:var(--ink2)}
+.photocard .pcap b{color:var(--pine);display:block;font-size:13px}
+.photocard .pdel{position:absolute;top:4px;right:4px;background:rgba(192,57,43,.85);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;display:none;align-items:center;justify-content:center}
+.editing .photocard .pdel{display:flex}
+.photoempty{font-size:14px;color:var(--ink2);padding:12px 0}
+.photoadd{border:2px dashed var(--teal);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 10px;cursor:pointer;color:var(--teal);font-weight:700;font-size:14px;min-height:120px;gap:4px;transition:background .15s}
+.photoadd:hover{background:var(--teal-s)}
+.photoadd .paico{font-size:28px}
+
+.fld label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink2);margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff}
+.fld textarea{min-height:80px;resize:vertical;line-height:1.5}
+.editgrid{display:grid;gap:10px}
+.btnrow{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700}
+.btn.primary{background:var(--teal);color:#fff}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.amber{background:var(--amber);color:#fff}
+.editfab{position:fixed;right:18px;bottom:74px;background:var(--teal);color:#fff;border:none;border-radius:999px;padding:14px 22px;font-size:15px;font-weight:800;box-shadow:0 4px 14px rgba(42,140,110,.45);z-index:6}
+
+.bottombar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20}
+.bottombar button{flex:1;background:none;border:none;padding:10px 4px 12px;font-size:12px;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:3px}
+.bottombar button.on{color:var(--pine);font-weight:800}
+.bottombar .ico{font-size:19px}
+
+.modal{position:fixed;inset:0;background:rgba(17,40,34,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modalbox{background:#fff;border-radius:14px;padding:22px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
+.modalbox h3{margin-bottom:6px;font-size:18px}
+.modalbox p{font-size:14px;color:var(--ink2);line-height:1.5;margin-bottom:12px}
+.modalbox input{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px 12px;margin-bottom:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;background:var(--pine);color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;z-index:60;display:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.disclaimer{font-size:12px;color:var(--ink2);line-height:1.55;padding:14px 4px 4px}
+
+.zoomer{position:fixed;inset:0;background:rgba(17,40,34,.92);z-index:70;display:none;overflow:auto;padding:12px}
+.zoomer.open{display:block}
+.zoomer img{max-width:95%;max-height:85vh;background:#fff;border-radius:6px;display:block;margin:50px auto 10px}
+.zoomer .zclose{position:fixed;top:12px;right:14px;background:var(--teal);color:#fff;border:none;border-radius:999px;width:42px;height:42px;font-size:20px;font-weight:800;z-index:71}
+.zoomer .zname{position:fixed;top:20px;left:16px;color:#fff;font-size:14px;font-weight:700;max-width:70%}
+.zoomer .zcap{color:#fff;text-align:center;font-size:14px;padding:8px 16px;max-width:600px;margin:0 auto;line-height:1.5}
+
+.imgpreview{max-width:100%;max-height:200px;border-radius:8px;margin-bottom:10px;display:none}
+@media(max-width:420px){.spec .val{font-size:17px} .tagcard .tag{font-size:12px} .photogrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">CTV<span>·</span>Suzano</div>
+    <small>Aracruz — Transportadores</small>
+    <button class="lockbtn" id="lockBtn" onclick="toggleLock()">🔒 Consulta</button>
+  </div>
+  <div class="searchrow">
+    <input id="q" type="search" placeholder="Buscar TAG ou descrição (ex: 23-132, casca, tora...)" oninput="render()">
+  </div>
+  <div class="chips" id="matChips"></div>
+</header>
+
+<div class="toolbar">
+  <select id="fLarg" onchange="render()"><option value="">Todas as larguras</option></select>
+  <select id="fEmenda" onchange="render()">
+    <option value="">Todos os tipos de emenda</option>
+    <option value="Emenda a frio">Emenda a frio</option>
+    <option value="Emenda a quente">Emenda a quente</option>
+    
+    
+    <option value="__vazio__">Sem tipo definido</option>
+  </select>
+  <select id="fSort" onchange="render()">
+    <option value="tag">Ordenar por TAG</option>
+    <option value="dias-asc">Dias ↑ (mais antiga)</option>
+    <option value="dias-desc">Dias ↓ (mais recente)</option>
+    <option value="sem-troca">Sem data de troca</option>
+    <option value="com-fotos">Com fotos</option>
+  </select>
+  <button class="anomfilter" id="fAnom" onclick="toggleAnom()">⚠ <span id="anomTotal">0</span></button>
+  <span class="count" id="count"></span>
+</div>
+
+<main id="list"></main>
+
+<div class="overlay" id="ficha"></div>
+
+<div class="overlay" id="dados">
+  <div class="fichahead">
+    <button class="back" onclick="document.getElementById('dados').classList.remove('open')">‹</button>
+    <div><h2>Dados</h2><div class="sub">Sincronização e segurança</div></div>
+  </div>
+  <div class="fichabody">
+    <div class="section">
+      <h3>Sincronizar por arquivo</h3>
+      <p style="margin-bottom:12px">Edições, histórico de trocas e fotos ficam salvos <b>neste navegador</b>. Exporte o JSON para compartilhar — o merge preserva todo o histórico e as fotos sem duplicar.</p>
+      <div class="btnrow">
+        <button class="btn primary" onclick="exportar()">Exportar edições (JSON)</button>
+        <button class="btn ghost" onclick="document.getElementById('importFile').click()">Importar JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importar(this)">
+      </div>
+    </div>
+    <div class="section">
+      <h3>Senha de edição</h3>
+      <p style="margin-bottom:12px">Controle organizacional — em arquivo HTML offline não é segurança real.</p>
+      <button class="btn ghost" onclick="trocarSenha()">Alterar senha de edição</button>
+    </div>
+    <div class="section">
+      <h3>Limpar dados locais</h3>
+      <p style="margin-bottom:12px">Remove <b>todos</b> os registros deste navegador: edições de especificações, histórico de trocas, fotos, anomalias. Os dados originais da planilha são preservados.</p>
+      <button class="btn ghost" style="color:var(--red);border-color:var(--red)" onclick="resetTudo()">Limpar todos os registros</button>
+    </div>
+    <div class="section"><h3>Sobre os dados</h3><p id="statsBox" style="line-height:1.7"></p></div>
+    <p class="disclaimer">Dados extraídos da planilha Transportadores Suzano – Aracruz. CTV Companhia Técnica em Vulcanização Ltda.</p>
+  </div>
+</div>
+
+<div class="modal" id="pwModal">
+  <div class="modalbox">
+    <h3>Modo edição</h3>
+    <p>Informe a senha de responsável para liberar edição, registro de trocas e fotos.</p>
+    <input type="password" id="pwInput" placeholder="Senha" onkeydown="if(event.key==='Enter')confirmarSenha()">
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn primary" onclick="confirmarSenha()">Liberar edição</button>
+      <button class="btn ghost" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="zoomer" id="zoomer" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="zname" id="zName"></div>
+  <button class="zclose" onclick="document.getElementById('zoomer').classList.remove('open')">✕</button>
+  <img id="zImg" alt="">
+  <div class="zcap" id="zCap"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="bottombar">
+  <button id="nav0" class="on" onclick="navTo(0)"><span class="ico">☰</span>Correias</button>
+  <button id="nav1" onclick="navTo(1)"><span class="ico">⇅</span>Dados</button>
+</div>
+
+<script>
+const DB = {"correias":[{"tag":"3070-23-3152-132","descricao":"TRANSP. CORREIA ( 23-132 ) P/ CASCA L1","material":"CASCA","ni":"25569316","larguraPol":30,"larguraMM":762.0,"comprimentoM":120,"cobSup":4.5,"cobInf":1.5,"carcaca":3.5,"espTotal":9.5,"pesoMetro":10,"pesoTotal":1200},{"tag":"3070-23-3152-137","descricao":"TRANSP. CORREIA ( 23-137 ) P/ CASCA L2","material":"CASCA","ni":"25569316","larguraPol":30,"larguraMM":762.0,"comprimentoM":76,"cobSup":4.5,"cobInf":1.5,"carcaca":3.5,"espTotal":9.5,"pesoMetro":10,"pesoTotal":760},{"tag":"3070-23-3153-20","descricao":"TRANSP. DE CORREIA ( 23-20 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":121,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":968},{"tag":"3070-23-3153-21","descricao":"TRANSP. DE CORREIA ( 23-21 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":121,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":968},{"tag":"3070-23-3152-159","descricao":"TRANSP. CORREIA ( 23-159 ) P/ TORAS L1","material":"TORA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":230,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":3450},{"tag":"3070-23-3152-160","descricao":"TRANSP. CORREIA ( 23-160 ) P/ TORAS L2","material":"TORA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":210,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":3150},{"tag":"3070-23-3152-19","descricao":"TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L1","material":"TORA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":92,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":1380},{"tag":"3070-23-3152-148","descricao":"TRANSP. CORREIA ( 23-148 ) P/ TORAS L2","material":"TORA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":71.5,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":1072.5},{"tag":"3070-23-3152-3","descricao":"TRANSP. DE CORREIA ( 23-3 ) P/ TORAS L3","material":"TORA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":88.5,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":1327.5},{"tag":"3070-23-3153-59","descricao":"TRANSP. CORREIA ( 23-59 ) P/ CASCAS L3","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":23,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":184},{"tag":"3070-23-3153-23","descricao":"TRANSP. DE CORREIA ( 23-23 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":118,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":708},{"tag":"3070-23-3153-24","descricao":"TRANSP. DE CORREIA ( 23-24 ) P/ RESÍDUOS","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":130,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1040},{"tag":"3070-23-3153-41","descricao":"TRANSP. DE CORREIA ( 23-41 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":86,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":516},{"tag":"3070-23-3153-42","descricao":"TRANSP. DE CORREIA ( 23-42 ) P/ CASCA","material":"CASCA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":285},{"tag":"3070-23-3153-43","descricao":"TRANSP. DE CORREIA ( 23-43 ) P/ CASCA","material":"CASCA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":285},{"tag":"3070-23-3153-44","descricao":"TRANSP. DE CORREIA ( 23-44 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":29,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":232},{"tag":"3070-23-3153-45","descricao":"TRANSP. DE CORREIA ( 23-45 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":29,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":232},{"tag":"3070-23-3153-46","descricao":"TRANSP. DE CORREIA ( 23-46 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":30,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":240},{"tag":"3070-23-3153-47","descricao":"TRANSP. DE CORREIA ( 23-47 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":56,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":448},{"tag":"3070-23-3153-26","descricao":"TRANSP. DE CORREIA ( 23-26 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":105,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":840},{"tag":"3070-23-3153-5","descricao":"TRANSP CORR 23-5 MÓVEL/REVERSÍVEL  CASC","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":47,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":376},{"tag":"3070-23-3153-8","descricao":"TRANSP. DE CORREIA ( 23-8 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":209,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":1463},{"tag":"3070-23-3153-9","descricao":"TRANSP. DE CORREIA ( 23-9 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":478,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":3346},{"tag":"3070-23-3153-10","descricao":"TRANSP. DE CORREIA ( 23-10 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":80,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":560},{"tag":"3070-23-3153-11","descricao":"TRANSP. DE CORREIA ( 23-11 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":31,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":217},{"tag":"3070-23-3153-51","descricao":"TRANSP. DE CORREIA ( 23-51 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":41,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":246},{"tag":"3070-23-3153-52","descricao":"TRANSP. DE CORREIA ( 23-52 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":123,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":738},{"tag":"3070-23-3153-53","descricao":"TRANSP. DE CORREIA ( 23-53 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":22,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":132},{"tag":"3070-23-3153-54","descricao":"TRANSP. DE CORREIA ( 23-54 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":91,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":546},{"tag":"3070-23-3153-55","descricao":"TRANSP. DE CORREIA ( 23-55 ) P/ CASCA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":34.5,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":207.0},{"tag":"3070-23-3152-30","descricao":"TRANSP CORR 23-30 P/ COLETA OVERS PENS","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":55,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":440},{"tag":"3070-23-3153-1","descricao":"TRANSP CORREIA 23-1 P/ CASCAS E RESÍDUOS","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":190,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1520},{"tag":"3070-23-3174-12","descricao":"CORREIA DE CASCAS SAÍDA ARRASTADOR L9","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":95,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":760},{"tag":"3070-23-3174-1","descricao":"TRANSPORTADOR TORAS","material":"TORA","ni":"25569324","larguraPol":55,"larguraMM":1397.0,"comprimentoM":74,"cobSup":19,"cobInf":3.5,"carcaca":8,"espTotal":30.5,"pesoMetro":18,"pesoTotal":1332},{"tag":"3070-23-3174-6","descricao":"TRANSPORTADOR DE CAVACOS","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":66,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":528},{"tag":"3070-23-3174-7","descricao":"TRANSP CORREIAS CAVACO FAB C","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":257,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":2056},{"tag":"3070-23-3152-17","descricao":"TRANSP. DE CORREIA ( 23-17 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":250,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":1500},{"tag":"3070-23-3152-18","descricao":"TRANSP. DE CORREIA ( 23-18 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":198,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":1188},{"tag":"3070-23-3152-19","descricao":"TRANSP. DE CORREIA ( 23-19 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":53,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":318},{"tag":"3070-23-3152-20","descricao":"TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":87.5,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":525.0},{"tag":"3070-23-3152-25","descricao":"TRANSP CORR 23-25 CAVACOS P/ DIGESTOR A","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":287,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":2296},{"tag":"3070-23-3152-26","descricao":"TRANSP CORR 23-26 CAVACOS P/ DIGESTOR A","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":287,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":2296},{"tag":"3070-23-3152-27","descricao":"TRANSP CORR 23-27 CAVACOS P/ DIGESTOR A","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":713,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":5704},{"tag":"3070-20-3201-101","descricao":"TRANSP CORREIA  CAVACOS P/ IMPBIN","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":78,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":624},{"tag":"3070-23-3152-155","descricao":"TRANSP CORR 23-155 DESVIO CAV FB A P/ B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":18.5,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":148.0},{"tag":"3070-23-3162-501","descricao":"TRANSP. CORREIA ( 23-501 ) P/ TORAS L6","material":"TORA","ni":"25569324","larguraPol":55,"larguraMM":1397.0,"comprimentoM":70,"cobSup":19,"cobInf":3.5,"carcaca":8,"espTotal":30.5,"pesoMetro":18,"pesoTotal":1260},{"tag":"3070-23-3163-501","descricao":"TRANSP CORR 23-501  COLETA RESÍDUOS MESA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":123,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":984},{"tag":"3070-23-3163-502","descricao":"TRANSP CORR 23-502 TRANSFE RESÍD L6/L4","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":74,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":592},{"tag":"3070-23-3162-507","descricao":"TRANSP. CORREIA ( 23-507 ) P/ CAVACOS L6","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":36,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":288},{"tag":"3070-23-3162-1","descricao":"TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L4","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":116.5,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":1514.5},{"tag":"3070-23-3162-5","descricao":"TRANSP. DE CORREIA ( 23-5 ) P/ TORAS L4","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":24,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":312},{"tag":"3070-23-3162-11","descricao":"TRANSP. DE CORREIA ( 23-11 ) P/ TORAS L4","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":247},{"tag":"3070-23-3162-3","descricao":"CORR TRANSP TORAS P/ALIM DESCASC 4","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":158.5,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":2060.5},{"tag":"3070-23-3162-6","descricao":"TRANSP. DE CORREIA ( 23-6 ) P/ TORAS L5","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":24,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":312},{"tag":"3070-23-3162-12","descricao":"TRANSP. DE CORREIA ( 23-12 ) P/ TORAS L5","material":"TORA","ni":"25569317","larguraPol":54,"larguraMM":1371.6,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":13,"pesoTotal":247},{"tag":"3070-23-3162-38","descricao":"TRANSP CORR 23-38 P/ COLETA OVERS PENS","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":53,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":424},{"tag":"3070-23-3162-39","descricao":"TRANSP CORR 23-39 P/ COLETA OVERS PENS","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":36,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":288},{"tag":"3070-23-3162-20","descricao":"TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":268,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":1608},{"tag":"3070-23-3162-21","descricao":"TRANSP. DE CORREIA ( 23-21 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":120,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":720},{"tag":"3070-23-3162-22","descricao":"TRANSP. DE CORREIA ( 23-22 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":68,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":408},{"tag":"3070-23-3162-23","descricao":"TRANSP. DE CORREIA ( 23-23 ) P/ CAVACOS","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":42,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":252},{"tag":"3070-23-3162-27","descricao":"TRANSP CORR 23-27 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":210,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1680},{"tag":"3070-23-3162-28","descricao":"TRANSP CORR 23-28 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":210,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1680},{"tag":"3070-23-3162-29","descricao":"TRANSP CORR 23-29 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":210,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1680},{"tag":"3070-23-3162-30","descricao":"TRANSP CORR 23-30 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":165,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1320},{"tag":"3070-23-3162-33","descricao":"TRANSP CORR 23-33 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":810,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":6480},{"tag":"3070-23-3162-34","descricao":"TRANSP CORR 23-34 CAVACOS P/ DIGESTOR B","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":68,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":544},{"tag":"3070-23-3163-1","descricao":"TRANSP. DE CORREIA ( 23-1 ) P/ CASCA L4","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":122.5,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":980.0},{"tag":"3070-23-3163-2","descricao":"TRANSP. DE CORREIA ( 23-2 ) P/ CASCA L5","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":122.5,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":980.0},{"tag":"3070-23-3163-3","descricao":"TRANSP. DE CORREIA ( 23-3 ) P/ CASCA L4","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":115.5,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":924.0},{"tag":"3070-23-3163-4","descricao":"TRANSP. DE CORREIA ( 23-30P/ CASCA L5","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":105.5,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":844.0},{"tag":"3070-23-3163-5","descricao":"TRANSP. DE CORREIA ( 23-5 ) P/ CASCA L4","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":439,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":3512},{"tag":"3070-23-3163-6","descricao":"TRANSP. DE CORREIA ( 23-6 ) P/ CASCA L5","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":432,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":3456},{"tag":"3070-23-3163-13","descricao":"TRANSP. DE CORREIA ( 23-13 ) P/ CASCA","material":"CASCA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":285},{"tag":"3070-23-3163-14","descricao":"TRANSP. DE CORREIA ( 23-14 ) P/ CASCA","material":"CASCA","ni":"25569321","larguraPol":42,"larguraMM":1066.8,"comprimentoM":19,"cobSup":12.5,"cobInf":3.5,"carcaca":6,"espTotal":22.0,"pesoMetro":15,"pesoTotal":285},{"tag":"3070-23-3163-16","descricao":"TRANSP. DE CORREIA ( 23-16 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":29,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":232},{"tag":"3070-23-3163-17","descricao":"TRANSP. DE CORREIA ( 23-17 ) P/ CASCA","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":29,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":232},{"tag":"3070-23-3163-7","descricao":"TRANSP. CORREIA 23-7  P/ CASCA TRITURADA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":31,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":186},{"tag":"3070-23-3163-18","descricao":"TRANSP. CORREIA 23-18 P/ CASCA TRITURADA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":116,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":696},{"tag":"3070-23-3163-21","descricao":"TRANSP. CORREIA 23-21 P/ CASCA TRITURADA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":59,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":354},{"tag":"3070-23-3163-22","descricao":"TRANSP. CORREIA 23-22 P/ CASCA TRITURADA","material":"CASCA","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":74,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":444},{"tag":"3070-23-3163-25","descricao":"TRANSP. DE CORREIA ( 23-25 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":425,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":2975},{"tag":"3070-23-3163-26","descricao":"TRANSP. DE CORREIA ( 23-26 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":505,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":3535},{"tag":"3070-23-3163-27","descricao":"TRANSP. DE CORREIA ( 23-27 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":139,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":973},{"tag":"3070-23-3163-28","descricao":"TRANSP. DE CORREIA ( 23-28 ) P/ CASCA","material":"CASCA","ni":"25569322","larguraPol":42,"larguraMM":1066.8,"comprimentoM":23.5,"cobSup":3.5,"cobInf":1.5,"carcaca":5,"espTotal":10.0,"pesoMetro":7,"pesoTotal":164.5},{"tag":"3070-23-3172-701","descricao":"CORREIA TRANSP. TORAS L7 PM/FAB C","material":"TORA","ni":"25569324","larguraPol":55,"larguraMM":1397.0,"comprimentoM":51,"cobSup":19,"cobInf":3.5,"carcaca":8,"espTotal":30.5,"pesoMetro":18,"pesoTotal":918},{"tag":"3070-23-3172-801","descricao":"CORREIA TRANSP. TORAS L8- PÁTIO-FAB C","material":"TORA","ni":"25569324","larguraPol":55,"larguraMM":1397.0,"comprimentoM":68,"cobSup":19,"cobInf":3.5,"carcaca":8,"espTotal":30.5,"pesoMetro":18,"pesoTotal":1224},{"tag":"3070-23-3173-701","descricao":"CORREIA TRANSP. P/ CASCAS L7 PM/FAB C","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":47,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":376},{"tag":"3070-23-3173-801","descricao":"CORREIA TRANSP. P/ CASCAS L8 PM/FAB C","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":65,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":520},{"tag":"3070-23-3173-26","descricao":"CORREIA TRANSP. FINOS/OVERS L7/8","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":69,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":552},{"tag":"3070-23-3173-27","descricao":"TRANSP. CORREIA P/ CASCAS/ RESÍDUOS L7/8","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":48,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":384},{"tag":"3070-23-3173-30","descricao":"CORREIA TRANSP. P/ CASCAS/ RESÍDUOS L7/8","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":42,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":336},{"tag":"3070-23-3163-36","descricao":"TRANSP CORR 23-36 COL REJEIT MESAS 4/5","material":"CASCA","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":159,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1272},{"tag":"3070-23-3172-1","descricao":"CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":206,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":1236},{"tag":"3070-23-3172-2","descricao":"CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":176,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":1056},{"tag":"3070-23-3172-3","descricao":"CORREIA TRANSP. REVERSÍVEL L7/8 PM/FAB C","material":"CAVACO","ni":"25569318","larguraPol":60,"larguraMM":1524.0,"comprimentoM":138,"cobSup":3.5,"cobInf":1.5,"carcaca":6,"espTotal":11.0,"pesoMetro":6,"pesoTotal":828},{"tag":"3070-23-3172-8","descricao":"CORREIA TRANSP. P/ DIGESTOR PM/FAB C","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":229,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":1832},{"tag":"3070-23-3172-9","descricao":"CORREIA TRANSP. CAVACOS P/ DIGESTOR L7/8","material":"CAVACO","ni":"25569325","larguraPol":48,"larguraMM":1219.2,"comprimentoM":905,"cobSup":4.5,"cobInf":1.5,"carcaca":6,"espTotal":12.0,"pesoMetro":8,"pesoTotal":7240}]};
+const PW_HASH_DEFAULT = "fbfef2c0dd3a1871fd593bb4ce61be3034be51259ff543b8836684df7a0a91e5";
+const LS_KEY = "ctv_suzano_edits_v2";
+const LS_PW  = "ctv_suzano_pw_v1";
+const PARTES = ["Acionamento (cabeça)","Retorno (cauda)","Esticamento / Tensionamento","Tambor de desvio","Trecho do tapete (carry)","Trecho de retorno","Área de emenda","Chute de alimentação","Chute de descarga","Raspador","Guia lateral","Estrutura / passadiço","Outro"];
+
+let memStore = {};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return memStore[k]||null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){memStore[k]=v}}
+
+let edits = JSON.parse(lsGet(LS_KEY)||"{}");
+let editMode=false, matSel="", fichaAtual=null;
+
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function norm(s){return(s||"").toUpperCase().replace(/[\s\-–_]/g,"")}
+function today(){return new Date().toISOString().slice(0,10)}
+function diasEntre(d1,d2){return Math.floor((new Date(d2)-new Date(d1))/(864e5))}
+function fmtDate(iso){if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y}`}
+function diasClass(n){if(n===null)return"none";if(n<180)return"green";if(n<365)return"amber";return"red"}
+function getEdits(tag){return edits[tag]||{historico:[],fotos:[],obs:""}}
+function ultimaTroca(tag){const e=getEdits(tag);if(!e.historico||!e.historico.length)return null;return e.historico.sort((a,b)=>b.data.localeCompare(a.data))[0]}
+function diasDesdeUltima(tag){const u=ultimaTroca(tag);return u?diasEntre(u.data,today()):null}
+function fotoCount(tag){return(getEdits(tag).fotos||[]).length}
+function anomaliasAbertas(tag){return(getEdits(tag).anomalias||[]).filter(a=>!a.resolvida)}
+function anomCount(tag){return anomaliasAbertas(tag).length}
+function temAnomalia(tag){return anomCount(tag)>0}
+
+const TIPOS_ANOM=[
+  "Emenda com defeito","Emenda aberta","Emenda com bolha/descolamento",
+  "Desgaste na cobertura superior","Desgaste na cobertura inferior",
+  "Corte longitudinal","Corte transversal","Rasgo",
+  "Bordo danificado","Carcaça exposta",
+  "Desalinhamento (desvio lateral)","Material preso/acumulado",
+  "Raspador danificado","Tambor com desgaste","Rolete travado/danificado",
+  "Estrutura comprometida","Outro"
+];
+const SEVS=[["critica","Crítica — risco de parada"],["moderada","Moderada — requer programação"],["leve","Leve — acompanhar"]];
+let anomOnly=false;
+function toggleAnom(){anomOnly=!anomOnly;document.getElementById("fAnom").classList.toggle("on",anomOnly);render()}
+function fichaFinal(tag){
+  const c=DB.correias.find(x=>x.tag===tag);if(!c)return null;
+  const e=getEdits(tag);
+  const s=e.specs||{};
+  const largPol=s.larguraPol??c.larguraPol;
+  const largMM=largPol?Math.round(largPol*25.4*10)/10:c.larguraMM;
+  const cobSup=s.cobSup??c.cobSup;
+  const cobInf=s.cobInf??c.cobInf;
+  const carc=s.carcaca??c.carcaca;
+  const espT=(cobSup!=null&&cobInf!=null&&carc!=null)?Math.round((cobSup+cobInf+carc)*10)/10:(s.espTotal??c.espTotal);
+  const comp=s.comprimentoM??c.comprimentoM;
+  const ppm=s.pesoMetro??c.pesoMetro;
+  const pesoT=(comp!=null&&ppm!=null)?Math.round(comp*ppm*10)/10:(s.pesoTotal??c.pesoTotal);
+  return{...c,larguraPol:largPol,larguraMM:largMM,comprimentoM:comp,cobSup,cobInf,carcaca:carc,espTotal:espT,pesoMetro:ppm,pesoTotal:pesoT,
+    descricao:s.descricao||c.descricao,material:s.material||c.material,ni:s.ni||c.ni,tipoEmenda:s.tipoEmenda||"",_editado:!!Object.keys(s).length};
+}
+
+function editarSpecs(){
+  const ff=fichaFinal(fichaAtual);
+  let m=document.getElementById("specModal");if(m)m.remove();
+  m=document.createElement("div");m.className="modal open";m.id="specModal";
+  m.innerHTML=`<div class="modalbox">
+    <h3>Editar especificações</h3><p>${esc(fichaAtual)}</p>
+    <div class="editgrid">
+      <div class="fld"><label>Descrição</label><input id="sDesc" value="${esc(ff.descricao)}"></div>
+      <div class="sfgrid">
+        <div class="fld"><label>Material transp.</label><select id="sMat"><option ${ff.material==="CASCA"?"selected":""}>CASCA</option><option ${ff.material==="CAVACO"?"selected":""}>CAVACO</option><option ${ff.material==="TORA"?"selected":""}>TORA</option></select></div>
+        <div class="fld"><label>Tipo de emenda</label><select id="sEmenda"><option value="">— não informado —</option><option ${ff.tipoEmenda==="Emenda a frio"?"selected":""}>Emenda a frio</option><option ${ff.tipoEmenda==="Emenda a quente"?"selected":""}>Emenda a quente</option></select></div>
+        <div class="fld"><label>NI</label><input id="sNI" value="${esc(ff.ni)}"></div>
+        <div class="fld"><label>Largura (pol.)</label><input id="sLargPol" type="number" step="any" value="${ff.larguraPol||""}"></div>
+        <div class="fld"><label>Comprimento (m)</label><input id="sComp" type="number" step="any" value="${ff.comprimentoM||""}"></div>
+        <div class="fld"><label>Cob. superior (mm)</label><input id="sCobSup" type="number" step="any" value="${ff.cobSup||""}"></div>
+        <div class="fld"><label>Cob. inferior (mm)</label><input id="sCobInf" type="number" step="any" value="${ff.cobInf||""}"></div>
+        <div class="fld"><label>Carcaça (mm)</label><input id="sCarc" type="number" step="any" value="${ff.carcaca||""}"></div>
+        <div class="fld"><label>Peso/metro (kg)</label><input id="sPPM" type="number" step="any" value="${ff.pesoMetro||""}"></div>
+      </div>
+    </div>
+    <p class="sfnote">Espessura total e peso total são recalculados automaticamente.</p>
+    <div class="btnrow">
+      <button class="btn primary" onclick="salvarSpecs()">Salvar</button>
+      <button class="btn ghost" onclick="document.getElementById('specModal').remove()">Cancelar</button>
+      ${(getEdits(fichaAtual).specs&&Object.keys(getEdits(fichaAtual).specs).length)?`<button class="btn ghost" style="color:var(--red);border-color:var(--red)" onclick="resetSpecs()">Restaurar original</button>`:""}
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+function salvarSpecs(){
+  const v=k=>{ const el=document.getElementById(k); return el.type==="number"?(el.value===""?null:parseFloat(el.value)):el.value.trim(); };
+  if(!edits[fichaAtual])edits[fichaAtual]={historico:[],fotos:[],obs:""};
+  edits[fichaAtual].specs={
+    descricao:v("sDesc"),material:document.getElementById("sMat").value,ni:v("sNI"),tipoEmenda:document.getElementById("sEmenda").value,
+    larguraPol:v("sLargPol"),comprimentoM:v("sComp"),
+    cobSup:v("sCobSup"),cobInf:v("sCobInf"),carcaca:v("sCarc"),pesoMetro:v("sPPM")
+  };
+  edits[fichaAtual].specsEditadoEm=new Date().toISOString();
+  lsSet(LS_KEY,JSON.stringify(edits));
+  document.getElementById("specModal").remove();renderFicha();toast("Especificações salvas ✔");
+}
+function resetSpecs(){
+  if(!confirm("Restaurar todos os dados originais da planilha? As edições de especificação serão perdidas."))return;
+  delete edits[fichaAtual].specs;delete edits[fichaAtual].specsEditadoEm;
+  lsSet(LS_KEY,JSON.stringify(edits));
+  document.getElementById("specModal").remove();renderFicha();toast("Dados originais restaurados");
+}
+
+const MATS=[...new Set(DB.correias.map(c=>c.material).filter(Boolean))].sort();
+function buildMatChips(){
+  document.getElementById("matChips").innerHTML=`<button class="chip ${matSel===""?"on":""}" onclick="setMat('')">Todos</button>`+MATS.map(m=>`<button class="chip ${matSel===m?"on":""}" onclick="setMat('${m}')">${m}</button>`).join("");
+}
+function setMat(m){matSel=m;buildMatChips();render()}
+const LARGS=[...new Set(DB.correias.map(c=>c.larguraPol).filter(Boolean))].sort((a,b)=>a-b);
+(function(){const s=document.getElementById("fLarg");LARGS.forEach(l=>{const o=document.createElement("option");o.value=l;o.textContent=l+'"';s.appendChild(o)})})();
+
+function render(){
+  const q=norm(document.getElementById("q").value), fl=document.getElementById("fLarg").value, fe=document.getElementById("fEmenda").value, sort=document.getElementById("fSort").value;
+  let out=[], totalAnom=0;
+  for(const c of DB.correias){
+    if(matSel&&c.material!==matSel)continue;
+    if(fl&&String(c.larguraPol)!==fl)continue;
+    const em=fichaFinal(c.tag).tipoEmenda;
+    if(fe==="__vazio__"&&em)continue;
+    if(fe&&fe!=="__vazio__"&&em!==fe)continue;
+    if(q&&!norm(c.tag).includes(q)&&!norm(c.descricao).includes(q)&&!norm(c.material).includes(q))continue;
+    const na=anomCount(c.tag); totalAnom+=na;
+    if(anomOnly&&na===0)continue;
+    out.push({...c,_dias:diasDesdeUltima(c.tag),_fotos:fotoCount(c.tag),_anom:na});
+  }
+  if(sort==="dias-asc")out.sort((a,b)=>(a._dias??9e9)-(b._dias??9e9));
+  else if(sort==="dias-desc")out.sort((a,b)=>(b._dias??-1)-(a._dias??-1));
+  else if(sort==="sem-troca")out.sort((a,b)=>(a._dias===null?0:1)-(b._dias===null?0:1));
+  else if(sort==="com-fotos")out.sort((a,b)=>b._fotos-a._fotos);
+  if(anomOnly)out.sort((a,b)=>b._anom-a._anom);
+  document.getElementById("anomTotal").textContent=totalAnom;
+  document.getElementById("count").textContent=out.length+" de "+DB.correias.length;
+  const list=document.getElementById("list");
+  if(!out.length){list.innerHTML=`<div class="empty">Nenhuma correia encontrada.</div>`;return}
+  list.innerHTML=out.map(c=>{
+    const dc=diasClass(c._dias);
+    const dt=c._dias!==null?`<span class="dias ${dc}">${c._dias} dias</span>`:`<span class="dias none">sem troca</span>`;
+    const u=ultimaTroca(c.tag), dtxt=u?fmtDate(u.data):"";
+    const hasFotos=c._fotos?`<span class="photocount">📷 ${c._fotos}</span>`:"";
+    const hasAnom=c._anom?`<span class="anomcount">⚠ ${c._anom}</span>`:"";
+    const em=fichaFinal(c.tag).tipoEmenda;
+    const emTxt=em?` · ${em}`:"";
+    return`<div class="tagcard ${c._anom?"anomalia":""}" onclick="abrirFicha('${esc(c.tag)}')">
+      <div><div class="tag">${esc(c.tag)}</div><div style="font-size:12px;color:var(--teal);margin-top:2px">${c.larguraPol}" · ${c.comprimentoM} m ${hasFotos} ${hasAnom}</div></div>
+      <div class="meta"><b>${esc(c.descricao)}</b><br>${esc(c.material)}${emTxt}${dtxt?" · Última: "+dtxt:""}</div>${dt}</div>`;
+  }).join("");
+}
+
+/* === FICHA === */
+function abrirFicha(tag){fichaAtual=tag;renderFicha();document.getElementById("ficha").classList.add("open");document.getElementById("ficha").scrollTop=0}
+function closeFicha(){document.getElementById("ficha").classList.remove("open");render()}
+
+function renderFicha(){
+  const c=DB.correias.find(x=>x.tag===fichaAtual);
+  const ff=fichaFinal(fichaAtual);
+  const e=getEdits(fichaAtual);
+  const d=diasDesdeUltima(fichaAtual), u=ultimaTroca(fichaAtual), dc=diasClass(d);
+  const hist=(e.historico||[]).slice().sort((a,b)=>b.data.localeCompare(a.data));
+  const fotos=(e.fotos||[]);
+  const specNote=e.specsEditadoEm?`<p class="disclaimer" style="padding:4px 0 0">Especificações editadas em ${fmtDate(e.specsEditadoEm.slice(0,10))}. Dados originais da planilha podem ser restaurados no modo edição.</p>`:"";
+
+  let html=`<div class="fichahead"><button class="back" onclick="closeFicha()">‹</button>
+    <div><h2>${esc(ff.tag)}</h2><div class="sub">${esc(ff.descricao)}</div></div></div>
+  <div class="fichabody">
+  <div class="diasbox ${dc}">${d!==null
+    ?`<div class="bignum">${d}</div><div class="biglabel">dias desde a última troca</div><div class="lastdate">Trocada em ${fmtDate(u.data)}${u.responsavel?" · "+esc(u.responsavel):""}</div>`
+    :`<div class="bignum">Sem registro de troca</div><div class="biglabel">Registre a primeira troca no modo edição</div>`}</div>
+  <div class="specplate"><div class="pl-title">Especificações · ${esc(ff.material)}${ff.tipoEmenda?" · "+esc(ff.tipoEmenda):""}${editMode?`<button class="specedit" onclick="editarSpecs()">✎ Editar</button>`:""}</div><div class="specgrid">
+    <div class="spec"><div class="lab">Largura</div><div class="val">${ff.larguraPol}" <span class="unit">(${ff.larguraMM} mm)</span></div></div>
+    <div class="spec"><div class="lab">Comprimento</div><div class="val">${ff.comprimentoM} <span class="unit">m</span></div></div>
+    <div class="spec"><div class="lab">Cob. Superior</div><div class="val">${ff.cobSup} <span class="unit">mm</span></div></div>
+    <div class="spec"><div class="lab">Cob. Inferior</div><div class="val">${ff.cobInf} <span class="unit">mm</span></div></div>
+    <div class="spec"><div class="lab">Carcaça</div><div class="val">${ff.carcaca} <span class="unit">mm</span></div></div>
+    <div class="spec"><div class="lab">Esp. Total</div><div class="val">${ff.espTotal} <span class="unit">mm</span></div></div>
+    <div class="spec"><div class="lab">Peso/metro</div><div class="val">${ff.pesoMetro} <span class="unit">kg</span></div></div>
+    <div class="spec"><div class="lab">Peso total</div><div class="val">${ff.pesoTotal} <span class="unit">kg</span></div></div>
+  </div></div>
+  <div class="section"><h3>Identificação</h3>
+    <div class="kv"><span class="k">NI</span><span class="v">${esc(ff.ni)}</span></div>
+    <div class="kv"><span class="k">Material transportado</span><span class="v">${esc(ff.material)}</span></div>
+    <div class="kv"><span class="k">Tipo de emenda</span><span class="v">${ff.tipoEmenda?esc(ff.tipoEmenda):`<span style="color:var(--warn)">não informado</span>`}</span></div></div>
+  ${specNote}
+  <div class="histbox ${editMode?'editing':''}" id="histBox"><h3>Histórico de trocas (${hist.length})</h3>
+    ${hist.length?hist.map((h,i)=>{
+      const prev=i+1<hist.length?i+1:-1, interv=prev>=0?diasEntre(hist[prev].data,h.data)+" dias":"—";
+      return`<div class="histitem"><div class="dot"></div><div class="hdate">${fmtDate(h.data)}</div>
+        <div class="hresp">${esc(h.responsavel)||"—"}${h.obs?" · "+esc(h.obs):""}</div>
+        <div class="hdias">Δ ${interv}</div>
+        <button class="hdel" onclick="removerTroca('${fichaAtual}',${i})" title="Remover">✕</button></div>`;
+    }).join(""):`<div class="histempty">Nenhuma troca registrada.</div>`}</div>
+
+  ${renderAnomalias(fichaAtual,e)}
+
+  <div class="section ${editMode?'editing':''}"><h3>Fotos do transportador (${fotos.length})</h3>
+    ${fotos.length?`<div class="photogrid">${fotos.map((f,i)=>
+      `<div class="photocard">
+        <img src="${f.img}" alt="${esc(f.parte)}" onclick="zoomFoto(${i})">
+        <div class="pcap"><b>${esc(f.parte)}</b>${f.descricao?esc(f.descricao):""}<br><span style="font-size:11px;color:#aaa">${fmtDate(f.data)}</span></div>
+        <button class="pdel" onclick="removerFoto(${i})">✕</button>
+      </div>`).join("")}</div>`:`<div class="photoempty">Nenhuma foto registrada.</div>`}
+    ${editMode?`<div class="photoadd" onclick="modalFoto()"><span class="paico">📷</span>Adicionar foto</div>`:""}</div>
+
+  ${e.obs?`<div class="section"><h3>Observações</h3><p>${esc(e.obs)}</p></div>`:""}
+  <div style="height:80px"></div></div>`;
+
+  document.getElementById("ficha").innerHTML=html;
+  const old=document.getElementById("editFab");if(old)old.remove();
+  if(editMode){const fab=document.createElement("button");fab.className="editfab";fab.id="editFab";fab.textContent="＋ Registrar troca";fab.onclick=()=>modalTroca();document.getElementById("ficha").appendChild(fab)}
+}
+
+/* === Anomalias === */
+function renderAnomalias(tag,e){
+  const all=(e.anomalias||[]);
+  const abertas=[], resolvidas=[];
+  all.forEach((a,i)=>{ a._i=i; (a.resolvida?resolvidas:abertas).push(a); });
+  let h="";
+  if(abertas.length){
+    h+=`<div class="anomalert"><div class="aicon">⚠</div><div class="atxt"><b>${abertas.length} anomalia${abertas.length>1?"s":""} aberta${abertas.length>1?"s":""}.</b>${abertas.filter(a=>a.severidade==="critica").length?" Inclui "+abertas.filter(a=>a.severidade==="critica").length+" crítica(s).":""}</div></div>`;
+  }
+  h+=`<div class="anombox ${editMode?"editing":""}"><h3>Anomalias (${abertas.length} aberta${abertas.length!==1?"s":""}${resolvidas.length?" · "+resolvidas.length+" resolvida"+(resolvidas.length!==1?"s":""):""})</h3>`;
+  const renderItem=(a,resolved)=>{
+    let mediaHtml="";
+    if(a.media){
+      if(a.mediaType==="video"){
+        mediaHtml=`<div class="anommedia"><video src="${a.media}" controls playsinline style="width:100%;max-height:200px;border-radius:6px;margin:6px 0"></video></div>`;
+      } else {
+        mediaHtml=`<div class="anommedia"><img src="${a.media}" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin:6px 0;cursor:zoom-in" onclick="zoomAnomMedia(${a._i})"></div>`;
+      }
+    }
+    if(resolved){
+      return`<div class="anomitem anomresolvida"><div class="asev ${a.severidade}"></div><div class="abody"><b>${esc(a.tipo)}</b>${mediaHtml}<span class="adate">${fmtDate(a.data)} → resolvida ${fmtDate(a.resolvidaEm)}${a.resolvidaPor?" por "+esc(a.resolvidaPor):""}</span></div><button class="adel" onclick="removerAnomalia(${a._i})">✕</button></div>`;
+    }
+    return`<div class="anomitem"><div class="asev ${a.severidade}"></div><div class="abody"><span class="atipo">${esc(a.tipo)}</span><b>${a.severidade==="critica"?"CRÍTICA":a.severidade==="moderada"?"MODERADA":"LEVE"}</b>${a.descricao?esc(a.descricao)+"<br>":""}${mediaHtml}<span class="adate">${fmtDate(a.data)}${a.responsavel?" · "+esc(a.responsavel):""}</span></div><button class="aresolve" onclick="resolverAnomalia(${a._i})">✔ Resolver</button><button class="adel" onclick="removerAnomalia(${a._i})">✕</button></div>`;
+  };
+  if(abertas.length){
+    h+=abertas.map(a=>renderItem(a,false)).join("");
+  } else {
+    h+=`<div class="histempty">Nenhuma anomalia aberta.</div>`;
+  }
+  if(resolvidas.length&&abertas.length===0){
+    h+=`<div style="margin-top:8px;font-size:12px;color:var(--ok)">✔ ${resolvidas.length} anomalia${resolvidas.length>1?"s":""} resolvida${resolvidas.length>1?"s":""}.</div>`;
+  }
+  if(resolvidas.length){
+    h+=`<details style="margin-top:8px"><summary style="font-size:12px;color:var(--ink2);cursor:pointer">Ver resolvidas (${resolvidas.length})</summary>`;
+    h+=resolvidas.map(a=>renderItem(a,true)).join("")+"</details>";
+  }
+  if(editMode){
+    h+=`<div class="anomadd" onclick="modalAnomalia()">⚠ Registrar anomalia</div>`;
+    if(all.length) h+=`<div style="margin-top:8px;text-align:right"><button class="btn ghost" style="font-size:12px;padding:6px 12px;color:var(--red);border-color:var(--red)" onclick="limparAnomalias()">Limpar todas as anomalias</button></div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+function zoomAnomMedia(idx){
+  const a=(getEdits(fichaAtual).anomalias||[])[idx];
+  if(!a||!a.media||a.mediaType==="video")return;
+  document.getElementById("zImg").src=a.media;
+  document.getElementById("zName").textContent=a.tipo;
+  document.getElementById("zCap").textContent=(a.descricao||"")+" — "+fmtDate(a.data);
+  document.getElementById("zoomer").classList.add("open");
+  document.getElementById("zoomer").scrollTop=0;
+}
+function limparAnomalias(){
+  if(!confirm("Remover TODAS as anomalias desta correia?"))return;
+  if(!edits[fichaAtual])edits[fichaAtual]={historico:[],fotos:[],anomalias:[],obs:""};
+  edits[fichaAtual].anomalias=[];
+  lsSet(LS_KEY,JSON.stringify(edits));renderFicha();toast("Anomalias removidas");
+}
+function modalAnomalia(){
+  let m=document.getElementById("anomModal");if(m)m.remove();
+  m=document.createElement("div");m.className="modal open";m.id="anomModal";
+  m.innerHTML=`<div class="modalbox">
+    <h3>Registrar anomalia</h3><p>${esc(fichaAtual)}</p>
+    <img id="anomPreview" class="imgpreview">
+    <video id="anomVideoPreview" class="imgpreview" controls style="display:none"></video>
+    <div class="editgrid">
+      <div class="fld"><label>Foto ou vídeo da avaria</label>
+        <input type="file" id="anomFile" accept="image/*,video/*" capture="environment" onchange="previewAnomMedia(this)">
+        <div style="font-size:11px;color:var(--ink2);margin-top:4px">Vídeos são limitados a ~10 seg por conta do armazenamento local</div></div>
+      <div class="fld"><label>Tipo de anomalia</label><select id="aTipo">${TIPOS_ANOM.map(t=>`<option>${t}</option>`).join("")}</select></div>
+      <div class="fld"><label>Severidade</label><select id="aSev">${SEVS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></div>
+      <div class="fld"><label>Data da identificação</label><input type="date" id="aData" value="${today()}" max="${today()}"></div>
+      <div class="fld"><label>Responsável pela identificação</label><input id="aResp" placeholder="Nome"></div>
+      <div class="fld"><label>Descrição (opcional)</label><textarea id="aDesc" rows="3" placeholder="Localização, extensão do dano, ação recomendada..."></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" style="background:var(--red)" onclick="salvarAnomalia()">Registrar anomalia</button>
+      <button class="btn ghost" onclick="document.getElementById('anomModal').remove()">Cancelar</button>
+    </div></div>`;
+  document.body.appendChild(m);
+}
+function previewAnomMedia(inp){
+  const file=inp.files[0];if(!file)return;
+  const prev=document.getElementById("anomPreview");
+  const vprev=document.getElementById("anomVideoPreview");
+  if(file.type.startsWith("video/")){
+    prev.style.display="none";
+    vprev.src=URL.createObjectURL(file);vprev.style.display="block";
+  } else {
+    vprev.style.display="none";
+    const r=new FileReader();r.onload=e=>{prev.src=e.target.result;prev.style.display="block"};r.readAsDataURL(file);
+  }
+}
+function processAnomMedia(file){
+  return new Promise((resolve)=>{
+    if(!file){resolve(null);return}
+    if(file.type.startsWith("video/")){
+      const r=new FileReader();
+      r.onload=e=>{
+        const b64=e.target.result;
+        if(b64.length>5000000){toast("Vídeo muito grande — limite ~10 segundos");resolve(null);return}
+        resolve({data:b64,type:"video"});
+      };
+      r.readAsDataURL(file);
+    } else {
+      const r=new FileReader();
+      r.onload=e=>{
+        const img=new Image();
+        img.onload=()=>{
+          const MAX=800;let w=img.width,h=img.height;
+          if(w>MAX||h>MAX){const s=Math.min(MAX/w,MAX/h);w=Math.round(w*s);h=Math.round(h*s)}
+          const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+          cv.getContext("2d").drawImage(img,0,0,w,h);
+          resolve({data:cv.toDataURL("image/jpeg",0.7),type:"image"});
+        };
+        img.src=e.target.result;
+      };
+      r.readAsDataURL(file);
+    }
+  });
+}
+async function salvarAnomalia(){
+  const tipo=document.getElementById("aTipo").value;
+  const sev=document.getElementById("aSev").value;
+  const data=document.getElementById("aData").value;
+  const resp=document.getElementById("aResp").value.trim();
+  const desc=document.getElementById("aDesc").value.trim();
+  if(!data){toast("Informe a data");return}
+  const fileInp=document.getElementById("anomFile");
+  const media=await processAnomMedia(fileInp.files[0]);
+  if(fileInp.files[0]&&!media)return;
+  if(!edits[fichaAtual])edits[fichaAtual]={historico:[],fotos:[],anomalias:[],obs:""};
+  if(!edits[fichaAtual].anomalias)edits[fichaAtual].anomalias=[];
+  const entry={tipo,severidade:sev,data,responsavel:resp,descricao:desc,resolvida:false,registradoEm:new Date().toISOString()};
+  if(media){entry.media=media.data;entry.mediaType=media.type}
+  edits[fichaAtual].anomalias.push(entry);
+  lsSet(LS_KEY,JSON.stringify(edits));
+  document.getElementById("anomModal").remove();renderFicha();toast("Anomalia registrada ⚠");
+}
+function resolverAnomalia(idx){
+  const nome=prompt("Quem resolveu?");
+  if(nome===null)return;
+  if(!edits[fichaAtual]||!edits[fichaAtual].anomalias||!edits[fichaAtual].anomalias[idx])return;
+  edits[fichaAtual].anomalias[idx].resolvida=true;
+  edits[fichaAtual].anomalias[idx].resolvidaEm=today();
+  edits[fichaAtual].anomalias[idx].resolvidaPor=nome.trim();
+  lsSet(LS_KEY,JSON.stringify(edits));renderFicha();toast("Anomalia resolvida ✔");
+}
+function removerAnomalia(idx){
+  if(!confirm("Remover este registro de anomalia?"))return;
+  if(!edits[fichaAtual]||!edits[fichaAtual].anomalias)return;
+  edits[fichaAtual].anomalias.splice(idx,1);
+  lsSet(LS_KEY,JSON.stringify(edits));renderFicha();toast("Registro removido");
+}
+
+/* === Fotos === */
+function modalFoto(){
+  let m=document.getElementById("fotoModal");if(m)m.remove();
+  m=document.createElement("div");m.className="modal open";m.id="fotoModal";
+  m.innerHTML=`<div class="modalbox">
+    <h3>Adicionar foto</h3><p>${esc(fichaAtual)}</p>
+    <img id="fotoPreview" class="imgpreview">
+    <div class="editgrid">
+      <div class="fld"><label>Foto (câmera ou galeria)</label>
+        <input type="file" id="fotoFile" accept="image/*" capture="environment" onchange="previewFoto(this)"></div>
+      <div class="fld"><label>Parte do transportador</label>
+        <select id="fotoParte">${PARTES.map(p=>`<option>${p}</option>`).join("")}</select></div>
+      <div class="fld"><label>Descrição (opcional)</label>
+        <textarea id="fotoDesc" rows="2" placeholder="Ex: desgaste no tambor, raspador danificado..."></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" onclick="salvarFoto()">Salvar foto</button>
+      <button class="btn ghost" onclick="document.getElementById('fotoModal').remove()">Cancelar</button>
+    </div>
+    <p class="disclaimer">A foto é armazenada localmente neste navegador. Imagens grandes são redimensionadas para economizar espaço.</p>
+  </div>`;
+  document.body.appendChild(m);
+}
+function previewFoto(inp){
+  const file=inp.files[0];if(!file)return;
+  const prev=document.getElementById("fotoPreview");
+  const reader=new FileReader();
+  reader.onload=e=>{prev.src=e.target.result;prev.style.display="block"};
+  reader.readAsDataURL(file);
+}
+function salvarFoto(){
+  const inp=document.getElementById("fotoFile");
+  if(!inp.files[0]){toast("Selecione uma foto");return}
+  const parte=document.getElementById("fotoParte").value;
+  const desc=document.getElementById("fotoDesc").value.trim();
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=800;
+      let w=img.width, h=img.height;
+      if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r)}
+      const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      const b64=cv.toDataURL("image/jpeg",0.7);
+      if(!edits[fichaAtual])edits[fichaAtual]={historico:[],fotos:[],obs:""};
+      if(!edits[fichaAtual].fotos)edits[fichaAtual].fotos=[];
+      edits[fichaAtual].fotos.push({img:b64,parte,descricao:desc,data:today(),registradoEm:new Date().toISOString()});
+      lsSet(LS_KEY,JSON.stringify(edits));
+      document.getElementById("fotoModal").remove();
+      renderFicha();toast("Foto salva ✔");
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+function removerFoto(idx){
+  if(!confirm("Remover esta foto?"))return;
+  edits[fichaAtual].fotos.splice(idx,1);
+  lsSet(LS_KEY,JSON.stringify(edits));
+  renderFicha();toast("Foto removida");
+}
+function zoomFoto(idx){
+  const f=getEdits(fichaAtual).fotos[idx];if(!f)return;
+  document.getElementById("zImg").src=f.img;
+  document.getElementById("zName").textContent=f.parte;
+  document.getElementById("zCap").textContent=(f.descricao||"")+(f.data?" — "+fmtDate(f.data):"");
+  document.getElementById("zoomer").classList.add("open");
+  document.getElementById("zoomer").scrollTop=0;
+}
+
+/* === Troca === */
+function modalTroca(){
+  let m=document.getElementById("trocaModal");if(m)m.remove();
+  m=document.createElement("div");m.className="modal open";m.id="trocaModal";
+  m.innerHTML=`<div class="modalbox"><h3>Registrar troca de correia</h3><p>${esc(fichaAtual)}</p>
+    <div class="editgrid">
+      <div class="fld"><label>Data da troca</label><input type="date" id="tData" value="${today()}" max="${today()}"></div>
+      <div class="fld"><label>Responsável</label><input id="tResp" placeholder="Nome do responsável"></div>
+      <div class="fld"><label>Observação (opcional)</label><textarea id="tObs" rows="3" placeholder="Motivo, fornecedor, lote..."></textarea></div>
+    </div>
+    <div class="btnrow"><button class="btn primary" onclick="salvarTroca()">Registrar troca</button>
+      <button class="btn ghost" onclick="document.getElementById('trocaModal').remove()">Cancelar</button></div></div>`;
+  document.body.appendChild(m);setTimeout(()=>document.getElementById("tResp").focus(),80);
+}
+function salvarTroca(){
+  const data=document.getElementById("tData").value,resp=document.getElementById("tResp").value.trim(),obs=document.getElementById("tObs").value.trim();
+  if(!data){toast("Informe a data");return}
+  if(!edits[fichaAtual])edits[fichaAtual]={historico:[],fotos:[],obs:""};
+  if(!edits[fichaAtual].historico)edits[fichaAtual].historico=[];
+  const dup=edits[fichaAtual].historico.find(h=>h.data===data&&h.responsavel===resp);
+  if(dup){toast("Já existe troca com mesma data e responsável");return}
+  edits[fichaAtual].historico.push({data,responsavel:resp,obs,registradoEm:new Date().toISOString()});
+  lsSet(LS_KEY,JSON.stringify(edits));
+  document.getElementById("trocaModal").remove();renderFicha();toast("Troca registrada ✔");
+}
+function removerTroca(tag,idx){
+  if(!confirm("Remover este registro?"))return;
+  const hist=edits[tag].historico.sort((a,b)=>b.data.localeCompare(a.data));hist.splice(idx,1);
+  edits[tag].historico=hist;lsSet(LS_KEY,JSON.stringify(edits));renderFicha();toast("Registro removido");
+}
+
+/* === Senha === */
+async function sha256(s){const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("")}
+function pwHash(){return lsGet(LS_PW)||PW_HASH_DEFAULT}
+function toggleLock(){
+  if(editMode){editMode=false;syncLockUI();toast("Modo consulta");if(fichaAtual&&document.getElementById("ficha").classList.contains("open"))renderFicha();return}
+  document.getElementById("pwModal").classList.add("open");setTimeout(()=>document.getElementById("pwInput").focus(),80);
+}
+function fecharModal(){document.getElementById("pwModal").classList.remove("open");document.getElementById("pwInput").value=""}
+async function confirmarSenha(){
+  if(await sha256(document.getElementById("pwInput").value)===pwHash()){editMode=true;fecharModal();syncLockUI();toast("Edição liberada");if(fichaAtual&&document.getElementById("ficha").classList.contains("open"))renderFicha()}else toast("Senha incorreta");
+}
+function syncLockUI(){const b=document.getElementById("lockBtn");b.classList.toggle("on",editMode);b.innerHTML=editMode?"🔓 Edição":"🔒 Consulta"}
+async function trocarSenha(){if(!editMode){toast("Libere a edição primeiro");return}const n=prompt("Nova senha (mín. 6 caracteres):");if(!n||n.length<6){if(n!==null)toast("Senha muito curta");return}lsSet(LS_PW,await sha256(n));toast("Senha alterada")}
+
+/* === Export/Import === */
+function exportar(){
+  const blob=new Blob([JSON.stringify({app:"ctv-suzano",versao:2,exportadoEm:new Date().toISOString(),edits},null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ctv_suzano_edicoes_"+today()+".json";a.click();URL.revokeObjectURL(a.href);toast("Exportado");
+}
+function importar(inp){
+  const file=inp.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{
+    const p=JSON.parse(r.result);if(!p.edits)throw 0;let novos=0,nfotos=0;
+    for(const[tag,e]of Object.entries(p.edits)){
+      if(!edits[tag])edits[tag]={historico:[],fotos:[],obs:""};
+      if(!edits[tag].historico)edits[tag].historico=[];
+      if(!edits[tag].fotos)edits[tag].fotos=[];
+      if(!edits[tag].anomalias)edits[tag].anomalias=[];
+      const existH=new Set(edits[tag].historico.map(h=>h.data+"|"+h.responsavel));
+      for(const h of(e.historico||[])){const k=h.data+"|"+h.responsavel;if(!existH.has(k)){edits[tag].historico.push(h);novos++;existH.add(k)}}
+      const existF=new Set(edits[tag].fotos.map(f=>f.registradoEm));
+      for(const f of(e.fotos||[])){if(!existF.has(f.registradoEm)){edits[tag].fotos.push(f);nfotos++;existF.add(f.registradoEm)}}
+      const existA=new Set(edits[tag].anomalias.map(a=>a.registradoEm));
+      for(const a of(e.anomalias||[])){if(!existA.has(a.registradoEm)){edits[tag].anomalias.push(a);existA.add(a.registradoEm)}}
+      if(e.obs&&!edits[tag].obs)edits[tag].obs=e.obs;
+    }
+    lsSet(LS_KEY,JSON.stringify(edits));render();
+    toast(`Importado: ${novos} troca(s), ${nfotos} foto(s)`);
+  }catch(err){toast("Arquivo inválido")}inp.value=""};
+  r.readAsText(file);
+}
+
+/* === Nav === */
+function navTo(i){
+  ["nav0","nav1"].forEach((id,j)=>document.getElementById(id).classList.toggle("on",i===j));
+  document.getElementById("ficha").classList.remove("open");
+  document.getElementById("dados").classList.toggle("open",i===1);
+  if(i===1)atualizarStats();
+}
+function atualizarStats(){
+  let comTroca=0,totalTrocas=0,totalFotos=0,totalAnom=0;
+  for(const c of DB.correias){const e=getEdits(c.tag);if(e.historico&&e.historico.length){comTroca++;totalTrocas+=e.historico.length}totalFotos+=(e.fotos||[]).length;totalAnom+=anomCount(c.tag)}
+  document.getElementById("statsBox").innerHTML=
+    `<b>${DB.correias.length}</b> correias · <b>${MATS.length}</b> materiais · <b>${LARGS.length}</b> larguras<br>`+
+    `<b>${comTroca}</b> com registro de troca · <b>${totalTrocas}</b> trocas no total<br>`+
+    `<b>${totalFotos}</b> fotos registradas<br>`+
+    `<b style="color:var(--red)">${totalAnom}</b> anomalia${totalAnom!==1?"s":""} aberta${totalAnom!==1?"s":""}<br>`+
+    `<b>${DB.correias.length-comTroca}</b> sem nenhum registro de troca`;
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",2600)}
+
+function resetTudo(){
+  if(!editMode){toast("Libere o modo edição primeiro");return}
+  if(!confirm("Tem certeza? Isso apaga TODAS as edições, trocas, fotos e anomalias de TODAS as correias neste navegador."))return;
+  if(!confirm("Confirmação final: essa ação não pode ser desfeita. Continuar?"))return;
+  edits={};
+  lsSet(LS_KEY,"{}");
+  render();atualizarStats();
+  toast("Todos os registros foram removidos");
+}
+
+buildMatChips();render();syncLockUI();
+</script>
+<script>
+/* PWA: registra o service worker para funcionar offline */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
