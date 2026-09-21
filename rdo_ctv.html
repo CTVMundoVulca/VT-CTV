@@ -124,6 +124,7 @@
   .auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
   #modeBanner { background: #FFF6E9; border-color: #F3D9A8; }
   html[data-dark="1"] #modeBanner { background: #2A2410; border-color: #4a3d12; }
+  html[data-dark="1"] #rdoDraftBanner { background: #2A2410 !important; border-color: #4a3d12 !important; }
 
   /* ── TELA DE IMPRESSÃO / PDF ── */
   #printOverlay { position: fixed; inset: 0; z-index: 400; background: #fff; display: none; flex-direction: column; }
@@ -198,6 +199,13 @@
       <div style="display:flex;align-items:center;gap:8px;font-size:12px">
         <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
         <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+      </div>
+    </div>
+    <div class="card" id="rdoDraftBanner" style="display:none;background:#FFF6E9;border-color:#F3D9A8">
+      <div class="hint" style="margin:0 0 10px;color:#8a5a00">📝 Você tem um RDO em preenchimento (não salvo).</div>
+      <div class="row">
+        <button class="btn btn-primary" onclick="retomarRascunho()">Retomar</button>
+        <button class="btn btn-ghost" onclick="descartarRascunho()">Descartar</button>
       </div>
     </div>
     <div class="card">
@@ -297,6 +305,7 @@
         <button class="btn btn-primary" onclick="gerarPDF()">📄 Gerar PDF</button>
         <button class="btn btn-ghost" onclick="exportOneCSV()">⬇️ CSV</button>
       </div>
+      <button class="btn btn-ghost" onclick="limparRDO()" style="margin-bottom:10px">🧹 Limpar campos</button>
       <button class="btn btn-danger" onclick="deleteRDO()">🗑️ Excluir RDO</button>
     </div>
   </div>
@@ -428,6 +437,7 @@ function goEditor() { document.getElementById('view-list').classList.remove('act
 
 /* ── lista ── */
 function renderList() {
+  atualizarBannerRascunho();
   const el = document.getElementById('rdoList');
   const list = db.rdos.slice().sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.criadoEm || 0) - (a.criadoEm || 0));
   if (!list.length) { el.innerHTML = `<div class="empty"><span class="big">📄</span>Nenhum RDO ainda. Toque em "Novo RDO".</div>`; return; }
@@ -489,8 +499,19 @@ function blankRDO(dateKey) {
   return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', titulo: '',
     efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, transporte: [], criadoEm: Date.now() };
 }
-function newRDO(dateKey) { cur = blankRDO(dateKey); editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor(); }
-function openRDO(id) { const r = db.rdos.find(x => x.id === id); if (!r) return; cur = JSON.parse(JSON.stringify(r)); editingId = id; fillEditor(); document.getElementById('hdrTitle').textContent = 'RDO ' + (r.numero || ''); goEditor(); }
+function newRDO(dateKey) {
+  const d = loadDraft();
+  if (d && d.rdo && d.editingId == null) { cur = d.rdo; }   // retoma o RDO novo em preenchimento
+  else { cur = blankRDO(dateKey); }
+  editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor();
+}
+function openRDO(id) {
+  const r = db.rdos.find(x => x.id === id); if (!r) return;
+  const d = loadDraft();
+  if (d && d.rdo && d.editingId === id) { cur = d.rdo; }     // retoma edições não salvas deste RDO
+  else { cur = JSON.parse(JSON.stringify(r)); }
+  editingId = id; fillEditor(); document.getElementById('hdrTitle').textContent = 'RDO ' + (r.numero || ''); goEditor();
+}
 
 function fillEditor() {
   document.getElementById('f_numero').value = cur.numero || '';
@@ -542,8 +563,8 @@ function syncSection(section) {
     return o;
   });
 }
-function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); }
-function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); }
+function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); saveDraftDebounced(); }
+function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); saveDraftDebounced(); }
 
 /* ── colaboradores (lista de nomes) ── */
 function colabList() { return (db.config.colaboradores || []).slice().sort((a, b) => a.localeCompare(b, 'pt')); }
@@ -608,19 +629,55 @@ function collectEditor() {
   cur.assBenetech = getSigDataURL('benetech') || cur.assBenetech || null;
   cur.assFiscal = getSigDataURL('fiscal') || cur.assFiscal || null;
 }
+/* ── rascunho automático (não perder o RDO em preenchimento) ── */
+const DRAFT_KEY = 'ctv_rdo_draft';
+let draftTimer = null;
+function loadDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return null; } }
+function saveDraftNow() {
+  const ed = document.getElementById('view-editor');
+  if (!ed || !ed.classList.contains('active') || !cur) return;
+  collectEditor();
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingId: editingId, rdo: cur, ts: Date.now() })); } catch (e) {}
+}
+function saveDraftDebounced() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraftNow, 500); }
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} atualizarBannerRascunho(); }
+function atualizarBannerRascunho() { const b = document.getElementById('rdoDraftBanner'); if (!b) return; const d = loadDraft(); b.style.display = (d && d.rdo) ? '' : 'none'; }
+function retomarRascunho() {
+  const d = loadDraft(); if (!d || !d.rdo) return;
+  cur = d.rdo; editingId = d.editingId || null;
+  fillEditor();
+  document.getElementById('hdrTitle').textContent = editingId ? ('RDO ' + (cur.numero || '')) : 'Novo RDO';
+  goEditor();
+}
+function descartarRascunho() {
+  if (!confirm('Descartar o RDO em preenchimento? As informações não salvas serão perdidas.')) return;
+  clearDraft(); showToast('Rascunho descartado'); renderList();
+}
+function limparRDO() {
+  if (!confirm('Limpar os campos deste RDO? As informações não salvas serão descartadas.')) return;
+  clearDraft();
+  if (editingId) { const r = db.rdos.find(x => x.id === editingId); cur = r ? JSON.parse(JSON.stringify(r)) : blankRDO(); }
+  else { cur = blankRDO(); editingId = null; }
+  fillEditor();
+  document.getElementById('hdrTitle').textContent = editingId ? ('RDO ' + (cur.numero || '')) : 'Novo RDO';
+  showToast('Campos limpos');
+}
+
 function saveRDO() {
   collectEditor();
   if (!cur.data) { showToast('Informe a data do RDO.'); return; }
   cur.atualizadoEm = Date.now();
   persistRDO(cur);
   editingId = cur.id;
+  clearDraft();
   document.getElementById('hdrTitle').textContent = 'RDO ' + (cur.numero || '');
   showToast('RDO salvo ✔️');
 }
 function deleteRDO() {
-  if (!editingId) { goList(); return; }
+  if (!editingId) { clearDraft(); goList(); return; }
   if (!confirm('Excluir este RDO?')) return;
   removeRDOStore(editingId);
+  clearDraft();
   showToast('RDO excluído'); goList();
 }
 
@@ -651,7 +708,7 @@ function restoreSignature(id, dataURL) {
   img.src = dataURL;
 }
 function limparAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); sigState[id] = false; if (id === 'benetech') cur.assBenetech = null; else cur.assFiscal = null; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = ''; }
-function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; if (id === 'benetech') cur.assBenetech = c.toDataURL('image/png'); else cur.assFiscal = c.toDataURL('image/png'); showToast('Assinatura confirmada ✔️'); }
+function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; if (id === 'benetech') cur.assBenetech = c.toDataURL('image/png'); else cur.assFiscal = c.toDataURL('image/png'); saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
 function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? c.toDataURL('image/png') : null; }
 
 /* ── PDF (tela de impressão dentro do app, com botão Voltar) ── */
@@ -856,6 +913,13 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
 
 /* ── init ── */
 document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }));
+/* rascunho automático: salva enquanto preenche e ao sair/fechar */
+(function () {
+  const ed = document.getElementById('view-editor');
+  if (ed) { ed.addEventListener('input', saveDraftDebounced, true); ed.addEventListener('change', saveDraftDebounced, true); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraftNow(); });
+  window.addEventListener('pagehide', saveDraftNow);
+})();
 window.__RDO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
 if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediato
 </script>
