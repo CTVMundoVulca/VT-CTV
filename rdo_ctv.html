@@ -90,9 +90,7 @@
   .cal-cell { position: relative; aspect-ratio: 1/1; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); display: grid; place-items: center; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text); }
   .cal-cell.empty { background: transparent; border: none; cursor: default; }
   .cal-cell:active { transform: scale(.94); }
-  .cal-cell.d-sede { background: var(--azul); color: #fff; border-color: transparent; }
-  .cal-cell.d-externo { background: var(--orange); color: #fff; border-color: transparent; }
-  .cal-cell.d-arcelor { background: var(--danger); color: #fff; border-color: transparent; }
+  .cal-cell.d-has { background: var(--orange); color: #fff; border-color: transparent; }
   .cal-cell.d-multi { background: var(--verde-esc); color: #fff; border-color: transparent; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
   html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
@@ -214,10 +212,8 @@
       </div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="cal-legend">
-        <span><i style="background:var(--azul)"></i>Sede</span>
-        <span><i style="background:var(--orange)"></i>Externo</span>
-        <span><i style="background:var(--danger)"></i>Arcelor</span>
-        <span><i style="background:var(--verde-esc)"></i>Múltiplos</span>
+        <span><i style="background:var(--orange)"></i>Com RDO</span>
+        <span><i style="background:var(--verde-esc)"></i>Múltiplos no dia</span>
       </div>
     </div>
     <div class="card">
@@ -248,14 +244,6 @@
         <div><label class="fld">Local / Facilidade</label><input type="text" id="f_local" placeholder="Ex.: Aracruz"></div>
         <div><label class="fld">Responsável Técnico</label><input type="text" id="f_responsavel"></div>
         <div><label class="fld">Ordem de Manutenção</label><input type="text" id="f_om"></div>
-        <div><label class="fld">ADM / Turno</label><input type="text" id="f_adm"></div>
-        <div><label class="fld">Tipo de atendimento</label>
-          <select id="f_tipo">
-            <option value="sede">Sede (azul)</option>
-            <option value="externo">Externo (laranja)</option>
-            <option value="arcelor">Arcelor (vermelho)</option>
-          </select>
-        </div>
         <div class="full"><label class="fld">Complemento (opcional — permite vários RDOs no mesmo dia)</label><input type="text" id="f_titulo" placeholder="Ex.: Correia 801"></div>
       </div>
     </div>
@@ -347,7 +335,6 @@ let editingId = null;
 
 const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
-const TIPO_LABEL = { sede: 'Sede', externo: 'Externo', arcelor: 'Arcelor' };
 const SEC = {
   efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['empresa','Empresa','text'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
   alimentacao: [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo','text'],['empresa','Empresa','text'],['liberado','Liberado por','text']],
@@ -446,7 +433,6 @@ function renderList() {
     return `<div class="entry" onclick="openRDO('${r.id}')">
       <div class="entry-main">
         <div class="top">
-          <span class="pill p-${r.tipo || 'externo'}">${TIPO_LABEL[r.tipo] || 'Externo'}</span>
           <span>RDO ${r.numero || '—'} · ${dt}</span>
         </div>
         <div class="sub">${escapeHtml([r.cliente, r.local, r.titulo].filter(Boolean).join(' · ') || '—')} · ${(r.efetivo||[]).length} pessoa(s), ${(r.atividades||[]).length} atividade(s)</div>
@@ -475,9 +461,7 @@ function renderCalendar() {
     const list = map[k] || [];
     let cls = 'cal-cell';
     if (list.length) {
-      const tipos = new Set(list.map(r => r.tipo || 'externo'));
-      if (list.length > 1 || tipos.size > 1) cls += ' d-multi';
-      else cls += ' d-' + [...tipos][0];
+      cls += (list.length > 1) ? ' d-multi' : ' d-has';
     }
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
@@ -499,7 +483,7 @@ function openDay(k) {
 function blankRDO(dateKey) {
   const today = dateKey || (new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate()));
   const nextNum = db.rdos.reduce((mx, r) => Math.max(mx, parseInt(r.numero, 10) || 0), 0) + 1;
-  return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', adm: '', tipo: 'externo', titulo: '',
+  return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', titulo: '',
     efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, transporte: [], criadoEm: Date.now() };
 }
 function newRDO(dateKey) { cur = blankRDO(dateKey); editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor(); }
@@ -512,8 +496,6 @@ function fillEditor() {
   document.getElementById('f_local').value = cur.local || '';
   document.getElementById('f_responsavel').value = cur.responsavel || '';
   document.getElementById('f_om').value = cur.om || '';
-  document.getElementById('f_adm').value = cur.adm || '';
-  document.getElementById('f_tipo').value = cur.tipo || 'externo';
   document.getElementById('f_titulo').value = cur.titulo || '';
   document.getElementById('f_ocorrencias').value = cur.ocorrencias || '';
   Object.keys(SEC).forEach(renderSection);
@@ -617,8 +599,6 @@ function collectEditor() {
   cur.local = document.getElementById('f_local').value.trim();
   cur.responsavel = document.getElementById('f_responsavel').value.trim();
   cur.om = document.getElementById('f_om').value.trim();
-  cur.adm = document.getElementById('f_adm').value.trim();
-  cur.tipo = document.getElementById('f_tipo').value;
   cur.titulo = document.getElementById('f_titulo').value.trim();
   cur.ocorrencias = document.getElementById('f_ocorrencias').value.trim();
   Object.keys(SEC).forEach(syncSection);
@@ -686,7 +666,6 @@ function gerarPDF() {
       <div><b>Nº RDO:</b> ${escapeHtml(r.numero)}</div><div><b>Data:</b> ${dt}</div>
       <div><b>Cliente/Contrato:</b> ${escapeHtml(r.cliente)}</div><div><b>Local:</b> ${escapeHtml(r.local)}</div>
       <div><b>Resp. Técnico:</b> ${escapeHtml(r.responsavel)}</div><div><b>Ordem Manut.:</b> ${escapeHtml(r.om)}</div>
-      <div><b>ADM/Turno:</b> ${escapeHtml(r.adm)}</div><div><b>Atendimento:</b> ${TIPO_LABEL[r.tipo] || ''}</div>
     </div>`;
   html += tbl('Efetivo de mão de obra', ['Nome','Função','Empresa','Entrada','Saída','Obs.'], (r.efetivo||[]).map(x => [x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
   html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
@@ -710,7 +689,7 @@ function csvCell(v) { const s = String(v == null ? '' : v); return /[";\n]/.test
 function rdoToCSVBlock(r) {
   const dt = r.data ? r.data.split('-').reverse().join('/') : '';
   const L = [];
-  L.push(['RDO', r.numero, 'Data', dt, 'Cliente', r.cliente, 'Local', r.local, 'Atendimento', TIPO_LABEL[r.tipo]||''].map(csvCell).join(';'));
+  L.push(['RDO', r.numero, 'Data', dt, 'Cliente', r.cliente, 'Local', r.local].map(csvCell).join(';'));
   const sec = (title, headers, rows) => { if (!rows.length) return; L.push(''); L.push(csvCell(title)); L.push(headers.map(csvCell).join(';')); rows.forEach(row => L.push(row.map(csvCell).join(';'))); };
   sec('Efetivo', ['Nome','Funcao','Empresa','Entrada','Saida','Obs'], (r.efetivo||[]).map(x=>[x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
   sec('Alimentacao', ['Inicio','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x=>[x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
