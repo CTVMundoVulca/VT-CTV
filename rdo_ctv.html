@@ -50,6 +50,9 @@
     width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 9px; font-size: 15px; font-family: inherit; background: var(--bg); color: var(--text);
   }
   textarea { resize: vertical; min-height: 58px; }
+  /* padroniza data/hora (iOS): alinhado à esquerda e mesma altura dos demais campos */
+  input[type=date], input[type=time] { -webkit-appearance: none; appearance: none; text-align: left; min-height: 44px; }
+  input[type=date]::-webkit-date-and-time-value, input[type=time]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   select:focus, input:focus, textarea:focus { outline: 2px solid var(--orange); border-color: var(--orange); }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .grid2 .full { grid-column: 1 / -1; }
