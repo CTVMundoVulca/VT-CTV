@@ -88,6 +88,8 @@
     display: grid; place-items: center;
   }
   .icon-btn:active { background: var(--orange); color: #fff; }
+  .menu-btn { background: var(--orange); color: #fff; border: none; padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .menu-btn:active { filter: brightness(.9); }
 
   /* ── CONTENT ── */
   .content { padding: var(--gap); max-width: 640px; margin: 0 auto; }
@@ -300,6 +302,7 @@
       <div class="logo-name">Registo de<b>Horários</b></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
       <span id="userChip" style="display:none;align-items:center;gap:6px;color:var(--silver-light);font-size:12px">
         <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <button class="icon-btn" title="Sair" onclick="logout()" style="width:32px;height:32px;font-size:14px">⏻</button>

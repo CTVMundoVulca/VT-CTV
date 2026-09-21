@@ -31,6 +31,8 @@ header{background:var(--pine);color:#fff;padding:14px 16px 0;position:sticky;top
 .brand small{opacity:.7;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
 .lockbtn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:6px}
 .lockbtn.on{background:var(--teal);border-color:var(--teal);font-weight:700}
+.menu-btn{background:var(--amber);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;margin-left:8px}
+.menu-btn:active{filter:brightness(.9)}
 .searchrow{display:flex;gap:8px;margin:12px 0}
 .searchrow input{flex:1;border:none;border-radius:10px;padding:12px 14px;font-size:16px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch}
@@ -189,6 +191,7 @@ main{padding:8px 16px 90px;max-width:760px;margin:0 auto}
     <div class="logo">CTV<span>·</span>Suzano</div>
     <small>Aracruz — Transportadores</small>
     <button class="lockbtn" id="lockBtn" onclick="toggleLock()">🔒 Consulta</button>
+    <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
   </div>
   <div class="searchrow">
     <input id="q" type="search" placeholder="Buscar TAG ou descrição (ex: 23-132, casca, tora...)" oninput="render()">
