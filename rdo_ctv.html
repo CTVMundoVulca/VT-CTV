@@ -280,7 +280,7 @@
 
     <div class="card">
       <div class="section-title">Assinaturas</div>
-      <label class="fld">Responsável Técnico (Benetech / CTV)</label>
+      <label class="fld">Responsável Técnico (Benetech)</label>
       <div class="sig-box"><canvas id="sig_benetech"></canvas><div class="sig-ph" id="ph_benetech">Assine aqui</div></div>
       <div class="row" style="margin-bottom:16px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('benetech')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('benetech')">Confirmar</button></div>
       <label class="fld">Fiscal / Representante do Cliente</label>
@@ -674,7 +674,7 @@ function gerarPDF() {
   if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
   html += tbl('Gestão de horários — transporte', ['Nome','Hora Busca','Hora Deixa','Obs.'], (r.transporte||[]).map(x => [x.nome,x.busca,x.deixa,x.obs]));
   html += `<div class="assin">
-    <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech/CTV)</div></div>
+    <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div></div>
     <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div></div>
   </div>`;
   document.getElementById('printArea').innerHTML = html;
