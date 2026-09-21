@@ -38,6 +38,8 @@
   .icon-btn { background: var(--navy-soft); color: var(--silver-light); border: none; width: 38px; height: 38px; border-radius: 9px; font-size: 17px; cursor: pointer; display: grid; place-items: center; }
   .icon-btn:active { background: var(--orange); color: #fff; }
   .back-btn { background: var(--navy-soft); color: #fff; border: none; padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .menu-btn { background: var(--orange); color: #fff; border: none; padding: 8px 13px; border-radius: 9px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .menu-btn:active { filter: brightness(.9); }
 
   .content { padding: var(--gap); max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
   .view { display: none; } .view.active { display: block; animation: fade .18s ease; }
@@ -165,6 +167,7 @@
       <div class="logo-name">Relatório Diário<b id="hdrTitle">de Obra (RDO)</b></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
       <span id="userChip" style="display:none;align-items:center;gap:6px;color:var(--silver-light);font-size:12px">
         <span class="uname" style="max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <button class="icon-btn" title="Sair" onclick="logout()" style="width:32px;height:32px;font-size:14px">⏻</button>
