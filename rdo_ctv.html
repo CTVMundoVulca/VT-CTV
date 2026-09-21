@@ -336,10 +336,10 @@ let editingId = null;
 const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
 const SEC = {
-  efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['empresa','Empresa','text'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
+  efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
   alimentacao: [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo','text'],['empresa','Empresa','text'],['liberado','Liberado por','text']],
   paradas:     [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo da paralisação','text'],['area','Área / Equip. aguardado','text'],['liberado','Liberado por','text']],
-  atividades:  [['inicio','Início','time'],['fim','Fim','time'],['descricao','Descrição da atividade','area'],['local','Local / Equipamento','text'],['percent','% Concluído','number'],['obs','Obs.','text']],
+  atividades:  [['inicio','Início','time'],['fim','Fim','time'],['descricao','Descrição da atividade','area'],['local','Local / Equipamento','text'],['obs','Obs.','text']],
   transporte:  [['nome','Nome','nome'],['busca','Hora Busca','time'],['deixa','Hora Deixa em Casa','time'],['obs','Obs.','text']]
 };
 
@@ -667,10 +667,10 @@ function gerarPDF() {
       <div><b>Cliente/Contrato:</b> ${escapeHtml(r.cliente)}</div><div><b>Local:</b> ${escapeHtml(r.local)}</div>
       <div><b>Resp. Técnico:</b> ${escapeHtml(r.responsavel)}</div><div><b>Ordem Manut.:</b> ${escapeHtml(r.om)}</div>
     </div>`;
-  html += tbl('Efetivo de mão de obra', ['Nome','Função','Empresa','Entrada','Saída','Obs.'], (r.efetivo||[]).map(x => [x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
+  html += tbl('Efetivo de mão de obra', ['Nome','Função','Entrada','Saída','Obs.'], (r.efetivo||[]).map(x => [x.nome,x.funcao,x.entrada,x.saida,x.obs]));
   html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
   html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
-  html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','% Concl.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.percent,x.obs]));
+  html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.obs]));
   if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
   html += tbl('Gestão de horários — transporte', ['Nome','Hora Busca','Hora Deixa','Obs.'], (r.transporte||[]).map(x => [x.nome,x.busca,x.deixa,x.obs]));
   html += `<div class="assin">
@@ -691,10 +691,10 @@ function rdoToCSVBlock(r) {
   const L = [];
   L.push(['RDO', r.numero, 'Data', dt, 'Cliente', r.cliente, 'Local', r.local].map(csvCell).join(';'));
   const sec = (title, headers, rows) => { if (!rows.length) return; L.push(''); L.push(csvCell(title)); L.push(headers.map(csvCell).join(';')); rows.forEach(row => L.push(row.map(csvCell).join(';'))); };
-  sec('Efetivo', ['Nome','Funcao','Empresa','Entrada','Saida','Obs'], (r.efetivo||[]).map(x=>[x.nome,x.funcao,x.empresa,x.entrada,x.saida,x.obs]));
+  sec('Efetivo', ['Nome','Funcao','Entrada','Saida','Obs'], (r.efetivo||[]).map(x=>[x.nome,x.funcao,x.entrada,x.saida,x.obs]));
   sec('Alimentacao', ['Inicio','Fim','Motivo','Empresa','Liberado por'], (r.alimentacao||[]).map(x=>[x.inicio,x.fim,x.motivo,x.empresa,x.liberado]));
   sec('Tempos parados', ['Inicio','Fim','Motivo','Area/Equip','Liberado por'], (r.paradas||[]).map(x=>[x.inicio,x.fim,x.motivo,x.area,x.liberado]));
-  sec('Atividades', ['Inicio','Fim','Descricao','Local/Equip','% Concluido','Obs'], (r.atividades||[]).map(x=>[x.inicio,x.fim,x.descricao,x.local,x.percent,x.obs]));
+  sec('Atividades', ['Inicio','Fim','Descricao','Local/Equip','Obs'], (r.atividades||[]).map(x=>[x.inicio,x.fim,x.descricao,x.local,x.obs]));
   if (r.ocorrencias) { L.push(''); L.push('Ocorrencias'); L.push(csvCell(r.ocorrencias)); }
   sec('Transporte', ['Nome','Hora Busca','Hora Deixa','Obs'], (r.transporte||[]).map(x=>[x.nome,x.busca,x.deixa,x.obs]));
   return L.join('\n');
