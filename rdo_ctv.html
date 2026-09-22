@@ -98,8 +98,8 @@
   .cal-cell { position: relative; aspect-ratio: 1/1; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); display: grid; place-items: center; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text); }
   .cal-cell.empty { background: transparent; border: none; cursor: default; }
   .cal-cell:active { transform: scale(.94); }
-  .cal-cell.d-off { background: rgba(229,57,53,.10); color: #C62828; border-color: rgba(229,57,53,.28); }
-  html[data-dark="1"] .cal-cell.d-off { background: rgba(229,57,53,.16); color: #FF8A80; border-color: rgba(229,57,53,.35); }
+  .cal-cell.d-off { background: rgba(126,87,194,.14); color: #5E35B1; border-color: rgba(126,87,194,.32); }
+  html[data-dark="1"] .cal-cell.d-off { background: rgba(179,157,219,.20); color: #B39DDB; border-color: rgba(179,157,219,.40); }
   .cal-cell.d-has { background: var(--orange); color: #fff; border-color: transparent; }
   .cal-cell.d-multi { background: var(--verde-esc); color: #fff; border-color: transparent; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
@@ -233,7 +233,7 @@
       <div class="cal-legend">
         <span><i style="background:var(--orange)"></i>Com RDO</span>
         <span><i style="background:var(--verde-esc)"></i>Múltiplos no dia</span>
-        <span><i style="background:#E53935"></i>Fim de semana / feriado</span>
+        <span><i style="background:#7E57C2"></i>Fim de semana / feriado</span>
       </div>
       <button class="btn btn-ghost" onclick="openFeriadoModal()" style="margin-top:12px">🎌 Feriado municipal</button>
       <div class="hint" style="margin-top:6px">Fins de semana e feriados nacionais já vêm marcados. Use este botão (ou segure um dia no calendário) para marcar feriados municipais.</div>
