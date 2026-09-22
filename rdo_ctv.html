@@ -232,6 +232,8 @@
         <span><i style="background:var(--verde-esc)"></i>Múltiplos no dia</span>
         <span><i style="background:#E53935"></i>Fim de semana / feriado</span>
       </div>
+      <button class="btn btn-ghost" onclick="openFeriadoModal()" style="margin-top:12px">🎌 Feriado municipal</button>
+      <div class="hint" style="margin-top:6px">Fins de semana e feriados nacionais já vêm marcados. Use este botão (ou segure um dia no calendário) para marcar feriados municipais.</div>
     </div>
     <div class="card">
       <div class="section-title">RDOs</div>
@@ -342,6 +344,23 @@
   </div>
 </div>
 
+<div class="modal-bg" id="feriadoModalBg">
+  <div class="modal">
+    <h3>Feriados municipais</h3>
+    <div class="hint" style="margin-bottom:10px">Feriados nacionais e fins de semana já são marcados automaticamente. Aqui você marca os feriados municipais (ex.: Aracruz, Serra, Vitória). Ficam salvos e são compartilhados com quem tem acesso ao RDO.</div>
+    <div id="feriadoModalList" style="max-height:40vh;overflow-y:auto;margin-bottom:12px"></div>
+    <label class="fld">Adicionar feriado</label>
+    <div class="row" style="margin-bottom:8px">
+      <input type="date" id="feriadoData" style="flex:1">
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="feriadoNome" placeholder="Nome (ex.: Aniversário de Aracruz)" style="flex:2">
+      <button class="btn btn-primary" style="flex:1" onclick="addFeriadoFromModal()">Adicionar</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeFeriadoModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -403,6 +422,7 @@ function loadLocal() {
   if (!db.rdos) db.rdos = [];
   if (!db.config) db.config = {};
   if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
+  if (!db.config.feriados) db.config.feriados = {};
 }
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
@@ -436,6 +456,10 @@ function persistColab() {
   if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(err => onWriteError(err)); }
   else { saveLocal(); }
 }
+function persistFeriados() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'feriados'), { map: db.config.feriados || {} }).catch(err => onWriteError(err)); }
+  else { saveLocal(); }
+}
 
 /* ── navegação de views ── */
 function goList() { document.getElementById('view-editor').classList.remove('active'); document.getElementById('view-list').classList.add('active'); document.getElementById('backBtn').style.display = 'none'; document.getElementById('hdrTitle').textContent = 'de Obra (RDO)'; renderList(); renderCalendar(); window.scrollTo(0, 0); }
@@ -462,7 +486,7 @@ function renderList() {
 }
 
 /* ── calendário ── */
-let calYear = null, calMonth = null;
+let calYear = null, calMonth = null, calLongFired = false;
 function initCal() { if (calYear === null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
 function calShift(delta) { initCal(); calMonth += delta; if (calMonth < 0) { calMonth = 11; calYear--; } if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
 function rdosByDay() { const m = {}; db.rdos.forEach(r => { if (r.data) (m[r.data] = m[r.data] || []).push(r); }); return m; }
@@ -520,7 +544,8 @@ function renderCalendar() {
     const k = calYear + '-' + pad(calMonth + 1) + '-' + pad(d);
     const list = map[k] || [];
     const dow = new Date(calYear, calMonth, d).getDay();
-    const feriado = hol[k];
+    const fMun = (db.config.feriados || {})[k];
+    const feriado = hol[k] || fMun;
     const isOff = (dow === 0 || dow === 6 || !!feriado);
     let cls = 'cal-cell';
     if (list.length) {
@@ -530,19 +555,68 @@ function renderCalendar() {
     }
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
-    const titulo = feriado ? ` title="${feriado}"` : (dow === 0 ? ' title="Domingo"' : (dow === 6 ? ' title="Sábado"' : ''));
-    cells += `<div class="${cls}"${titulo} onclick="openDay('${k}')">${d}${badge}</div>`;
+    const nomeDia = feriado ? feriado : (dow === 0 ? 'Domingo' : (dow === 6 ? 'Sábado' : ''));
+    const titulo = nomeDia ? ` title="${escapeAttr(nomeDia)}"` : '';
+    cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDay('${k}')">${d}${badge}</div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
   document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
 }
 function openDay(k) {
+  if (calLongFired) { calLongFired = false; return; } // veio de um "segurar", não abre RDO
   const list = db.rdos.filter(r => r.data === k);
   if (list.length === 1) { openRDO(list[0].id); return; }
   if (list.length === 0) { newRDO(k); return; }
   // vários: abre o primeiro (lista já mostra os demais)
   openRDO(list[0].id);
   showToast(list.length + ' RDOs neste dia — veja a lista abaixo.');
+}
+
+/* ── feriados municipais (marcação manual, compartilhada) ── */
+function fmtBR(k) { const p = String(k).split('-'); return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : k; }
+function toggleFeriado(k) {
+  const ano = parseInt(String(k).slice(0, 4), 10);
+  const nac = holidaysFor(ano)[k];
+  if (nac) { showToast('Feriado nacional: ' + nac); return; }
+  db.config.feriados = db.config.feriados || {};
+  if (db.config.feriados[k]) {
+    if (confirm('Remover o feriado "' + db.config.feriados[k] + '" de ' + fmtBR(k) + '?')) {
+      delete db.config.feriados[k]; persistFeriados(); renderCalendar(); showToast('Feriado removido.');
+    }
+    return;
+  }
+  const nome = (prompt('Nome do feriado municipal em ' + fmtBR(k) + ':', '') || '').trim();
+  if (nome) { db.config.feriados[k] = nome; persistFeriados(); renderCalendar(); showToast('Feriado marcado ✔️'); }
+}
+function openFeriadoModal() { renderFeriadoModal(); const inp = document.getElementById('feriadoData'); if (inp && !inp.value) inp.value = new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate()); document.getElementById('feriadoModalBg').classList.add('open'); }
+function closeFeriadoModal() { document.getElementById('feriadoModalBg').classList.remove('open'); }
+function renderFeriadoModal() {
+  const el = document.getElementById('feriadoModalList');
+  const map = db.config.feriados || {};
+  const keys = Object.keys(map).sort();
+  el.innerHTML = keys.length ? keys.map(k => `<div class="entry" style="cursor:default">
+      <div class="entry-main"><div class="top">${escapeHtml(map[k])}</div><div class="sub">${fmtBR(k)}</div></div>
+      <button class="mini-del" onclick="removeFeriado('${escapeAttr(k)}')">✕</button>
+    </div>`).join('') : `<div class="empty">Nenhum feriado municipal marcado.</div>`;
+}
+function addFeriadoFromModal() {
+  const k = document.getElementById('feriadoData').value;
+  const nome = (document.getElementById('feriadoNome').value || '').trim();
+  if (!k) { showToast('Escolha a data.'); return; }
+  if (!nome) { showToast('Digite o nome do feriado.'); return; }
+  const ano = parseInt(k.slice(0, 4), 10);
+  if (holidaysFor(ano)[k]) { showToast('Esse dia já é feriado nacional: ' + holidaysFor(ano)[k]); return; }
+  db.config.feriados = db.config.feriados || {};
+  db.config.feriados[k] = nome;
+  persistFeriados(); renderFeriadoModal(); renderCalendar();
+  document.getElementById('feriadoNome').value = '';
+  showToast('Feriado adicionado ✔️');
+}
+function removeFeriado(k) {
+  if (!(db.config.feriados || {})[k]) return;
+  db.config.feriados = db.config.feriados || {};
+  delete db.config.feriados[k];
+  persistFeriados(); renderFeriadoModal(); renderCalendar();
 }
 
 /* ── CRUD ── */
@@ -855,8 +929,9 @@ function bootCloud(api) {
   db = { version: 1, rdos: [], config: {} };
   loadDark(); applyDark();
   // primeira pintura a partir do cache (offline), até o Firestore responder
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); } } catch (e) {}
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
   if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
+  if (!db.config.feriados) db.config.feriados = {};
   updateModeUI();
   renderList(); renderCalendar();
   FB.onAuthStateChanged(FB.auth, user => {
@@ -934,6 +1009,12 @@ function startCloudListeners() {
     const d = s.data(); db.config.colaboradores = (d && d.list) || DEFAULT_COLAB.slice();
     if (document.getElementById('colabModalBg').classList.contains('open')) renderColabModal();
   }, () => {}));
+  const ferRef = FB.doc(FB.fs, 'shared', 'feriados');
+  cloudUnsub.push(FB.onSnapshot(ferRef, s => {
+    const d = s.data(); db.config.feriados = (d && d.map) || {};
+    if (document.getElementById('view-list').classList.contains('active')) renderCalendar();
+    if (document.getElementById('feriadoModalBg').classList.contains('open')) renderFeriadoModal();
+  }, () => {}));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
     db.rdos = s.docs.map(d => d.data());
     cacheSnapshot();
@@ -966,6 +1047,24 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
 
 /* ── init ── */
 document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); }));
+/* segurar (long-press) um dia do calendário marca/desmarca feriado municipal */
+(function setupCalLongPress() {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  let timer = null, sx = 0, sy = 0;
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  grid.addEventListener('pointerdown', e => {
+    const cell = e.target.closest('.cal-cell[data-k]');
+    if (!cell) return;
+    const k = cell.getAttribute('data-k');
+    calLongFired = false; // novo gesto: um "segurar" anterior sem clique não trava este toque
+    sx = e.clientX; sy = e.clientY;
+    clear();
+    timer = setTimeout(() => { timer = null; calLongFired = true; toggleFeriado(k); }, 550);
+  });
+  grid.addEventListener('pointermove', e => { if (timer && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) clear(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => grid.addEventListener(ev, clear));
+})();
 /* rascunho automático: salva enquanto preenche e ao sair/fechar */
 (function () {
   const ed = document.getElementById('view-editor');
