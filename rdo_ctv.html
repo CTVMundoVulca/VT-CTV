@@ -95,6 +95,8 @@
   .cal-cell { position: relative; aspect-ratio: 1/1; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); display: grid; place-items: center; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text); }
   .cal-cell.empty { background: transparent; border: none; cursor: default; }
   .cal-cell:active { transform: scale(.94); }
+  .cal-cell.d-off { background: rgba(229,57,53,.10); color: #C62828; border-color: rgba(229,57,53,.28); }
+  html[data-dark="1"] .cal-cell.d-off { background: rgba(229,57,53,.16); color: #FF8A80; border-color: rgba(229,57,53,.35); }
   .cal-cell.d-has { background: var(--orange); color: #fff; border-color: transparent; }
   .cal-cell.d-multi { background: var(--verde-esc); color: #fff; border-color: transparent; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
@@ -228,6 +230,7 @@
       <div class="cal-legend">
         <span><i style="background:var(--orange)"></i>Com RDO</span>
         <span><i style="background:var(--verde-esc)"></i>Múltiplos no dia</span>
+        <span><i style="background:#E53935"></i>Fim de semana / feriado</span>
       </div>
     </div>
     <div class="card">
@@ -463,25 +466,72 @@ let calYear = null, calMonth = null;
 function initCal() { if (calYear === null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
 function calShift(delta) { initCal(); calMonth += delta; if (calMonth < 0) { calMonth = 11; calYear--; } if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
 function rdosByDay() { const m = {}; db.rdos.forEach(r => { if (r.data) (m[r.data] = m[r.data] || []).push(r); }); return m; }
+/* ── Feriados nacionais (fixos + móveis calculados pela Páscoa) ──
+   Móveis usam o algoritmo de Meeus/Jones/Butcher (Gauss), determinístico
+   e offline. Ajuste esta lista se quiser incluir feriados municipais/estaduais. */
+function easterSunday(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+const _holCache = {};
+function holidaysFor(year) {
+  if (_holCache[year]) return _holCache[year];
+  const H = {};
+  const add = (mo, da, name) => { H[year + '-' + pad(mo) + '-' + pad(da)] = name; };
+  // Fixos nacionais
+  add(1, 1, 'Confraternização Universal');
+  add(4, 21, 'Tiradentes');
+  add(5, 1, 'Dia do Trabalho');
+  add(9, 7, 'Independência do Brasil');
+  add(10, 12, 'Nossa Senhora Aparecida');
+  add(11, 2, 'Finados');
+  add(11, 15, 'Proclamação da República');
+  add(11, 20, 'Consciência Negra');
+  add(12, 25, 'Natal');
+  // Móveis (a partir da Páscoa)
+  const easter = easterSunday(year);
+  const addOff = (off, name) => {
+    const dt = new Date(easter); dt.setDate(dt.getDate() + off);
+    H[dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate())] = name;
+  };
+  addOff(-47, 'Carnaval');
+  addOff(-2, 'Sexta-feira Santa');
+  addOff(60, 'Corpus Christi');
+  _holCache[year] = H;
+  return H;
+}
 function renderCalendar() {
   initCal();
   const first = new Date(calYear, calMonth, 1);
   const startDow = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   const map = rdosByDay();
+  const hol = holidaysFor(calYear);
   const todayK = new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate());
   let cells = '';
   for (let i = 0; i < startDow; i++) cells += '<div class="cal-cell empty"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
     const k = calYear + '-' + pad(calMonth + 1) + '-' + pad(d);
     const list = map[k] || [];
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const feriado = hol[k];
+    const isOff = (dow === 0 || dow === 6 || !!feriado);
     let cls = 'cal-cell';
     if (list.length) {
-      cls += (list.length > 1) ? ' d-multi' : ' d-has';
+      cls += (list.length > 1) ? ' d-multi' : ' d-has'; // RDO tem prioridade visual
+    } else if (isOff) {
+      cls += ' d-off';
     }
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
-    cells += `<div class="${cls}" onclick="openDay('${k}')">${d}${badge}</div>`;
+    const titulo = feriado ? ` title="${feriado}"` : (dow === 0 ? ' title="Domingo"' : (dow === 6 ? ' title="Sábado"' : ''));
+    cells += `<div class="${cls}"${titulo} onclick="openDay('${k}')">${d}${badge}</div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
   document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
