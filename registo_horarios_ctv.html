@@ -64,8 +64,9 @@
     z-index: 100;
     border-bottom: 3px solid var(--orange);
   }
-  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: nowrap; }
+  .logo-area { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .header-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .logo-badge {
     background: var(--orange);
     color: #fff;
@@ -74,9 +75,12 @@
     letter-spacing: 0.5px;
     padding: 5px 10px;
     border-radius: 6px;
+    flex: 0 0 auto;
   }
-  .logo-name { color: var(--silver-light); font-size: 13px; line-height: 1.2; }
-  .logo-name b { color: #fff; display: block; font-size: 15px; }
+  .logo-name { color: var(--silver-light); font-size: 13px; line-height: 1.2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logo-name b { color: #fff; display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* e-mail já aparece no cartão de sincronização; fora da barra para não estourar */
+  #userChip .uname { display: none; }
   .icon-btn {
     background: var(--navy-soft);
     color: var(--silver-light);
@@ -301,7 +305,7 @@
       <div class="logo-badge">CTV</div>
       <div class="logo-name">Registo de<b>Horários</b></div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div class="header-actions">
       <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
       <span id="userChip" style="display:none;align-items:center;gap:6px;color:var(--silver-light);font-size:12px">
         <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>

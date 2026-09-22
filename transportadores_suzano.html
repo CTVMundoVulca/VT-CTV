@@ -25,11 +25,11 @@ button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:16px}
 
 header{background:var(--pine);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(17,40,34,.3)}
-.brand{display:flex;align-items:baseline;gap:10px}
-.brand .logo{font-weight:800;font-size:21px;letter-spacing:.5px}
+.brand{display:flex;align-items:center;gap:10px 8px;flex-wrap:wrap}
+.brand .logo{font-weight:800;font-size:21px;letter-spacing:.5px;flex:0 0 auto}
 .brand .logo span{color:var(--teal)}
-.brand small{opacity:.7;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
-.lockbtn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:6px}
+.brand small{opacity:.7;font-size:11px;letter-spacing:.5px;text-transform:uppercase;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lockbtn{flex:0 0 auto;margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .lockbtn.on{background:var(--teal);border-color:var(--teal);font-weight:700}
 .menu-btn{background:var(--amber);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;margin-left:8px}
 .menu-btn:active{filter:brightness(.9)}
