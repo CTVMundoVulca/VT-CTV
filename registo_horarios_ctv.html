@@ -296,6 +296,7 @@
   .cal-cell.d-amt { background: #E53935; color: #fff; border-color: transparent; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
   html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
+  .cal-cell.d-sel { outline: 3px solid var(--orange); outline-offset: 1px; }
   .cal-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; font-size: 11px; color: var(--text-light); }
   .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
@@ -495,6 +496,23 @@
       <select id="eqFilterColab" onchange="renderEquipe()"></select>
       <div class="hint" style="margin-top:8px">Mostra os lançamentos que você fez (<b>EQUIPE</b>) e o ponto que cada colaborador registrou na própria conta (<b>PESSOAL</b>).</div>
     </div>
+    <div class="card">
+      <div class="cal-grid" style="margin-bottom:4px">
+        <div class="cal-wd">Seg</div><div class="cal-wd">Ter</div><div class="cal-wd">Qua</div>
+        <div class="cal-wd">Qui</div><div class="cal-wd">Sex</div><div class="cal-wd">Sáb</div><div class="cal-wd">Dom</div>
+      </div>
+      <div class="cal-grid" id="eqCalGrid" style="margin-top:4px"></div>
+      <div class="cal-legend">
+        <span><i style="background:#0070C0"></i>Sede</span>
+        <span><i style="background:#1E8449"></i>Suzano</span>
+        <span><i style="background:#F47820"></i>Externo</span>
+        <span><i style="background:#E53935"></i>AMT</span>
+        <span><i style="background:#CBD2DA;border:1px solid #B7BFC9"></i>Fim de semana</span>
+        <span><i style="background:#7E57C2"></i>Feriado</span>
+      </div>
+      <div class="hint" style="margin-top:8px">Toque num dia para ver só os registros dele. A cor mostra o contrato com mais horas no dia.</div>
+    </div>
+    <div id="eqDayBanner" style="display:none"></div>
     <div id="equipeList"></div>
     <div class="card">
       <button class="btn btn-ghost" onclick="exportEquipeCSV()">⬇️ Exportar CSV (equipe)</button>
@@ -1187,9 +1205,9 @@ function renderRegistos() {
 }
 
 /* ═══════════════════ EQUIPE (ponto por nome, compartilhado) ═══════════════════ */
-let eqYear = null, eqMonth = null, eqSelectsReady = false;
+let eqYear = null, eqMonth = null, eqSelectsReady = false, eqDayFilter = '';
 function eqInit() { if (eqYear === null) { const d = new Date(); eqYear = d.getFullYear(); eqMonth = d.getMonth(); } }
-function eqShift(delta) { eqInit(); eqMonth += delta; if (eqMonth < 0) { eqMonth = 11; eqYear--; } if (eqMonth > 11) { eqMonth = 0; eqYear++; } renderEquipe(); }
+function eqShift(delta) { eqInit(); eqMonth += delta; if (eqMonth < 0) { eqMonth = 11; eqYear--; } if (eqMonth > 11) { eqMonth = 0; eqYear++; } eqDayFilter = ''; renderEquipe(); }
 function equipeMs(r) {
   if (!r || !r.data || !r.entrada) return 0;
   const p = String(r.data).split('-').map(Number);
@@ -1283,13 +1301,29 @@ function renderEquipe() {
   fil.innerHTML = '<option value="all">Todos os colaboradores</option>' + whos.map(w => `<option${w === curFil ? ' selected' : ''}>${escapeHtml(w)}</option>`).join('');
   if (curFil !== 'all' && whos.indexOf(curFil) >= 0) { fil.value = curFil; recs = recs.filter(r => r.who === curFil); }
   else fil.value = 'all';
-  recs.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (a.who || '').localeCompare(b.who || ''));
-  const total = recs.reduce((a, r) => a + r.ms, 0);
+  const recsMonth = recs.slice();
+  const total = recsMonth.reduce((a, r) => a + r.ms, 0);
   document.getElementById('eqMonthTotal').textContent = fmtHM(total);
+  renderEquipeCal(recsMonth); // calendário colorido por contrato
+  // filtro por dia (ao tocar num dia do calendário)
+  const banner = document.getElementById('eqDayBanner');
+  let lista = recsMonth;
+  if (eqDayFilter) {
+    lista = recsMonth.filter(r => r.data === eqDayFilter);
+    banner.style.display = '';
+    banner.innerHTML = `<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="font-weight:800">${eqDateLabel(eqDayFilter)}</div>
+      <button class="btn btn-ghost btn-sm" onclick="eqPickDay('')">Ver mês inteiro</button>
+    </div>`;
+  } else { banner.style.display = 'none'; banner.innerHTML = ''; }
+  lista = lista.slice().sort((a, b) => (b.data || '').localeCompare(a.data || '') || (a.who || '').localeCompare(b.who || ''));
   const cont = document.getElementById('equipeList');
-  if (!recs.length) { cont.innerHTML = `<div class="card"><div class="empty"><span class="big">👥</span>Nenhum registro neste mês.</div></div>`; return; }
+  if (!lista.length) {
+    cont.innerHTML = `<div class="card"><div class="empty"><span class="big">👥</span>${eqDayFilter ? 'Nenhum registro neste dia.' : 'Nenhum registro neste mês.'}</div></div>`;
+    return;
+  }
   const groups = {};
-  recs.forEach(r => { (groups[r.data] = groups[r.data] || []).push(r); });
+  lista.forEach(r => { (groups[r.data] = groups[r.data] || []).push(r); });
   cont.innerHTML = Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(k => {
     const items = groups[k];
     const dayTotal = items.reduce((a, r) => a + r.ms, 0);
@@ -1299,6 +1333,39 @@ function renderEquipe() {
     </div>`;
   }).join('');
 }
+function renderEquipeCal(recsMonth) {
+  const grid = document.getElementById('eqCalGrid'); if (!grid) return;
+  const first = new Date(eqYear, eqMonth, 1);
+  const startDow = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(eqYear, eqMonth + 1, 0).getDate();
+  const hol = holidaysFor(eqYear);
+  const todayK = dateKey(Date.now());
+  const byDay = {};
+  (recsMonth || []).forEach(r => { const d = byDay[r.data] = byDay[r.data] || { tipos: {}, ms: 0, n: 0 }; d.tipos[r.tipo] = (d.tipos[r.tipo] || 0) + r.ms; d.ms += r.ms; d.n++; });
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<div class="cal-cell empty"></div>';
+  for (let dd = 1; dd <= daysInMonth; dd++) {
+    const k = eqYear + '-' + pad(eqMonth + 1) + '-' + pad(dd);
+    const info = byDay[k];
+    const dow = new Date(eqYear, eqMonth, dd).getDay();
+    const weekend = (dow === 0 || dow === 6);
+    const feriado = hol[k] || (db.config.feriados || {})[k];
+    let cls = 'cal-cell';
+    if (info) {
+      let best = null, bm = -1;
+      Object.keys(info.tipos).forEach(t => { if (info.tipos[t] > bm) { bm = info.tipos[t]; best = t; } });
+      if (best) cls += ' d-' + best;
+    } else if (feriado) { cls += ' d-holiday'; } else if (weekend) { cls += ' d-weekend'; }
+    if (k === todayK) cls += ' d-today';
+    if (k === eqDayFilter) cls += ' d-sel';
+    const dur = info && info.ms > 0 ? `<span class="cal-h">${fmtHShort(info.ms)}</span>` : '';
+    const badge = info && info.n > 1 ? `<span class="cal-badge">${info.n}</span>` : '';
+    const titulo = feriado ? ` title="${escapeHtml(feriado)}"` : '';
+    cells += `<div class="${cls}"${titulo} onclick="eqPickDay('${k}')"><span class="cal-d">${dd}</span>${dur}${badge}</div>`;
+  }
+  grid.innerHTML = cells;
+}
+function eqPickDay(k) { eqDayFilter = (eqDayFilter === k) ? '' : k; renderEquipe(); if (eqDayFilter) { const el = document.getElementById('eqDayBanner'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
 function eqPreview() {
   const r = { data: document.getElementById('eq_data').value, entrada: document.getElementById('eq_entrada').value, saida: document.getElementById('eq_saida').value, pausa: document.getElementById('eq_pausa').value };
   const el = document.getElementById('eqDurPreview');
