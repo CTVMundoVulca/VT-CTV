@@ -658,6 +658,20 @@ function removeSession(id) {
   } else saveLocal();
 }
 function onWriteError(err) { const c = (err && err.code) || ''; if (c.includes('permission-denied')) setSync('denied'); else if (!navigator.onLine || c.includes('unavailable')) setSync('offline'); else setSync('error', c); }
+/* marca ownerEmail/ownerUid nos registros antigos deste usuário (uma vez por sessão)
+   para que o admin veja o nome de quem registrou, mesmo em registros feitos antes. */
+let _backfilled = false;
+function backfillOwner() {
+  if (_backfilled || MODE !== 'cloud' || !FB || !currentUser) return;
+  const email = currentUser.email || ''; if (!email) return;
+  const faltando = (db.sessoes || []).filter(x => !x.ownerEmail);
+  if (!faltando.length) { _backfilled = true; return; }
+  _backfilled = true;
+  faltando.forEach(x => {
+    x.ownerEmail = email; x.ownerUid = currentUser.uid || '';
+    FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', x.id), JSON.parse(JSON.stringify(x))).catch(() => {});
+  });
+}
 
 /* ═══════════════════ HELPERS DE TEMPO ═══════════════════ */
 // Duração trabalhada em ms: (saida||agora) - entrada - pausas
@@ -1646,10 +1660,12 @@ function bootCloud(api) {
 }
 function startCloudListeners() {
   clearCloudListeners();
+  _backfilled = false;
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'users', currentUser.uid, 'sessoes'), s => {
     db.sessoes = s.docs.map(d => d.data());
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
+    backfillOwner(); // marca o dono (e-mail) nos registros antigos deste usuário, uma vez
     renderPonto();
     const active = document.querySelector('.nav button.active');
     if (active && active.dataset.view !== 'ponto') switchView(active.dataset.view);
