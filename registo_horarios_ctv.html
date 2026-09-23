@@ -449,7 +449,8 @@
       <input type="hidden" id="eq_id">
       <div class="fld-group">
         <label class="fld">Colaborador</label>
-        <select id="eq_colab"></select>
+        <select id="eq_colab" onchange="eqColabChanged()"></select>
+        <div class="hint">Não está na lista? Escolha "➕ Novo colaborador" para adicionar (fica salvo).</div>
       </div>
       <div class="fld-group">
         <label class="fld">Contrato Atendido</label>
@@ -491,6 +492,7 @@
       </div>
       <label class="fld">Filtrar por colaborador</label>
       <select id="eqFilterColab" onchange="renderEquipe()"></select>
+      <div class="hint" style="margin-top:8px">Mostra os lançamentos que você fez (<b>EQUIPE</b>) e o ponto que cada colaborador registrou na própria conta (<b>PESSOAL</b>).</div>
     </div>
     <div id="equipeList"></div>
     <div class="card">
@@ -640,6 +642,8 @@ function persistSession(s) {
   const i = db.sessoes.findIndex(x => x.id === clean.id);
   if (i >= 0) db.sessoes[i] = clean; else db.sessoes.push(clean);
   if (MODE === 'cloud' && FB && currentUser) {
+    clean.ownerEmail = currentUser.email || ''; clean.ownerUid = currentUser.uid || '';
+    const i2 = db.sessoes.findIndex(x => x.id === clean.id); if (i2 >= 0) db.sessoes[i2] = clean;
     FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', clean.id), clean)
       .then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
     cacheSnapshot(); if (!navigator.onLine) setSync('offline');
@@ -1175,17 +1179,83 @@ function equipeMs(r) {
 }
 function fillEquipeSelects() {
   const nomes = colabList();
-  const optNomes = nomes.map(n => `<option>${escapeHtml(n)}</option>`).join('');
   const colab = document.getElementById('eq_colab');
   const curColab = colab.value;
-  colab.innerHTML = '<option value="">— selecione —</option>' + optNomes;
-  if (curColab) colab.value = curColab;
+  colab.innerHTML = '<option value="">— selecione —</option>' + nomes.map(n => `<option>${escapeHtml(n)}</option>`).join('') + '<option value="__novo__">➕ Novo colaborador…</option>';
+  if (curColab && curColab !== '__novo__') colab.value = curColab;
   const tipo = document.getElementById('eq_tipo');
-  if (!tipo.value) tipo.innerHTML = tipoOptions('suzano'); else { const cur = tipo.value; tipo.innerHTML = tipoOptions(cur); }
+  const cur = tipo.value || 'suzano'; tipo.innerHTML = tipoOptions(cur);
+}
+function eqColabChanged() {
+  const sel = document.getElementById('eq_colab');
+  if (sel.value !== '__novo__') return;
+  const nome = (prompt('Nome do novo colaborador:') || '').trim();
+  if (!nome) { sel.value = ''; return; }
+  addColaboradorEquipe(nome);
+  fillEquipeSelects();
+  sel.value = nome;
+}
+function addColaboradorEquipe(nome) {
+  nome = (nome || '').trim(); if (!nome) return;
+  db.config.colaboradores = (db.config.colaboradores && db.config.colaboradores.length) ? db.config.colaboradores : DEFAULT_COLAB.slice();
+  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) {
+    db.config.colaboradores.push(nome);
+    persistColaboradores();
+  }
+}
+function persistColaboradores() {
+  save();
+  if (MODE === 'cloud' && FB && isAdmin()) {
+    FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(() => {});
+  }
+}
+/* nome amigável de quem registrou o ponto pessoal (só temos o e-mail) */
+function ownerLabel(s) { const e = s.ownerEmail || ''; return e ? e.split('@')[0].replace(/\./g, ' ') : (s.ownerUid ? 'conta ' + String(s.ownerUid).slice(0, 5) : '—'); }
+/* registros do mês: lançamentos da Equipe + ponto pessoal de todos */
+function eqMonthRecords() {
+  const prefix = eqYear + '-' + pad(eqMonth + 1);
+  const recs = [];
+  (db.equipe || []).forEach(r => {
+    if ((r.data || '').slice(0, 7) !== prefix) return;
+    recs.push({ key: 'eq_' + r.id, source: 'equipe', who: r.colaborador || '—', tipo: r.tipo, data: r.data, entrada: r.entrada, saida: r.saida, pausaMin: parseInt(r.pausa, 10) || 0, nota: r.nota || '', ms: equipeMs(r), id: r.id });
+  });
+  const now = Date.now();
+  (db.allSessoes || []).forEach(s => {
+    if (!s.entrada) return;
+    const k = dateKey(s.entrada);
+    if (k.slice(0, 7) !== prefix) return;
+    recs.push({ key: 'ps_' + s.id, source: 'pessoal', who: ownerLabel(s), tipo: sessTipo(s), data: k, entrada: timeOf(s.entrada), saida: s.saida ? timeOf(s.saida) : '', pausaMin: Math.round(pausaMs(s, s.saida || now) / 60000), nota: s.nota || '', ms: workedMs(s, now), id: s.id });
+  });
+  return recs;
+}
+function renderEquipe() {
+  if (!isAdmin()) { switchView('ponto'); return; }
+  eqInit();
+  if (!eqSelectsReady) { fillEquipeSelects(); eqSelectsReady = true; if (!document.getElementById('eq_data').value) document.getElementById('eq_data').value = dateKey(Date.now()); }
+  document.getElementById('eqMonthTitle').textContent = MOFULL[eqMonth] + ' ' + eqYear;
+  let recs = eqMonthRecords();
+  // filtro por pessoa (união de nomes/contas presentes)
   const fil = document.getElementById('eqFilterColab');
   const curFil = fil.value || 'all';
-  fil.innerHTML = '<option value="all">Todos os colaboradores</option>' + optNomes;
-  fil.value = curFil;
+  const whos = Array.from(new Set(recs.map(r => r.who))).sort((a, b) => a.localeCompare(b, 'pt'));
+  fil.innerHTML = '<option value="all">Todos os colaboradores</option>' + whos.map(w => `<option${w === curFil ? ' selected' : ''}>${escapeHtml(w)}</option>`).join('');
+  if (curFil !== 'all' && whos.indexOf(curFil) >= 0) { fil.value = curFil; recs = recs.filter(r => r.who === curFil); }
+  else fil.value = 'all';
+  recs.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (a.who || '').localeCompare(b.who || ''));
+  const total = recs.reduce((a, r) => a + r.ms, 0);
+  document.getElementById('eqMonthTotal').textContent = fmtHM(total);
+  const cont = document.getElementById('equipeList');
+  if (!recs.length) { cont.innerHTML = `<div class="card"><div class="empty"><span class="big">👥</span>Nenhum registro neste mês.</div></div>`; return; }
+  const groups = {};
+  recs.forEach(r => { (groups[r.data] = groups[r.data] || []).push(r); });
+  cont.innerHTML = Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(k => {
+    const items = groups[k];
+    const dayTotal = items.reduce((a, r) => a + r.ms, 0);
+    return `<div class="card">
+      <div class="day-head">${eqDateLabel(k)} <span>${fmtHM(dayTotal)}</span></div>
+      ${items.sort((a, b) => (a.who || '').localeCompare(b.who || '')).map(eqRow).join('')}
+    </div>`;
+  }).join('');
 }
 function eqPreview() {
   const r = { data: document.getElementById('eq_data').value, entrada: document.getElementById('eq_entrada').value, saida: document.getElementById('eq_saida').value, pausa: document.getElementById('eq_pausa').value };
@@ -1193,47 +1263,29 @@ function eqPreview() {
   if (r.entrada && r.saida) el.textContent = 'Duração: ' + fmtHM(equipeMs(r));
   else el.textContent = '';
 }
-function renderEquipe() {
-  if (!isAdmin()) { switchView('ponto'); return; }
-  eqInit();
-  if (!eqSelectsReady) { fillEquipeSelects(); eqSelectsReady = true; if (!document.getElementById('eq_data').value) document.getElementById('eq_data').value = dateKey(Date.now()); }
-  document.getElementById('eqMonthTitle').textContent = MOFULL[eqMonth] + ' ' + eqYear;
-  const filC = document.getElementById('eqFilterColab').value || 'all';
-  const prefix = eqYear + '-' + pad(eqMonth + 1);
-  let list = (db.equipe || []).filter(r => (r.data || '').slice(0, 7) === prefix);
-  if (filC !== 'all') list = list.filter(r => r.colaborador === filC);
-  list.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (a.colaborador || '').localeCompare(b.colaborador || ''));
-  const total = list.reduce((a, r) => a + equipeMs(r), 0);
-  document.getElementById('eqMonthTotal').textContent = fmtHM(total);
-  const cont = document.getElementById('equipeList');
-  if (!list.length) { cont.innerHTML = `<div class="card"><div class="empty"><span class="big">👥</span>Nenhum registro da equipe neste mês.</div></div>`; return; }
-  const groups = {};
-  list.forEach(r => { (groups[r.data] = groups[r.data] || []).push(r); });
-  cont.innerHTML = Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(k => {
-    const items = groups[k];
-    const dayTotal = items.reduce((a, r) => a + equipeMs(r), 0);
-    return `<div class="card">
-      <div class="day-head">${eqDateLabel(k)} <span>${fmtHM(dayTotal)}</span></div>
-      ${items.sort((a, b) => (a.colaborador || '').localeCompare(b.colaborador || '')).map(eqRow).join('')}
-    </div>`;
-  }).join('');
-}
 function eqDateLabel(k) { const p = String(k).split('-'); if (p.length !== 3) return k; const dt = new Date(+p[0], +p[1] - 1, +p[2]); return WD[dt.getDay()] + ', ' + (+p[2]) + ' ' + MO[+p[1] - 1] + ' ' + p[0]; }
 function eqRow(r) {
+  const badge = r.source === 'equipe'
+    ? '<span style="font-size:9px;font-weight:800;color:#fff;background:var(--orange);border-radius:4px;padding:1px 5px">EQUIPE</span>'
+    : '<span style="font-size:9px;font-weight:800;color:var(--text-light);border:1px solid var(--border);border-radius:4px;padding:1px 5px">PESSOAL</span>';
+  const actions = r.source === 'equipe'
+    ? `<div class="entry-actions">
+        <button class="mini-btn" onclick="editEquipe('${r.id}')" title="Editar">✏️</button>
+        <button class="mini-btn" onclick="removeEquipe('${r.id}')" title="Excluir">🗑️</button>
+      </div>`
+    : '';
   return `
     <div class="entry">
       <div class="entry-main">
         <div class="top">
-          <span style="font-weight:800">${escapeHtml(r.colaborador || '—')}</span>
+          <span style="font-weight:800">${escapeHtml(r.who || '—')}</span>
           <span class="contract-pill" style="background:${tipoColor(r.tipo)};color:#fff">${tipoLabel(r.tipo)}</span>
+          ${badge}
         </div>
-        <div class="sub">${escapeHtml(r.entrada || '?')} → ${escapeHtml(r.saida || '?')}${(parseInt(r.pausa,10)||0) > 0 ? ' · pausa ' + (parseInt(r.pausa,10)) + 'min' : ''}${r.nota ? ' · ' + escapeHtml(r.nota) : ''}</div>
+        <div class="sub">${escapeHtml(r.entrada || '?')} → ${escapeHtml(r.saida || '...')}${(r.pausaMin || 0) > 0 ? ' · pausa ' + r.pausaMin + 'min' : ''}${r.nota ? ' · ' + escapeHtml(r.nota) : ''}</div>
       </div>
-      <div class="entry-dur">${fmtHM(equipeMs(r))}</div>
-      <div class="entry-actions">
-        <button class="mini-btn" onclick="editEquipe('${r.id}')" title="Editar">✏️</button>
-        <button class="mini-btn" onclick="removeEquipe('${r.id}')" title="Excluir">🗑️</button>
-      </div>
+      <div class="entry-dur">${fmtHM(r.ms)}</div>
+      ${actions}
     </div>`;
 }
 function saveEquipe() {
@@ -1316,16 +1368,16 @@ function exportEquipeCSV() {
   eqInit();
   const prefix = eqYear + '-' + pad(eqMonth + 1);
   const filC = document.getElementById('eqFilterColab').value || 'all';
-  let list = (db.equipe || []).filter(r => (r.data || '').slice(0, 7) === prefix);
-  if (filC !== 'all') list = list.filter(r => r.colaborador === filC);
+  let list = eqMonthRecords();
+  if (filC !== 'all') list = list.filter(r => r.who === filC);
   if (!list.length) { showToast('Nenhum registro no mês.'); return; }
-  list.sort((a, b) => (a.data || '').localeCompare(b.data || '') || (a.colaborador || '').localeCompare(b.colaborador || ''));
+  list.sort((a, b) => (a.data || '').localeCompare(b.data || '') || (a.who || '').localeCompare(b.who || ''));
   const esc = v => { v = String(v == null ? '' : v); return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const head = ['Colaborador', 'Contrato', 'Data', 'Entrada', 'Saída', 'Pausa (min)', 'Horas', 'Observação'];
-  const rows = list.map(r => [r.colaborador, tipoLabel(r.tipo), r.data, r.entrada, r.saida, (parseInt(r.pausa, 10) || 0), fmtHM(equipeMs(r)), r.nota || ''].map(esc).join(';'));
+  const head = ['Colaborador', 'Origem', 'Contrato', 'Data', 'Entrada', 'Saída', 'Pausa (min)', 'Horas', 'Observação'];
+  const rows = list.map(r => [r.who, r.source === 'equipe' ? 'Equipe' : 'Pessoal', tipoLabel(r.tipo), r.data, r.entrada, r.saida, (r.pausaMin || 0), fmtHM(r.ms), r.nota || ''].map(esc).join(';'));
   const csv = '﻿' + head.join(';') + '\n' + rows.join('\n');
   downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'ponto_equipe_' + prefix + '.csv');
-  showToast('CSV da equipe exportado ⬇️');
+  showToast('CSV exportado ⬇️');
 }
 function updateAdminUI() {
   const nav = document.getElementById('navEquipe');
@@ -1544,7 +1596,7 @@ function bootCloud(api) {
   FB.onAuthStateChanged(FB.auth, user => {
     currentUser = user;
     if (user) { hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); updateAdminUI(); }
-    else { clearCloudListeners(); db.sessoes = []; db.equipe = []; updateAdminUI(); renderPonto(); showAuth(); }
+    else { clearCloudListeners(); db.sessoes = []; db.equipe = []; db.allSessoes = []; updateAdminUI(); renderPonto(); showAuth(); }
   });
   window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
   window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
@@ -1578,6 +1630,13 @@ function startCloudListeners() {
       cacheSnapshot();
       if (document.getElementById('view-equipe').classList.contains('active')) renderEquipe();
     }, () => { /* sem permissão: mantém o que houver em cache */ }));
+    // ponto PESSOAL de todos os colaboradores (todas as contas) — via collectionGroup
+    if (FB.collectionGroup) {
+      cloudUnsub.push(FB.onSnapshot(FB.collectionGroup(FB.fs, 'sessoes'), s => {
+        db.allSessoes = s.docs.map(d => d.data());
+        if (document.getElementById('view-equipe').classList.contains('active')) renderEquipe();
+      }, () => { /* sem permissão/índice: usa só os registros da Equipe */ }));
+    }
   }
 }
 function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
@@ -1664,7 +1723,8 @@ if (!window.__PONTO.wantCloud) bootLocal();
         onAuthStateChanged: authMod.onAuthStateChanged,
         signOut: authMod.signOut,
         collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
-        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
+        collectionGroup: fsMod.collectionGroup
       });
     } catch (e) {
       console.warn('Firebase indisponível — modo local.', e);
