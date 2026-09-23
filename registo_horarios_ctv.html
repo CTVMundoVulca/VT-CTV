@@ -466,10 +466,11 @@
           <input type="time" id="eq_entrada" oninput="eqPreview()">
         </div>
         <div>
-          <label class="fld">Saída</label>
+          <label class="fld">Saída <span style="font-weight:400;color:var(--text-light)">(opcional)</span></label>
           <input type="time" id="eq_saida" oninput="eqPreview()">
         </div>
       </div>
+      <div class="hint" style="margin-top:-6px;margin-bottom:6px">Registre só a <b>entrada</b> agora (deixe a saída em branco); depois toque em ⏹️ no registro para lançar a <b>saída</b>.</div>
       <div class="fld-group">
         <label class="fld">Pausa / intervalo (minutos)</label>
         <input type="number" id="eq_pausa" min="0" step="1" value="60" inputmode="numeric" oninput="eqPreview()">
@@ -716,6 +717,15 @@ function dateLabel(ts) {
 function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 /* ═══════════════════ NAVEGAÇÃO ═══════════════════ */
+let eqTick = null;
+function startEqTick() {
+  stopEqTick();
+  eqTick = setInterval(() => {
+    if (!document.getElementById('view-equipe').classList.contains('active')) { stopEqTick(); return; }
+    if (eqMonthRecords().some(r => r.open)) renderEquipe();
+  }, 30000);
+}
+function stopEqTick() { if (eqTick) { clearInterval(eqTick); eqTick = null; } }
 function switchView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
@@ -723,7 +733,7 @@ function switchView(v) {
   if (v === 'ponto') renderPonto();
   if (v === 'registos') renderRegistos();
   if (v === 'relatorios') renderRelatorios();
-  if (v === 'equipe') renderEquipe();
+  if (v === 'equipe') { renderEquipe(); startEqTick(); } else stopEqTick();
   window.scrollTo(0, 0);
 }
 
@@ -1167,14 +1177,21 @@ let eqYear = null, eqMonth = null, eqSelectsReady = false;
 function eqInit() { if (eqYear === null) { const d = new Date(); eqYear = d.getFullYear(); eqMonth = d.getMonth(); } }
 function eqShift(delta) { eqInit(); eqMonth += delta; if (eqMonth < 0) { eqMonth = 11; eqYear--; } if (eqMonth > 11) { eqMonth = 0; eqYear++; } renderEquipe(); }
 function equipeMs(r) {
-  if (!r || !r.data || !r.entrada || !r.saida) return 0;
+  if (!r || !r.data || !r.entrada) return 0;
   const p = String(r.data).split('-').map(Number);
   const e1 = String(r.entrada).split(':').map(Number);
-  const e2 = String(r.saida).split(':').map(Number);
-  if (p.length !== 3 || e1.length < 2 || e2.length < 2) return 0;
-  let start = new Date(p[0], p[1] - 1, p[2], e1[0], e1[1]).getTime();
-  let end = new Date(p[0], p[1] - 1, p[2], e2[0], e2[1]).getTime();
-  if (end < start) end += 24 * 3600 * 1000; // virou o dia
+  if (p.length !== 3 || e1.length < 2) return 0;
+  const start = new Date(p[0], p[1] - 1, p[2], e1[0], e1[1]).getTime();
+  let end;
+  if (r.saida) {
+    const e2 = String(r.saida).split(':').map(Number);
+    if (e2.length < 2) return 0;
+    end = new Date(p[0], p[1] - 1, p[2], e2[0], e2[1]).getTime();
+    if (end < start) end += 24 * 3600 * 1000; // virou o dia
+  } else {
+    end = Date.now(); // em andamento: conta até agora (como o relógio de ponto)
+    if (end < start) return 0; // entrada no futuro
+  }
   return Math.max(0, end - start - (parseInt(r.pausa, 10) || 0) * 60000);
 }
 function fillEquipeSelects() {
@@ -1217,14 +1234,14 @@ function eqMonthRecords() {
   const recs = [];
   (db.equipe || []).forEach(r => {
     if ((r.data || '').slice(0, 7) !== prefix) return;
-    recs.push({ key: 'eq_' + r.id, source: 'equipe', who: r.colaborador || '—', tipo: r.tipo, data: r.data, entrada: r.entrada, saida: r.saida, pausaMin: parseInt(r.pausa, 10) || 0, nota: r.nota || '', ms: equipeMs(r), id: r.id });
+    recs.push({ key: 'eq_' + r.id, source: 'equipe', who: r.colaborador || '—', tipo: r.tipo, data: r.data, entrada: r.entrada, saida: r.saida, open: !r.saida, pausaMin: parseInt(r.pausa, 10) || 0, nota: r.nota || '', ms: equipeMs(r), id: r.id });
   });
   const now = Date.now();
   (db.allSessoes || []).forEach(s => {
     if (!s.entrada) return;
     const k = dateKey(s.entrada);
     if (k.slice(0, 7) !== prefix) return;
-    recs.push({ key: 'ps_' + s.id, source: 'pessoal', who: ownerLabel(s), tipo: sessTipo(s), data: k, entrada: timeOf(s.entrada), saida: s.saida ? timeOf(s.saida) : '', pausaMin: Math.round(pausaMs(s, s.saida || now) / 60000), nota: s.nota || '', ms: workedMs(s, now), id: s.id });
+    recs.push({ key: 'ps_' + s.id, source: 'pessoal', who: ownerLabel(s), tipo: sessTipo(s), data: k, entrada: timeOf(s.entrada), saida: s.saida ? timeOf(s.saida) : '', open: !s.saida, pausaMin: Math.round(pausaMs(s, s.saida || now) / 60000), nota: s.nota || '', ms: workedMs(s, now), id: s.id });
   });
   return recs;
 }
@@ -1261,6 +1278,7 @@ function eqPreview() {
   const r = { data: document.getElementById('eq_data').value, entrada: document.getElementById('eq_entrada').value, saida: document.getElementById('eq_saida').value, pausa: document.getElementById('eq_pausa').value };
   const el = document.getElementById('eqDurPreview');
   if (r.entrada && r.saida) el.textContent = 'Duração: ' + fmtHM(equipeMs(r));
+  else if (r.entrada) el.textContent = 'Sem saída = fica “em andamento” (você registra a saída depois).';
   else el.textContent = '';
 }
 function eqDateLabel(k) { const p = String(k).split('-'); if (p.length !== 3) return k; const dt = new Date(+p[0], +p[1] - 1, +p[2]); return WD[dt.getDay()] + ', ' + (+p[2]) + ' ' + MO[+p[1] - 1] + ' ' + p[0]; }
@@ -1268,8 +1286,10 @@ function eqRow(r) {
   const badge = r.source === 'equipe'
     ? '<span style="font-size:9px;font-weight:800;color:#fff;background:var(--orange);border-radius:4px;padding:1px 5px">EQUIPE</span>'
     : '<span style="font-size:9px;font-weight:800;color:var(--text-light);border:1px solid var(--border);border-radius:4px;padding:1px 5px">PESSOAL</span>';
+  const emAndamento = r.open ? '<span style="font-size:9px;font-weight:800;color:var(--success)">● EM ANDAMENTO</span>' : '';
   const actions = r.source === 'equipe'
     ? `<div class="entry-actions">
+        ${r.open ? `<button class="mini-btn" onclick="fecharEquipe('${r.id}')" title="Registrar saída">⏹️</button>` : ''}
         <button class="mini-btn" onclick="editEquipe('${r.id}')" title="Editar">✏️</button>
         <button class="mini-btn" onclick="removeEquipe('${r.id}')" title="Excluir">🗑️</button>
       </div>`
@@ -1280,7 +1300,7 @@ function eqRow(r) {
         <div class="top">
           <span style="font-weight:800">${escapeHtml(r.who || '—')}</span>
           <span class="contract-pill" style="background:${tipoColor(r.tipo)};color:#fff">${tipoLabel(r.tipo)}</span>
-          ${badge}
+          ${badge}${emAndamento}
         </div>
         <div class="sub">${escapeHtml(r.entrada || '?')} → ${escapeHtml(r.saida || '...')}${(r.pausaMin || 0) > 0 ? ' · pausa ' + r.pausaMin + 'min' : ''}${r.nota ? ' · ' + escapeHtml(r.nota) : ''}</div>
       </div>
@@ -1298,7 +1318,7 @@ function saveEquipe() {
   const pausa = parseInt(document.getElementById('eq_pausa').value, 10) || 0;
   const nota = document.getElementById('eq_nota').value.trim();
   if (!colaborador) { showToast('Escolha o colaborador.'); return; }
-  if (!data || !entrada || !saida) { showToast('Preencha data, entrada e saída.'); return; }
+  if (!data || !entrada) { showToast('Preencha ao menos data e entrada.'); return; }
   const id = document.getElementById('eq_id').value;
   const existing = id ? (db.equipe || []).find(x => x.id === id) : null;
   const rec = Object.assign({}, existing || {}, {
@@ -1312,7 +1332,19 @@ function saveEquipe() {
   persistEquipe(rec);
   resetEquipeForm();
   renderEquipe();
-  showToast('Ponto da equipe registrado ✔️');
+  showToast(saida ? 'Ponto registrado ✔️' : 'Entrada registrada ▶️ — registre a saída depois.');
+}
+/* fecha um lançamento em andamento (registra a saída como um novo passo) */
+function fecharEquipe(id) {
+  if (!isAdmin()) return;
+  const r = (db.equipe || []).find(x => x.id === id); if (!r) return;
+  const now = new Date();
+  const sugestao = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  const saida = (prompt('Horário de SAÍDA de ' + (r.colaborador || '') + ' (HH:MM):', sugestao) || '').trim();
+  if (!saida) return;
+  if (!/^\d{1,2}:\d{2}$/.test(saida)) { showToast('Horário inválido. Use HH:MM.'); return; }
+  r.saida = saida; r.atualizadoEm = Date.now();
+  persistEquipe(r); renderEquipe(); showToast('Saída registrada ✔️ — ' + fmtHM(equipeMs(r)));
 }
 function editEquipe(id) {
   const r = (db.equipe || []).find(x => x.id === id); if (!r) return;
