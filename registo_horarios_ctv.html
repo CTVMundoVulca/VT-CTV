@@ -595,7 +595,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 /* Tipos de atendimento (ordem = ordem da legenda) */
 const TIPOS = [['sede', 'Sede', '#0070C0'], ['suzano', 'Suzano', '#1E8449'], ['externo', 'Externo', '#F47820'], ['amt', 'AMT', '#E53935']];
 /* Equipe: só estes e-mails registram/veem o ponto da equipe */
-const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br', 'michael.lopes@benetechbrasil.com.br'];
+const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br', 'michael.lopes@benetechbrasil.com.br', 'micahel.lopes@benetechbrasil.com.br'];
 function isAdmin() { return !!(currentUser && currentUser.email && ADMIN_EMAILS.indexOf(currentUser.email.toLowerCase()) >= 0); }
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
 function colabList() { const l = (db.config.colaboradores && db.config.colaboradores.length) ? db.config.colaboradores : DEFAULT_COLAB; return l.slice().sort((a, b) => a.localeCompare(b, 'pt')); }
