@@ -1227,7 +1227,15 @@ function persistColaboradores() {
   }
 }
 /* nome amigável de quem registrou o ponto pessoal (só temos o e-mail) */
-function ownerLabel(s) { const e = s.ownerEmail || ''; return e ? e.split('@')[0].replace(/\./g, ' ') : (s.ownerUid ? 'conta ' + String(s.ownerUid).slice(0, 5) : '—'); }
+function friendlyEmail(e) { if (!e) return ''; const base = String(e).split('@')[0].replace(/[._-]+/g, ' ').trim(); return base.replace(/\b\w/g, c => c.toUpperCase()); }
+/* dono de um ponto pessoal: e-mail direto, ou pelo mapa uid→e-mail, ou pela conta */
+function ownerLabel(s, uidToEmail) {
+  const uid = s._uid || s.ownerUid || '';
+  const em = s.ownerEmail || (uidToEmail && uid ? uidToEmail[uid] : '') || '';
+  if (uid && currentUser && uid === currentUser.uid) return 'Você' + (em ? ' · ' + friendlyEmail(em) : '');
+  if (em) return friendlyEmail(em);
+  return uid ? 'conta ' + String(uid).slice(0, 5) : '—';
+}
 /* registros do mês: lançamentos da Equipe + ponto pessoal de todos */
 function eqMonthRecords() {
   const prefix = eqYear + '-' + pad(eqMonth + 1);
@@ -1236,12 +1244,15 @@ function eqMonthRecords() {
     if ((r.data || '').slice(0, 7) !== prefix) return;
     recs.push({ key: 'eq_' + r.id, source: 'equipe', who: r.colaborador || '—', tipo: r.tipo, data: r.data, entrada: r.entrada, saida: r.saida, open: !r.saida, pausaMin: parseInt(r.pausa, 10) || 0, nota: r.nota || '', ms: equipeMs(r), id: r.id });
   });
+  // mapa uid→e-mail a partir de qualquer registro que já tenha e-mail (conserta os antigos do mesmo dono)
+  const uidToEmail = {};
+  (db.allSessoes || []).forEach(s => { const uid = s._uid || s.ownerUid; if (s.ownerEmail && uid) uidToEmail[uid] = s.ownerEmail; });
   const now = Date.now();
   (db.allSessoes || []).forEach(s => {
     if (!s.entrada) return;
     const k = dateKey(s.entrada);
     if (k.slice(0, 7) !== prefix) return;
-    recs.push({ key: 'ps_' + s.id, source: 'pessoal', who: ownerLabel(s), tipo: sessTipo(s), data: k, entrada: timeOf(s.entrada), saida: s.saida ? timeOf(s.saida) : '', open: !s.saida, pausaMin: Math.round(pausaMs(s, s.saida || now) / 60000), nota: s.nota || '', ms: workedMs(s, now), id: s.id });
+    recs.push({ key: 'ps_' + s.id, source: 'pessoal', who: ownerLabel(s, uidToEmail), tipo: sessTipo(s), data: k, entrada: timeOf(s.entrada), saida: s.saida ? timeOf(s.saida) : '', open: !s.saida, pausaMin: Math.round(pausaMs(s, s.saida || now) / 60000), nota: s.nota || '', ms: workedMs(s, now), id: s.id });
   });
   return recs;
 }
@@ -1665,7 +1676,7 @@ function startCloudListeners() {
     // ponto PESSOAL de todos os colaboradores (todas as contas) — via collectionGroup
     if (FB.collectionGroup) {
       cloudUnsub.push(FB.onSnapshot(FB.collectionGroup(FB.fs, 'sessoes'), s => {
-        db.allSessoes = s.docs.map(d => d.data());
+        db.allSessoes = s.docs.map(d => { const x = d.data(); try { x._uid = d.ref.parent.parent.id; } catch (e) {} return x; });
         if (document.getElementById('view-equipe').classList.contains('active')) renderEquipe();
       }, () => { /* sem permissão/índice: usa só os registros da Equipe */ }));
     }
