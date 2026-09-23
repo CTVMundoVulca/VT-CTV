@@ -472,7 +472,7 @@
       </div>
       <div class="fld-group">
         <label class="fld">Pausa / intervalo (minutos)</label>
-        <input type="number" id="eq_pausa" min="0" step="1" value="0" inputmode="numeric" oninput="eqPreview()">
+        <input type="number" id="eq_pausa" min="0" step="1" value="60" inputmode="numeric" oninput="eqPreview()">
       </div>
       <div class="fld-group">
         <label class="fld">Observação (opcional)</label>
@@ -1336,7 +1336,7 @@ function resetEquipeForm() {
   document.getElementById('eq_tipo').innerHTML = tipoOptions('suzano');
   document.getElementById('eq_entrada').value = '';
   document.getElementById('eq_saida').value = '';
-  document.getElementById('eq_pausa').value = '0';
+  document.getElementById('eq_pausa').value = '60';
   document.getElementById('eq_nota').value = '';
   document.getElementById('eqDurPreview').textContent = '';
   document.getElementById('eqFormTitle').textContent = 'Registrar ponto da equipe';
