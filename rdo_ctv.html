@@ -7,10 +7,10 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="RDO CTV">
+<meta name="apple-mobile-web-app-title" content="RDO Benetech">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>RDO — CTV</title>
+<title>RDO — Benetech</title>
 <style>
   :root {
     --navy: #0D1B2A; --navy-mid: #162436; --navy-soft: #1E2F45;
@@ -33,7 +33,7 @@
   .header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: nowrap; }
   .logo-area { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
   .header-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-  .logo-badge { background: var(--orange); color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .5px; padding: 5px 10px; border-radius: 6px; flex: 0 0 auto; }
+  .logo-img { height: 28px; width: auto; flex: 0 0 auto; }
   .logo-name { color: var(--silver-light); font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .logo-name b { color: #fff; display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* e-mail já aparece no cartão de sincronização; fora da barra para não estourar */
@@ -173,7 +173,7 @@
   <div class="header-row">
     <div class="logo-area">
       <button class="back-btn" id="backBtn" onclick="goList()" style="display:none">‹ RDOs</button>
-      <div class="logo-badge">CTV</div>
+      <img src="logo-benetech.png" alt="Benetech" class="logo-img">
       <div class="logo-name">Relatório Diário<b id="hdrTitle">de Obra (RDO)</b></div>
     </div>
     <div class="header-actions">
@@ -190,7 +190,7 @@
 <!-- ═══════════ LOGIN (modo nuvem) ═══════════ -->
 <div id="authOverlay">
   <div class="auth-card">
-    <div class="logo-badge" style="display:inline-block;font-size:16px;margin-bottom:14px">CTV</div>
+    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
     <h3 style="margin-bottom:6px">Relatório Diário de Obra</h3>
     <p class="hint" id="authMsg" style="margin-bottom:16px">Entre com seu e-mail e senha. Se ainda não tem conta, toque em "Criar conta".</p>
     <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
@@ -1178,6 +1178,7 @@ if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediat
     }
   }
 </script>
+<div style="text-align:center;padding:12px 0 20px;font-size:11px;color:var(--text-light);opacity:.5">dev CTV</div>
 <script src="app-update.js"></script>
 </body>
 </html>
