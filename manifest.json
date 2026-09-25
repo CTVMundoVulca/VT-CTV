@@ -1,13 +1,13 @@
 {
-  "name": "Apps CTV — Campo",
-  "short_name": "CTV Campo",
-  "description": "Ferramentas de campo CTV: registo de horários e visita técnica. Funciona offline.",
+  "name": "Apps Benetech — Campo",
+  "short_name": "Benetech Campo",
+  "description": "Ferramentas de campo Benetech: registo de horários, RDO, visita técnica e transportadores. Funciona offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0D1B2A",
-  "theme_color": "#0D1B2A",
+  "background_color": "#001a33",
+  "theme_color": "#001a33",
   "lang": "pt-BR",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
