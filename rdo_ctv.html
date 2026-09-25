@@ -144,7 +144,9 @@
   #printBar { display: flex; gap: 10px; padding: 10px 14px; background: var(--navy); position: sticky; top: 0; }
   #printBar .btn { width: auto; flex: 1; }
   #printArea { flex: 1; overflow-y: auto; background: #fff; color: #1a1a2e; padding-bottom: 30px; font-family: Arial, Helvetica, sans-serif; }
-  #printArea h1 { background: #001a33; color: #fff; font-size: 16px; padding: 12px 14px; margin: 0; border-bottom: 3px solid #43a6ea; }
+  #printArea .rdo-header { background: #001a33; color: #fff; display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 0; border-bottom: 3px solid #43a6ea; }
+  #printArea .rdo-header img { height: 28px; width: auto; background: #fff; padding: 3px 6px; border-radius: 5px; }
+  #printArea .rdo-header h1 { background: none; font-size: 16px; padding: 0; margin: 0; border: none; color: #fff; }
   #printArea .meta { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 10px 14px; font-size: 12px; }
   #printArea .meta div { min-width: 150px; }
   #printArea .meta b { color: #555; }
@@ -868,6 +870,16 @@ function limparAssinatura(id) { const c = document.getElementById('sig_' + id); 
 function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; if (id === 'benetech') cur.assBenetech = c.toDataURL('image/png'); else cur.assFiscal = c.toDataURL('image/png'); saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
 function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? c.toDataURL('image/png') : null; }
 
+/* ── Logo base64 cache ── */
+let _logoB64 = '';
+(function preloadLogo() {
+  fetch('logo-benetech.png').then(r => r.blob()).then(b => {
+    const fr = new FileReader();
+    fr.onload = () => { _logoB64 = fr.result; };
+    fr.readAsDataURL(b);
+  }).catch(() => {});
+})();
+
 /* ── PDF (tela de impressão dentro do app, com botão Voltar) ── */
 function tbl(title, headers, rows) {
   if (!rows.length) return '';
@@ -878,7 +890,8 @@ function gerarPDF() {
   collectEditor();
   const r = cur;
   const dt = r.data ? r.data.split('-').reverse().join('/') : '';
-  let html = `<h1>RELATÓRIO DIÁRIO DE OBRA (RDO)${r.titulo ? ' — ' + escapeHtml(r.titulo) : ''}</h1>
+  const logoSrc = _logoB64 || document.querySelector('header .logo-img')?.src || '';
+  let html = `<div class="rdo-header"><img src="${logoSrc}" alt="Benetech"><h1>RELATÓRIO DIÁRIO DE OBRA (RDO)${r.titulo ? ' — ' + escapeHtml(r.titulo) : ''}</h1></div>
     <div class="meta">
       <div><b>Nº RDO:</b> ${escapeHtml(r.numero)}</div><div><b>Data:</b> ${dt}</div>
       <div><b>Cliente/Contrato:</b> ${escapeHtml(r.cliente)}</div><div><b>Local:</b> ${escapeHtml(r.local)}</div>
@@ -904,7 +917,9 @@ function buildPrintHTML() {
 <title>RDO ${escapeHtml(cur.numero || '')}</title>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e}
-h1{background:#001a33;color:#fff;font-size:16px;padding:12px 14px;margin:0;border-bottom:3px solid #43a6ea}
+.rdo-header{background:#001a33;color:#fff;display:flex;align-items:center;gap:12px;padding:10px 14px;margin:0;border-bottom:3px solid #43a6ea}
+.rdo-header img{height:28px;width:auto;background:#fff;padding:3px 6px;border-radius:5px}
+.rdo-header h1{background:none;font-size:16px;padding:0;margin:0;border:none;color:#fff}
 .meta{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 14px;font-size:12px}
 .meta div{min-width:150px} .meta b{color:#555}
 h3{background:#F0F2F5;color:#0D1B2A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;margin:12px 14px 4px}
