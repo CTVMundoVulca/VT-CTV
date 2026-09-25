@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0D1B2A">
+<meta name="theme-color" content="#001a33">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,8 +13,8 @@
 <title>RDO — Benetech</title>
 <style>
   :root {
-    --navy: #0D1B2A; --navy-mid: #162436; --navy-soft: #1E2F45;
-    --orange: #F47820; --orange-light: #FF8F35;
+    --navy: #001a33; --navy-mid: #0a2744; --navy-soft: #133557;
+    --orange: #43a6ea; --orange-light: #5bb5f0;
     --silver: #C0C0C0; --silver-light: #E8E8E8; --white: #fff;
     --text: #1A1A2E; --text-light: #555;
     --danger: #E53935; --success: #2E7D32; --warn: #F9A825;
@@ -23,7 +23,7 @@
     --azul: #0070C0; --verde-esc: #1E8449;
   }
   html[data-dark="1"] {
-    --navy: #0A1420; --card: #17222F; --bg: #0F1822; --text: #EAECEF;
+    --navy: #000d1a; --card: #0f1f30; --bg: #081420; --text: #EAECEF;
     --text-light: #9AA5B1; --silver-light: #2A3644; --border: #26323F;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -144,7 +144,7 @@
   #printBar { display: flex; gap: 10px; padding: 10px 14px; background: var(--navy); position: sticky; top: 0; }
   #printBar .btn { width: auto; flex: 1; }
   #printArea { flex: 1; overflow-y: auto; background: #fff; color: #1a1a2e; padding-bottom: 30px; font-family: Arial, Helvetica, sans-serif; }
-  #printArea h1 { background: #0D1B2A; color: #fff; font-size: 16px; padding: 12px 14px; margin: 0; border-bottom: 3px solid #F47820; }
+  #printArea h1 { background: #001a33; color: #fff; font-size: 16px; padding: 12px 14px; margin: 0; border-bottom: 3px solid #43a6ea; }
   #printArea .meta { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 10px 14px; font-size: 12px; }
   #printArea .meta div { min-width: 150px; }
   #printArea .meta b { color: #555; }
@@ -904,7 +904,7 @@ function buildPrintHTML() {
 <title>RDO ${escapeHtml(cur.numero || '')}</title>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e}
-h1{background:#0D1B2A;color:#fff;font-size:16px;padding:12px 14px;margin:0;border-bottom:3px solid #F47820}
+h1{background:#001a33;color:#fff;font-size:16px;padding:12px 14px;margin:0;border-bottom:3px solid #43a6ea}
 .meta{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 14px;font-size:12px}
 .meta div{min-width:150px} .meta b{color:#555}
 h3{background:#F0F2F5;color:#0D1B2A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;margin:12px 14px 4px}
@@ -979,7 +979,7 @@ function importBackup(input) {
 function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 
 /* ── tema / toast ── */
-function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', on ? '#0A1420' : '#0D1B2A'); }
+function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', on ? '#000d1a' : '#001a33'); }
 function toggleDark() { db.config.dark = !db.config.dark; saveDark(); applyDark(); }
 let toastTimer = null;
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
@@ -1178,7 +1178,7 @@ if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediat
     }
   }
 </script>
-<div style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · © 2026 — Todos os direitos reservados</div>
+<div style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2026 — Todos os direitos reservados</div>
 <script src="app-update.js"></script>
 </body>
 </html>
