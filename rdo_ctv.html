@@ -902,7 +902,6 @@ function gerarPDF() {
   html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
   html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.obs]));
   if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
-  html += tbl('Gestão de horários — transporte', ['Nome','Hora Busca','Hora Deixa','Obs.'], (r.transporte||[]).map(x => [x.nome,x.busca,x.deixa,x.obs]));
   html += `<div class="assin">
     <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div></div>
     <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div></div>
