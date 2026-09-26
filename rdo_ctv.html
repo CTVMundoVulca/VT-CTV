@@ -159,6 +159,7 @@
   #printArea .assin div { flex: 1; text-align: center; }
   #printArea .assin img { max-width: 100%; height: 70px; object-fit: contain; }
   #printArea .assin .ln { border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; font-size: 11px; color: #333; }
+  #printArea .assin .sig-id { font-size: 10px; color: #555; margin-top: 2px; }
   @media print {
     body * { visibility: hidden; }
     #printOverlay, #printOverlay * { visibility: visible; }
@@ -312,10 +313,12 @@
       <div class="section-title">Assinaturas</div>
       <label class="fld">Responsável Técnico (Benetech)</label>
       <div class="sig-box"><canvas id="sig_benetech"></canvas><div class="sig-ph" id="ph_benetech">Assine aqui</div></div>
-      <div class="row" style="margin-bottom:16px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('benetech')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('benetech')">Confirmar</button></div>
+      <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('benetech')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('benetech')">Confirmar</button></div>
+      <div class="row" style="margin-bottom:16px"><div style="flex:1"><label class="fld">Nome</label><input type="text" id="f_sig_nome_benetech" placeholder="Nome completo"></div><div style="flex:1"><label class="fld">Matrícula / CPF</label><input type="text" id="f_sig_doc_benetech" placeholder="Matrícula ou CPF"></div></div>
       <label class="fld">Fiscal / Representante do Cliente</label>
       <div class="sig-box"><canvas id="sig_fiscal"></canvas><div class="sig-ph" id="ph_fiscal">Assine aqui</div></div>
-      <div class="row"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('fiscal')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('fiscal')">Confirmar</button></div>
+      <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('fiscal')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('fiscal')">Confirmar</button></div>
+      <div class="row"><div style="flex:1"><label class="fld">Nome</label><input type="text" id="f_sig_nome_fiscal" placeholder="Nome completo"></div><div style="flex:1"><label class="fld">Matrícula / CPF</label><input type="text" id="f_sig_doc_fiscal" placeholder="Matrícula ou CPF"></div></div>
     </div>
 
     <div class="card">
@@ -656,7 +659,7 @@ function blankRDO(dateKey) {
   const today = dateKey || (new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate()));
   const nextNum = db.rdos.reduce((mx, r) => Math.max(mx, parseInt(r.numero, 10) || 0), 0) + 1;
   return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', titulo: '',
-    efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, transporte: [], criadoEm: Date.now() };
+    efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, sigNomeBenetech: '', sigDocBenetech: '', sigNomeFiscal: '', sigDocFiscal: '', transporte: [], criadoEm: Date.now() };
 }
 function newRDO(dateKey) {
   const d = loadDraft();
@@ -683,6 +686,10 @@ function fillEditor() {
   document.getElementById('f_ocorrencias').value = cur.ocorrencias || '';
   Object.keys(SEC).forEach(renderSection);
   ['benetech','fiscal'].forEach(id => { initSignature(id); const src = id === 'benetech' ? cur.assBenetech : cur.assFiscal; restoreSignature(id, src); });
+  document.getElementById('f_sig_nome_benetech').value = cur.sigNomeBenetech || '';
+  document.getElementById('f_sig_doc_benetech').value = cur.sigDocBenetech || '';
+  document.getElementById('f_sig_nome_fiscal').value = cur.sigNomeFiscal || '';
+  document.getElementById('f_sig_doc_fiscal').value = cur.sigDocFiscal || '';
 }
 
 /* ── seções dinâmicas ── */
@@ -787,6 +794,10 @@ function collectEditor() {
   Object.keys(SEC).forEach(syncSection);
   cur.assBenetech = getSigDataURL('benetech') || cur.assBenetech || null;
   cur.assFiscal = getSigDataURL('fiscal') || cur.assFiscal || null;
+  cur.sigNomeBenetech = document.getElementById('f_sig_nome_benetech').value.trim();
+  cur.sigDocBenetech = document.getElementById('f_sig_doc_benetech').value.trim();
+  cur.sigNomeFiscal = document.getElementById('f_sig_nome_fiscal').value.trim();
+  cur.sigDocFiscal = document.getElementById('f_sig_doc_fiscal').value.trim();
 }
 /* ── rascunho automático (não perder o RDO em preenchimento) ── */
 const DRAFT_KEY = 'ctv_rdo_draft';
@@ -903,8 +914,8 @@ function gerarPDF() {
   html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.obs]));
   if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
   html += `<div class="assin">
-    <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div></div>
-    <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div></div>
+    <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div>${r.sigNomeBenetech ? `<div class="sig-id">${escapeHtml(r.sigNomeBenetech)}${r.sigDocBenetech ? ' · ' + escapeHtml(r.sigDocBenetech) : ''}</div>` : ''}</div>
+    <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div>${r.sigNomeFiscal ? `<div class="sig-id">${escapeHtml(r.sigNomeFiscal)}${r.sigDocFiscal ? ' · ' + escapeHtml(r.sigDocFiscal) : ''}</div>` : ''}</div>
   </div>`;
   document.getElementById('printArea').innerHTML = html;
   document.getElementById('printOverlay').classList.add('open');
@@ -930,6 +941,7 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 .assin div{flex:1;text-align:center}
 .assin img{max-width:100%;height:70px;object-fit:contain}
 .assin .ln{border-top:1px solid #333;margin-top:4px;padding-top:4px;font-size:11px;color:#333}
+.assin .sig-id{font-size:10px;color:#555;margin-top:2px}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:10mm;size:A4}}
 </style></head><body>${content}</body></html>`;
 }
