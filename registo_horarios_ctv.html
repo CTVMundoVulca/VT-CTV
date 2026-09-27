@@ -1096,15 +1096,15 @@ function renderCalendar() {
     else if (list.length && bestTipo) { cls += ' d-' + bestTipo; }
     else if (feriado) { cls += ' d-holiday'; }
     else if (weekend) { cls += ' d-weekend'; }
-    if (feriado && !list.length && !plantao) cls += ' has-fer';
+    if ((feriado || (plantao && !list.length)) && !list.length) cls += ' has-fer';
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
     const dur = dayMs > 0 ? `<span class="cal-h">${fmtHShort(dayMs)}</span>` : '';
     const tipoDot = (plantao && list.length && bestTipo) ? `<span class="cal-tipo-dot" style="background:${tipoColor(bestTipo)}"></span>` : '';
-    const nomeDia = feriado ? feriado : (plantao ? 'Plantão' : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : ''));
+    const nomeDia = feriado ? (plantao ? 'Plantão · ' + feriado : feriado) : (plantao ? 'Plantão' : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : ''));
     const titulo = nomeDia ? ` title="${escapeHtml(nomeDia)}"` : '';
-    const ferLabel = (feriado && !list.length && !plantao) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
-    const plLabel = (plantao && !list.length) ? `<span class="cal-fer">🔔</span>` : '';
+    const ferLabel = (feriado && !list.length) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
+    const plLabel = (plantao && !feriado && !list.length) ? `<span class="cal-fer">🔔</span>` : '';
     cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}${ferLabel}${plLabel}${tipoDot}</div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
