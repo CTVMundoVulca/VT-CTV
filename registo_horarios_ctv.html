@@ -285,6 +285,8 @@
   .cal-cell.d-suzano { background: #1E8449; color: #fff; border-color: transparent; }
   .cal-cell.d-externo { background: #F47820; color: #fff; border-color: transparent; }
   .cal-cell.d-amt { background: #E53935; color: #fff; border-color: transparent; }
+  .cal-cell.d-plantao { background: #FFB300; color: #333; border-color: transparent; font-weight: 700; }
+  html[data-dark="1"] .cal-cell.d-plantao { background: #FF8F00; color: #fff; }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
   html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
   .cal-cell.d-sel { outline: 3px solid var(--orange); outline-offset: 1px; }
@@ -360,6 +362,7 @@
         <span><i style="background:#E53935"></i>AMT</span>
         <span><i style="background:#CBD2DA;border:1px solid #B7BFC9"></i>Fim de semana</span>
         <span><i style="background:#D1C4E9;border:1px solid #7E57C2"></i>Feriado</span>
+        <span><i style="background:#FFB300"></i>Plantão</span>
       </div>
       <button class="btn btn-ghost" onclick="openFeriadoModal()" style="margin-top:12px">🎌 Feriado municipal</button>
       <div class="hint" style="margin-top:6px">Fins de semana e feriados nacionais já vêm marcados. Use este botão (ou segure um dia no calendário) para marcar feriados municipais.</div>
@@ -512,6 +515,7 @@
         <span><i style="background:#E53935"></i>AMT</span>
         <span><i style="background:#CBD2DA;border:1px solid #B7BFC9"></i>Fim de semana</span>
         <span><i style="background:#7E57C2"></i>Feriado</span>
+        <span><i style="background:#FFB300"></i>Plantão</span>
       </div>
       <div class="hint" style="margin-top:8px">Toque num dia para ver só os registros dele. A cor mostra o contrato com mais horas no dia.</div>
     </div>
@@ -581,6 +585,7 @@
     <div id="dayModalList"></div>
     <div class="divider"></div>
     <button class="btn btn-primary" onclick="addForDay()">➕ Adicionar registro neste dia</button>
+    <button class="btn btn-ghost" id="btnPlantao" style="margin-top:10px" onclick="togglePlantao(dayModalKey)"></button>
     <button class="btn btn-ghost" style="margin-top:10px" onclick="closeDayModal()">Fechar</button>
   </div>
 </div>
@@ -648,6 +653,7 @@ function loadLocal() {
   if (!db.sessoes) db.sessoes = [];
   if (!db.config) db.config = {};
   if (!db.config.feriados) db.config.feriados = {};
+  if (!db.config.plantoes) db.config.plantoes = {};
   if (!db.equipe) db.equipe = [];
   let migrou = false;
   db.sessoes.forEach(s => { if (!s.tipo) { s.tipo = 'externo'; migrou = true; } });
@@ -1074,26 +1080,29 @@ function renderCalendar() {
     const dow = new Date(calYear, calMonth, d).getDay();
     const weekend = (dow === 0 || dow === 6);
     const feriado = hol[k] || (db.config.feriados || {})[k];
+    const plantao = isPlantao(k);
     let cls = 'cal-cell';
     let dayMs = 0;
     if (list.length) {
-      // colore pelo tipo de atendimento dominante (maior tempo) do dia
       const byTipo = {};
       list.forEach(s => { const w = workedMs(s, now); dayMs += w; const t = sessTipo(s); byTipo[t] = (byTipo[t] || 0) + w; });
       monthTotal += dayMs;
       let best = null, bestMs = -1;
       Object.keys(byTipo).forEach(t => { if (byTipo[t] > bestMs) { bestMs = byTipo[t]; best = t; } });
       if (best) cls += ' d-' + best;
-    } else if (feriado) { cls += ' d-holiday'; }
+    } else if (plantao) { cls += ' d-plantao'; }
+    else if (feriado) { cls += ' d-holiday'; }
     else if (weekend) { cls += ' d-weekend'; }
-    if (feriado && !list.length) cls += ' has-fer';
+    if (feriado && !list.length && !plantao) cls += ' has-fer';
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
     const dur = dayMs > 0 ? `<span class="cal-h">${fmtHShort(dayMs)}</span>` : '';
-    const nomeDia = feriado ? feriado : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : '');
+    const plantaoIcon = (plantao && !list.length) ? '🔔' : '';
+    const nomeDia = feriado ? feriado : (plantao && !list.length ? 'Plantão' : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : ''));
     const titulo = nomeDia ? ` title="${escapeHtml(nomeDia)}"` : '';
-    const ferLabel = (feriado && !list.length) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
-    cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}${ferLabel}</div>`;
+    const ferLabel = (feriado && !list.length && !plantao) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
+    const plLabel = (plantao && !list.length) ? `<span class="cal-fer">🔔</span>` : '';
+    cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}${ferLabel}${plLabel}</div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
   document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
@@ -1153,6 +1162,34 @@ function removeFeriado(k) {
   persistFeriados(); renderFeriadoModal(); renderCalendar();
 }
 
+/* ── Plantão (sobreaviso) ── */
+function isPlantao(k) { return !!(db.config.plantoes || {})[k]; }
+function persistPlantoes() {
+  save();
+  if (MODE === 'cloud' && FB && currentUser) {
+    FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'config', 'plantoes'), { map: db.config.plantoes || {} }).catch(() => {});
+  }
+}
+function togglePlantao(k) {
+  if (!k) return;
+  db.config.plantoes = db.config.plantoes || {};
+  if (db.config.plantoes[k]) {
+    delete db.config.plantoes[k];
+    showToast('Plantão removido');
+  } else {
+    db.config.plantoes[k] = true;
+    showToast('Plantão marcado ✔️');
+  }
+  persistPlantoes(); renderCalendar(); updatePlantaoBtn(k);
+}
+function updatePlantaoBtn(k) {
+  const btn = document.getElementById('btnPlantao');
+  if (!btn) return;
+  btn.textContent = isPlantao(k) ? '🔕 Remover plantão deste dia' : '🔔 Marcar como plantão';
+  btn.style.color = isPlantao(k) ? 'var(--danger)' : '';
+  btn.style.borderColor = isPlantao(k) ? 'var(--danger)' : '';
+}
+
 let dayModalKey = null;
 function openDayModal(k) {
   if (calLongFired) { calLongFired = false; return; } // veio de um "segurar", não abre o dia
@@ -1169,6 +1206,7 @@ function openDayModal(k) {
   document.getElementById('dayModalList').innerHTML = list.length
     ? list.map(s => entryRow(s, now)).join('')
     : `<div class="empty"><span class="big">🗓️</span>Sem registos.</div>`;
+  updatePlantaoBtn(k);
   document.getElementById('dayModalBg').classList.add('open');
 }
 function closeDayModal() { document.getElementById('dayModalBg').classList.remove('open'); dayModalKey = null; }
@@ -1358,17 +1396,19 @@ function renderEquipeCal(recsMonth) {
     const dow = new Date(eqYear, eqMonth, dd).getDay();
     const weekend = (dow === 0 || dow === 6);
     const feriado = hol[k] || (db.config.feriados || {})[k];
+    const plantao = isPlantao(k);
     let cls = 'cal-cell';
     if (info) {
       let best = null, bm = -1;
       Object.keys(info.tipos).forEach(t => { if (info.tipos[t] > bm) { bm = info.tipos[t]; best = t; } });
       if (best) cls += ' d-' + best;
-    } else if (feriado) { cls += ' d-holiday'; } else if (weekend) { cls += ' d-weekend'; }
+    } else if (plantao) { cls += ' d-plantao'; }
+    else if (feriado) { cls += ' d-holiday'; } else if (weekend) { cls += ' d-weekend'; }
     if (k === todayK) cls += ' d-today';
     if (k === eqDayFilter) cls += ' d-sel';
     const dur = info && info.ms > 0 ? `<span class="cal-h">${fmtHShort(info.ms)}</span>` : '';
     const badge = info && info.n > 1 ? `<span class="cal-badge">${info.n}</span>` : '';
-    const titulo = feriado ? ` title="${escapeHtml(feriado)}"` : '';
+    const titulo = feriado ? ` title="${escapeHtml(feriado)}"` : (plantao ? ' title="Plantão"' : '');
     cells += `<div class="${cls}"${titulo} onclick="eqPickDay('${k}')"><span class="cal-d">${dd}</span>${dur}${badge}</div>`;
   }
   grid.innerHTML = cells;
@@ -1786,8 +1826,9 @@ function bootCloud(api) {
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_ponto_local_backup')) localStorage.setItem('ctv_ponto_local_backup', raw); } catch (e) {}
   db = { version: 1, sessoes: [], equipe: [], config: {} };
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.config && c.config.feriados) db.config.feriados = c.config.feriados; if (c && c.equipe) db.equipe = c.equipe; if (c && c.config && c.config.colaboradores) db.config.colaboradores = c.config.colaboradores; } catch (e) {}
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.config && c.config.feriados) db.config.feriados = c.config.feriados; if (c && c.config && c.config.plantoes) db.config.plantoes = c.config.plantoes; if (c && c.equipe) db.equipe = c.equipe; if (c && c.config && c.config.colaboradores) db.config.colaboradores = c.config.colaboradores; } catch (e) {}
   if (!db.config.feriados) db.config.feriados = {};
+  if (!db.config.plantoes) db.config.plantoes = {};
   if (!db.equipe) db.equipe = [];
   loadDark(); applyDark();
   updateModeUI();
@@ -1819,6 +1860,11 @@ function startCloudListeners() {
     renderCalendar();
     if (document.getElementById('feriadoModalBg').classList.contains('open')) renderFeriadoModal();
   }, () => { /* sem permissão de leitura: mantém feriados locais/nacionais */ }));
+  // plantões do próprio usuário
+  cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'users', currentUser.uid, 'config', 'plantoes'), s => {
+    const d = s.data(); db.config.plantoes = (d && d.map) || {};
+    cacheSnapshot(); renderCalendar();
+  }, () => { /* sem permissão: mantém plantões locais */ }));
   // Equipe (só admins): lista de colaboradores (mesma do RDO) e o ponto compartilhado da equipe
   if (isAdmin()) {
     cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'shared', 'colaboradores'), s => {
