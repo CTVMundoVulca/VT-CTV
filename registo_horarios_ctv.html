@@ -287,6 +287,7 @@
   .cal-cell.d-amt { background: #E53935; color: #fff; border-color: transparent; }
   .cal-cell.d-plantao { background: #FFB300; color: #333; border-color: transparent; font-weight: 700; }
   html[data-dark="1"] .cal-cell.d-plantao { background: #FF8F00; color: #fff; }
+  .cal-cell .cal-tipo-dot { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.7); }
   .cal-cell.d-today { outline: 2px solid var(--navy); outline-offset: 1px; }
   html[data-dark="1"] .cal-cell.d-today { outline-color: var(--orange); }
   .cal-cell.d-sel { outline: 3px solid var(--orange); outline-offset: 1px; }
@@ -1083,26 +1084,28 @@ function renderCalendar() {
     const plantao = isPlantao(k);
     let cls = 'cal-cell';
     let dayMs = 0;
+    let bestTipo = null;
     if (list.length) {
       const byTipo = {};
       list.forEach(s => { const w = workedMs(s, now); dayMs += w; const t = sessTipo(s); byTipo[t] = (byTipo[t] || 0) + w; });
       monthTotal += dayMs;
-      let best = null, bestMs = -1;
-      Object.keys(byTipo).forEach(t => { if (byTipo[t] > bestMs) { bestMs = byTipo[t]; best = t; } });
-      if (best) cls += ' d-' + best;
-    } else if (plantao) { cls += ' d-plantao'; }
+      let bestMs = -1;
+      Object.keys(byTipo).forEach(t => { if (byTipo[t] > bestMs) { bestMs = byTipo[t]; bestTipo = t; } });
+    }
+    if (plantao) { cls += ' d-plantao'; }
+    else if (list.length && bestTipo) { cls += ' d-' + bestTipo; }
     else if (feriado) { cls += ' d-holiday'; }
     else if (weekend) { cls += ' d-weekend'; }
-    if (feriado && !list.length && !plantao) cls += ' has-fer';
+    if ((feriado || (plantao && !list.length)) && !list.length) cls += ' has-fer';
     if (k === todayK) cls += ' d-today';
     const badge = list.length > 1 ? `<span class="cal-badge">${list.length}</span>` : '';
     const dur = dayMs > 0 ? `<span class="cal-h">${fmtHShort(dayMs)}</span>` : '';
-    const plantaoIcon = (plantao && !list.length) ? '🔔' : '';
-    const nomeDia = feriado ? feriado : (plantao && !list.length ? 'Plantão' : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : ''));
+    const tipoDot = (plantao && list.length && bestTipo) ? `<span class="cal-tipo-dot" style="background:${tipoColor(bestTipo)}"></span>` : '';
+    const nomeDia = feriado ? (plantao ? 'Plantão · ' + feriado : feriado) : (plantao ? 'Plantão' : (weekend ? (dow === 0 ? 'Domingo' : 'Sábado') : ''));
     const titulo = nomeDia ? ` title="${escapeHtml(nomeDia)}"` : '';
-    const ferLabel = (feriado && !list.length && !plantao) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
-    const plLabel = (plantao && !list.length) ? `<span class="cal-fer">🔔</span>` : '';
-    cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}${ferLabel}${plLabel}</div>`;
+    const ferLabel = (feriado && !list.length) ? `<span class="cal-fer">${escapeHtml(shortFer(feriado))}</span>` : '';
+    const plLabel = (plantao && !feriado && !list.length) ? `<span class="cal-fer">🔔</span>` : '';
+    cells += `<div class="${cls}" data-k="${k}"${titulo} onclick="openDayModal('${k}')"><span class="cal-d">${d}</span>${dur}${badge}${ferLabel}${plLabel}${tipoDot}</div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
   document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
@@ -1398,18 +1401,21 @@ function renderEquipeCal(recsMonth) {
     const feriado = hol[k] || (db.config.feriados || {})[k];
     const plantao = isPlantao(k);
     let cls = 'cal-cell';
+    let eqBestTipo = null;
     if (info) {
-      let best = null, bm = -1;
-      Object.keys(info.tipos).forEach(t => { if (info.tipos[t] > bm) { bm = info.tipos[t]; best = t; } });
-      if (best) cls += ' d-' + best;
-    } else if (plantao) { cls += ' d-plantao'; }
+      let bm = -1;
+      Object.keys(info.tipos).forEach(t => { if (info.tipos[t] > bm) { bm = info.tipos[t]; eqBestTipo = t; } });
+    }
+    if (plantao) { cls += ' d-plantao'; }
+    else if (info && eqBestTipo) { cls += ' d-' + eqBestTipo; }
     else if (feriado) { cls += ' d-holiday'; } else if (weekend) { cls += ' d-weekend'; }
     if (k === todayK) cls += ' d-today';
     if (k === eqDayFilter) cls += ' d-sel';
     const dur = info && info.ms > 0 ? `<span class="cal-h">${fmtHShort(info.ms)}</span>` : '';
     const badge = info && info.n > 1 ? `<span class="cal-badge">${info.n}</span>` : '';
+    const eqTipoDot = (plantao && info && eqBestTipo) ? `<span class="cal-tipo-dot" style="background:${tipoColor(eqBestTipo)}"></span>` : '';
     const titulo = feriado ? ` title="${escapeHtml(feriado)}"` : (plantao ? ' title="Plantão"' : '');
-    cells += `<div class="${cls}"${titulo} onclick="eqPickDay('${k}')"><span class="cal-d">${dd}</span>${dur}${badge}</div>`;
+    cells += `<div class="${cls}"${titulo} onclick="eqPickDay('${k}')"><span class="cal-d">${dd}</span>${dur}${badge}${eqTipoDot}</div>`;
   }
   grid.innerHTML = cells;
 }
