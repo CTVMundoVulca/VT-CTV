@@ -878,8 +878,17 @@ function restoreSignature(id, dataURL) {
   img.src = dataURL;
 }
 function limparAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); sigState[id] = false; if (id === 'benetech') cur.assBenetech = null; else cur.assFiscal = null; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = ''; }
-function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; if (id === 'benetech') cur.assBenetech = c.toDataURL('image/png'); else cur.assFiscal = c.toDataURL('image/png'); saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
-function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? c.toDataURL('image/png') : null; }
+function compressSig(canvas) {
+  const tmp = document.createElement('canvas');
+  tmp.width = 400; tmp.height = 110;
+  const ctx = tmp.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, tmp.width, tmp.height);
+  ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+  return tmp.toDataURL('image/jpeg', 0.6);
+}
+function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; const compressed = compressSig(c); if (id === 'benetech') cur.assBenetech = compressed; else cur.assFiscal = compressed; saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
+function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? compressSig(c) : null; }
 
 /* ── Logo base64 cache ── */
 let _logoB64 = '';
@@ -943,29 +952,29 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 .assin .ln{border-top:1px solid #333;margin-top:4px;padding-top:4px;font-size:11px;color:#333}
 .assin .sig-id{font-size:10px;color:#555;margin-top:2px}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:10mm;size:A4}}
-</style></head><body>${content}</body></html>`;
+</style></head><body>${content}<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>`;
 }
 function isStandaloneMode() {
   return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 }
 function doPrint() {
   if (!isStandaloneMode()) { window.print(); return; }
-  shareOrDownloadRDO();
+  openPrintWindow();
 }
-function shareOrDownloadRDO() {
+function openPrintWindow() {
   const html = buildPrintHTML();
   const blob = new Blob([html], { type: 'text/html' });
-  const fname = 'RDO_' + (cur.numero || 'sem_numero') + '_' + (cur.data || '') + '.html';
-  const file = new File([blob], fname, { type: 'text/html' });
-  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: 'RDO ' + (cur.numero || '') })
-      .catch(() => { downloadBlob(blob, fname); showToast('Arquivo salvo. Abra no navegador para imprimir.'); });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (w) {
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   } else {
-    downloadBlob(blob, fname);
-    showToast('Arquivo salvo. Abra no navegador para imprimir.');
+    URL.revokeObjectURL(url);
+    downloadBlob(blob, 'RDO_' + (cur.numero || 'sem_numero') + '_' + (cur.data || '') + '.html');
+    showToast('Abra o arquivo e use "Imprimir" → "Salvar como PDF".');
   }
 }
-function shareRDO() { shareOrDownloadRDO(); }
+function shareRDO() { openPrintWindow(); }
 function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
 
 /* ── CSV ── */
