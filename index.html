@@ -116,12 +116,23 @@
       </div>
       <div class="app-arrow">›</div>
     </a>
+
+    <a class="app-card" href="registro_emenda_ctv.html" id="card-emenda" style="display:none">
+      <div class="app-ico">🔧</div>
+      <div class="app-info">
+        <h2>Registro de Emenda</h2>
+        <p>Registro de emenda de correia transportadora — FOR GTO 054. Fotos, assinaturas e PDF.</p>
+      </div>
+      <div class="app-arrow">›</div>
+    </a>
   </div>
   <div id="ctv-copyright" class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:9px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
   <script>
   (function(){
     console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
     console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 (Software) e Lei nº 9.610/98 (Direitos Autorais).\nReprodução, cópia ou modificação sem autorização é crime previsto no Art. 12 da Lei 9.609/98.','font-size:11px;color:#333');
+    var ae=['glauber.dutra@benetechbrasil.com.br','michael.lopes@benetechbrasil.com.br'];
+    try{var e=(localStorage.getItem('ctv_user_email')||'').toLowerCase();if(ae.indexOf(e)!==-1){var c=document.getElementById('card-emenda');if(c)c.style.display='';}}catch(x){}
   })();
   </script>
   <script src="app-update.js"></script>
