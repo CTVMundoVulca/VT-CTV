@@ -1,8 +1,25 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOFTWARE PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS              ║
+  ║  © 2024-2026 CTV Consultoria Técnica em Vulcanização               ║
+  ║  CNPJ: 65.601.481/0001-36                                         ║
+  ║  Autor: Glauber Dutra                                              ║
+  ║                                                                    ║
+  ║  Este software é protegido pela Lei nº 9.609/98 (Lei do Software)  ║
+  ║  e pela Lei nº 9.610/98 (Lei de Direitos Autorais).                ║
+  ║  É vedada a reprodução, distribuição, modificação ou utilização    ║
+  ║  deste código, total ou parcialmente, sem autorização expressa     ║
+  ║  por escrito do titular dos direitos.                              ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
 <meta name="theme-color" content="#001a33">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -1582,8 +1599,13 @@ function gerarPDF() {
   const secFotos = temFotos ? '<div class="sec-title">9. REGISTRO FOTOGRAFICO</div>' + fotosHTML : '';
   const numConclusao = temFotos ? '10' : '9';
 
+  const tsVT = new Date().toISOString();
   const html = '<!DOCTYPE html>'
     + '<html lang="pt-BR"><head><meta charset="UTF-8">'
+    + '<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">'
+    + '<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">'
+    + '<meta name="generator" content="CTV Apps Campo v1.0">'
+    + '<meta name="created" content="' + tsVT + '">'
     + '<title>Relatorio VT - ' + tag + '</title>'
     + '<style>'
     + '* { box-sizing: border-box; margin: 0; padding: 0; }'
@@ -1690,7 +1712,9 @@ function gerarPDF() {
     + (() => { const sc=getSigDataURL('ctv'); return sc ? '<div class="assin-block"><img src="'+sc+'" style="width:160px;height:60px;object-fit:contain;border-bottom:1px solid #333;display:block;margin:0 auto 4px;"><div class="assin-label"><strong>'+(d.responsavel||'Responsavel CTV')+'</strong></div><div class="assin-label">CTV Consultoria Tecnica em Vulcanizacao</div></div>' : '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>'+(d.responsavel||'Responsavel CTV')+'</strong></div><div class="assin-label">CTV Consultoria Tecnica em Vulcanizacao</div></div>'; })()
     + (() => { const sc=getSigDataURL('cliente'); return sc ? '<div class="assin-block"><img src="'+sc+'" style="width:160px;height:60px;object-fit:contain;border-bottom:1px solid #333;display:block;margin:0 auto 4px;"><div class="assin-label"><strong>'+(d.contato_cliente||'Responsavel Suzano')+'</strong></div><div class="assin-label">Suzano S.A. - Complexo Aracruz/ES</div></div>' : '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>'+(d.contato_cliente||'Responsavel Suzano')+'</strong></div><div class="assin-label">Suzano S.A. - Complexo Aracruz/ES</div></div>'; })()
     + '</div>'
-    + '<div class="footer"><span>Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2026</span><span>Gerado em: ' + agora + '</span></div>'
+    + '<div class="footer"><span>Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados</span><span>Gerado em: ' + agora + '</span></div>'
+    + '<div style="font-size:5px;color:#fff;text-align:center">Software protegido pela Lei 9.609/98. Autor: Glauber Dutra. CNPJ 65.601.481/0001-36</div>'
+    + '<div style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-' + tsVT + '</div>'
     + '</body></html>';
 
   const win = window.open('', '_blank');
@@ -2443,7 +2467,15 @@ setTimeout(() => {
 }, 1200);
 
 </script>
-<div style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2026 — Todos os direitos reservados</div>
+<div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script>
+(function(){
+  console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
+  console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 (Software) e Lei nº 9.610/98 (Direitos Autorais).\nReprodução, cópia ou modificação sem autorização é crime previsto no Art. 12 da Lei 9.609/98.','font-size:11px;color:#333');
+  var _f=document.getElementById('ctv-copyright');
+  setInterval(function(){if(!_f||!document.body.contains(_f)){var d=document.createElement('div');d.id='ctv-copyright';d.style.cssText='text-align:center;padding:12px 16px 20px;font-size:10px;opacity:.55;line-height:1.4;color:gray';d.innerHTML='Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026';document.body.appendChild(d);_f=d;}},5000);
+})();
+</script>
 <script src="app-update.js"></script>
 </body>
 </html>
