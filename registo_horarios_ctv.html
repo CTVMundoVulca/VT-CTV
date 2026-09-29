@@ -1858,7 +1858,7 @@ function bootCloud(api) {
   renderPonto();
   FB.onAuthStateChanged(FB.auth, user => {
     currentUser = user;
-    if (user) { hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); updateAdminUI(); }
+    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); updateAdminUI(); }
     else { clearCloudListeners(); db.sessoes = []; db.equipe = []; db.allSessoes = []; updateAdminUI(); renderPonto(); showAuth(); }
   });
   window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
