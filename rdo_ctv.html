@@ -314,11 +314,11 @@
       <label class="fld">Responsável Técnico (Benetech)</label>
       <div class="sig-box"><canvas id="sig_benetech"></canvas><div class="sig-ph" id="ph_benetech">Assine aqui</div></div>
       <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('benetech')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('benetech')">Confirmar</button></div>
-      <div class="row" style="margin-bottom:16px"><div style="flex:1"><label class="fld">Nome</label><input type="text" id="f_sig_nome_benetech" placeholder="Nome completo"></div><div style="flex:1"><label class="fld">Matrícula / CPF</label><input type="text" id="f_sig_doc_benetech" placeholder="Matrícula ou CPF"></div></div>
-      <label class="fld">Fiscal / Representante do Cliente</label>
+      <div class="row" style="margin-bottom:16px"><div style="flex:1"><label class="fld">Nome</label><select id="f_sig_nome_benetech" onchange="autoFillDoc('benetech')"><option value="">Selecione</option><option value="Glauber Dutra">Glauber Dutra</option></select></div><div style="flex:1"><label class="fld">CPF</label><input type="text" id="f_sig_doc_benetech" readonly></div></div>
+      <label class="fld">Fiscal / Representante do Cliente (Suzano)</label>
       <div class="sig-box"><canvas id="sig_fiscal"></canvas><div class="sig-ph" id="ph_fiscal">Assine aqui</div></div>
       <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('fiscal')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('fiscal')">Confirmar</button></div>
-      <div class="row"><div style="flex:1"><label class="fld">Nome</label><input type="text" id="f_sig_nome_fiscal" placeholder="Nome completo"></div><div style="flex:1"><label class="fld">Matrícula / CPF</label><input type="text" id="f_sig_doc_fiscal" placeholder="Matrícula ou CPF"></div></div>
+      <div class="row"><div style="flex:1"><label class="fld">Nome</label><select id="f_sig_nome_fiscal" onchange="autoFillDoc('fiscal')"><option value="">Selecione</option><option value="Otávio Gobbi">Otávio Gobbi</option></select></div><div style="flex:1"><label class="fld">Matrícula</label><input type="text" id="f_sig_doc_fiscal" readonly></div></div>
     </div>
 
     <div class="card">
@@ -686,9 +686,9 @@ function fillEditor() {
   document.getElementById('f_ocorrencias').value = cur.ocorrencias || '';
   Object.keys(SEC).forEach(renderSection);
   ['benetech','fiscal'].forEach(id => { initSignature(id); const src = id === 'benetech' ? cur.assBenetech : cur.assFiscal; restoreSignature(id, src); });
-  document.getElementById('f_sig_nome_benetech').value = cur.sigNomeBenetech || '';
+  setSigSelect('benetech', cur.sigNomeBenetech || '');
   document.getElementById('f_sig_doc_benetech').value = cur.sigDocBenetech || '';
-  document.getElementById('f_sig_nome_fiscal').value = cur.sigNomeFiscal || '';
+  setSigSelect('fiscal', cur.sigNomeFiscal || '');
   document.getElementById('f_sig_doc_fiscal').value = cur.sigDocFiscal || '';
 }
 
@@ -849,6 +849,25 @@ function deleteRDO() {
   removeRDOStore(editingId);
   clearDraft();
   showToast('RDO excluído'); goList();
+}
+
+/* ── assinatura: auto-preenchimento de documento ── */
+const SIG_DOCS = {
+  benetech: { 'Glauber Dutra': '146.380.647-79' },
+  fiscal:   { 'Otávio Gobbi': '454828' }
+};
+function autoFillDoc(role) {
+  const sel = document.getElementById('f_sig_nome_' + role);
+  const doc = document.getElementById('f_sig_doc_' + role);
+  doc.value = (SIG_DOCS[role] && SIG_DOCS[role][sel.value]) || '';
+  saveDraftDebounced();
+}
+function setSigSelect(role, name) {
+  const sel = document.getElementById('f_sig_nome_' + role);
+  if (!name) { sel.value = ''; return; }
+  const opts = Array.from(sel.options).map(o => o.value);
+  if (opts.includes(name)) { sel.value = name; }
+  else { const o = document.createElement('option'); o.value = name; o.textContent = name; sel.appendChild(o); sel.value = name; }
 }
 
 /* ── assinatura (reaproveitado do app de Visita Técnica) ── */
