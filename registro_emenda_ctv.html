@@ -485,6 +485,7 @@ const STORE_KEY = 'ctv_emendas_v1';
 let db = { registros: [], config: { dark: false } };
 let cur = null;
 let curIdx = -1;
+let LOGO_B64 = '';
 let fotoCount = 0;
 
 /* ═══ CONTROLE DE ACESSO ═══ */
@@ -1084,7 +1085,13 @@ function gerarPDF() {
 <title>Emenda #${esc(r.numEmenda)} — TAG ${esc(r.tag)}</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;font-size:10px;color:#1a1a2e}
+.toolbar{background:#f5f5f5;padding:8px 14px;display:flex;gap:8px;border-bottom:1px solid #ddd}
+.toolbar button{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.toolbar .btn-back{background:#001a33;color:#fff}
+.toolbar .btn-print{background:#43a6ea;color:#fff}
 .hdr{background:#001a33;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #43a6ea}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-logo{height:30px;background:#fff;padding:3px 6px;border-radius:4px}
 .hdr h1{font-size:14px;margin:0} .hdr .ref{font-size:9px;color:#aaa}
 .sec{background:#001a33;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;margin:10px 14px 4px;border-left:3px solid #43a6ea}
 table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:9px}
@@ -1102,9 +1109,10 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 .footer{text-align:center;padding:12px 14px 8px;font-size:8px;color:#999;border-top:1px solid #e0e0e0;margin-top:16px}
 .footer .legal{font-size:6px;color:#bbb;margin-top:3px}
 .wm{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:8mm;size:A4}}
+@media print{.toolbar{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:8mm;size:A4}}
 </style></head><body>
-<div class="hdr"><div><h1>REGISTRO DE EMENDA DE CORREIA</h1><div style="font-size:9px;color:#aaa;margin-top:2px">FOR GTO 054 — REV.08</div></div><div class="ref">Emenda #${esc(r.numEmenda)}<br>TAG: ${esc(r.tag)}</div></div>
+<div class="toolbar"><button class="btn-back" onclick="window.close()">← Voltar</button><button class="btn-print" onclick="window.print()">🖨 Imprimir / Salvar PDF</button></div>
+<div class="hdr"><div class="hdr-left">${LOGO_B64 ? `<img src="${LOGO_B64}" class="hdr-logo" alt="Benetech">` : ''}<div><h1>REGISTRO DE EMENDA DE CORREIA</h1><div style="font-size:9px;color:#aaa;margin-top:2px">FOR GTO 054 — REV.08</div></div></div><div class="ref">Emenda #${esc(r.numEmenda)}<br>TAG: ${esc(r.tag)}</div></div>
 
 <div class="meta-row"><div><b>Equipamento (TAG):</b> ${esc(r.tag)}</div><div><b>Data:</b> ${fmtData(r.data)}</div><div><b>Nº Emenda:</b> ${esc(r.numEmenda)}</div><div><b>OM:</b> ${esc(r.om)}</div></div>
 
@@ -1171,7 +1179,6 @@ ${fotosHTML ? `<div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
 
 <div class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div>
 <div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div>
-<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\/script>
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html' });
@@ -1187,6 +1194,13 @@ loadLocal();
 applyDark();
 checkAccess();
 renderList();
+(function loadLogo(){
+  fetch('logo-benetech.png').then(r=>r.blob()).then(b=>{
+    const rd=new FileReader();
+    rd.onload=function(){LOGO_B64=rd.result};
+    rd.readAsDataURL(b);
+  }).catch(()=>{});
+})();
 
 // Proteção console
 (function(){
