@@ -112,6 +112,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .access-denied { text-align: center; padding: 60px 20px; }
 .access-denied h2 { font-size: 20px; margin-bottom: 12px; }
 .access-denied p { color: var(--text-light); }
+
+/* auth overlay (login Firebase) */
+#authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+#authOverlay.open { display: flex; }
+.auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+
 </style>
 </head>
 <body>
@@ -124,17 +130,44 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   <p style="margin-top:20px"><a href="index.html" style="color:var(--blue)">← Voltar ao menu</a></p>
 </div>
 
+<!-- LOGIN (modo nuvem) -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
+    <h3 style="margin-bottom:6px">Registro de Emenda</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px;font-size:12px;color:var(--text-light)">Entre com seu e-mail e senha. Se ainda não tem conta, toque em "Criar conta".</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary btn-block" onclick="loginEmail()" style="margin-bottom:8px">Entrar</button>
+    <button class="btn btn-ghost btn-block" onclick="registerEmail()" style="margin-bottom:10px">Criar conta</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
+  </div>
+</div>
+
 <!-- APP PRINCIPAL -->
 <div id="mainApp">
 
 <div class="topbar">
   <button onclick="goBack()" title="Voltar">←</button>
   <h1 id="topTitle">Registro de Emenda</h1>
+  <span id="userChip" style="display:none;align-items:center;gap:6px;color:#ccc;font-size:11px">
+    <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button onclick="logout()" style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:2px 4px" title="Sair">⏻</button>
+  </span>
   <button id="darkBtn" onclick="toggleDark()" title="Tema">🌙</button>
 </div>
 
 <!-- VIEW: LISTA -->
 <div id="listView">
+  <div class="card" id="modeBanner" style="display:none">
+    <div style="margin:0;color:#8a5a00;font-size:12px">📴 Modo local (só neste aparelho).</div>
+  </div>
+  <div class="card" id="syncCard" style="display:none;padding:11px 14px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+      <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+      <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+    </div>
+  </div>
   <div style="padding:12px;display:flex;gap:8px">
     <button class="btn btn-primary btn-block" onclick="novoRegistro()">+ Novo Registro de Emenda</button>
   </div>
@@ -142,6 +175,10 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalEfetivo()">👥 Efetivo</button>
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalMat('emenda')">🧪 Mat. Emenda</button>
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalMat('manta')">🧱 Mat. Manta</button>
+  </div>
+  <div style="padding:0 12px 8px">
+    <button class="btn btn-ghost btn-sm btn-block" id="btnMigrar" style="display:none" onclick="migrarLocalParaNuvem()">☁️ Enviar registros locais para a nuvem</button>
+    <button class="btn btn-ghost btn-sm" id="btnSenha" style="display:none;margin-top:6px" onclick="alterarSenha()">🔑 Alterar minha senha</button>
   </div>
   <div id="listContainer" class="list-view"></div>
 </div>
@@ -515,6 +552,20 @@ const FABRICANTES = ['VIPAFIX','BENETECH'];
 
 const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br'];
 
+/* ══════════════ CONFIGURAÇÃO FIREBASE ══════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
+  authDomain: "rdo-benetech.firebaseapp.com",
+  projectId: "rdo-benetech",
+  storageBucket: "rdo-benetech.firebasestorage.app",
+  messagingSenderId: "784889553730",
+  appId: "1:784889553730:web:d0dcaad912a793a80f1edb"
+};
+function isConfigured() {
+  const k = firebaseConfig.apiKey, p = firebaseConfig.projectId;
+  return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p));
+}
+
 const STORE_KEY = 'ctv_emendas_v1';
 let db = { registros: [], config: { dark: false } };
 let cur = null;
@@ -522,10 +573,22 @@ let curIdx = -1;
 let LOGO_B64 = '';
 let fotoCount = 0;
 
+/* ── estado do modo de dados ── */
+let MODE = 'local';
+let FB = null;
+let currentUser = null;
+let cloudUnsub = [];
+let booted = false;
+
 /* ═══ CONTROLE DE ACESSO ═══ */
 function checkAccess() {
   const mainApp = document.getElementById('mainApp');
   const denied = document.getElementById('accessDenied');
+  if (MODE === 'cloud' && currentUser) {
+    mainApp.style.display = '';
+    denied.style.display = 'none';
+    return true;
+  }
   const userEmail = localStorage.getItem('ctv_user_email') || '';
   if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
     mainApp.style.display = '';
@@ -540,6 +603,50 @@ function checkAccess() {
 /* ═══ PERSISTÊNCIA ═══ */
 function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && d.registros) db = d; } catch(e){} if (!db.config) db.config = { dark: false }; }
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+
+function persistRegistro(reg) {
+  const clean = JSON.parse(JSON.stringify(reg));
+  const i = db.registros.findIndex(r => r.id === clean.id);
+  if (i >= 0) db.registros[i] = clean; else db.registros.push(clean);
+  if (MODE === 'cloud' && FB) {
+    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'emendas', clean.id), clean)
+      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .catch(err => onWriteError(err));
+    cacheSnapshot();
+    if (!navigator.onLine) setSync('offline');
+  } else { saveLocal(); }
+}
+function removeRegistroStore(id) {
+  db.registros = db.registros.filter(r => r.id !== id);
+  if (MODE === 'cloud' && FB) {
+    FB.deleteDoc(FB.doc(FB.fs, 'emendas', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    cacheSnapshot();
+  } else { saveLocal(); }
+}
+function onWriteError(err) {
+  const code = (err && err.code) || '';
+  if (code.includes('permission-denied')) setSync('denied');
+  else if (!navigator.onLine || code.includes('unavailable')) setSync('offline');
+  else setSync('error', code);
+}
+function persistFuncionarios() {
+  if (MODE === 'cloud' && FB) {
+    FB.setDoc(FB.doc(FB.fs, 'shared', 'emenda_funcionarios'), { list: FUNCIONARIOS }).catch(err => onWriteError(err));
+  }
+  saveFuncionarios();
+}
+function persistMateriais(tipo) {
+  if (MODE === 'cloud' && FB) {
+    if (tipo === 'emenda') {
+      FB.setDoc(FB.doc(FB.fs, 'shared', 'emenda_mat_emenda'), { list: MATERIAIS_EMENDA }).catch(err => onWriteError(err));
+    } else {
+      FB.setDoc(FB.doc(FB.fs, 'shared', 'emenda_mat_manta'), { list: MATERIAIS_MANTA }).catch(err => onWriteError(err));
+    }
+  }
+  if (tipo === 'emenda') saveMatEmenda(); else saveMatManta();
+}
 
 /* ═══ TEMA ═══ */
 function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; }
@@ -605,7 +712,7 @@ function novoRegistro() {
   };
   db.registros.unshift(cur);
   curIdx = 0;
-  saveLocal();
+  persistRegistro(cur);
   openEditor();
 }
 
@@ -715,7 +822,7 @@ function adicionarFuncionario() {
   if (FUNCIONARIOS.some(f => f.nome === nome)) { showToast('Funcionário já existe'); return; }
   FUNCIONARIOS.push({ nome, doc });
   FUNCIONARIOS.sort((a, b) => a.nome.localeCompare(b.nome));
-  saveFuncionarios();
+  persistFuncionarios();
   document.getElementById('novoFuncNome').value = '';
   document.getElementById('novoFuncDoc').value = '';
   renderFuncList();
@@ -725,7 +832,7 @@ function removerFuncionario(i) {
   const nome = FUNCIONARIOS[i].nome;
   if (!confirm('Remover ' + nome + '?')) return;
   FUNCIONARIOS.splice(i, 1);
-  saveFuncionarios();
+  persistFuncionarios();
   renderFuncList();
   showToast('Funcionário removido');
 }
@@ -755,7 +862,7 @@ function adicionarMaterial() {
   if (arr.includes(nome)) { showToast('Material já existe'); return; }
   arr.push(nome);
   arr.sort((a, b) => a.localeCompare(b));
-  if (matModalTipo === 'emenda') saveMatEmenda(); else saveMatManta();
+  persistMateriais(matModalTipo);
   document.getElementById('novoMatNome').value = '';
   renderMatList();
   showToast('Material adicionado');
@@ -765,7 +872,7 @@ function removerMaterial(i) {
   const nome = arr[i];
   if (!confirm('Remover ' + nome + '?')) return;
   arr.splice(i, 1);
-  if (matModalTipo === 'emenda') saveMatEmenda(); else saveMatManta();
+  persistMateriais(matModalTipo);
   renderMatList();
   showToast('Material removido');
 }
@@ -798,7 +905,7 @@ function capturarFoto(idx) {
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
-        saveLocal(); renderFotos();
+        persistRegistro(cur); renderFotos();
       };
       img.src = ev.target.result;
     };
@@ -806,7 +913,7 @@ function capturarFoto(idx) {
   };
   input.click();
 }
-function removerFoto(idx) { cur.fotos[idx].data = null; renderFotos(); saveLocal(); }
+function removerFoto(idx) { cur.fotos[idx].data = null; renderFotos(); persistRegistro(cur); }
 
 /* ═══ ASSINATURA ═══ */
 const sigState = {};
@@ -1125,15 +1232,14 @@ function collectEditor() {
 
 function salvarRegistro(silent) {
   collectEditor();
-  db.registros[curIdx] = cur;
-  saveLocal();
+  persistRegistro(cur);
+  curIdx = db.registros.findIndex(r => r.id === cur.id);
   if (!silent) showToast('Registro salvo ✔️');
 }
 
 function excluirRegistro() {
   if (!confirm('Excluir este registro de emenda?')) return;
-  db.registros.splice(curIdx, 1);
-  saveLocal();
+  removeRegistroStore(cur.id);
   showList();
   showToast('Registro excluído.');
 }
@@ -1265,13 +1371,140 @@ ${fotosHTML ? `<div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
   else { URL.revokeObjectURL(url); showToast('Permita pop-ups para gerar o PDF.'); }
 }
 
+/* ══════════════ NUVEM: boot, login, tempo real ══════════════ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  MODE = 'local';
+  loadFuncionarios(); loadMateriais(); loadLocal(); applyDark();
+  checkAccess(); updateModeUI(); renderList();
+}
+function bootCloud(api) {
+  if (booted) return; booted = true;
+  MODE = 'cloud'; FB = api;
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_emenda_local_backup')) localStorage.setItem('ctv_emenda_local_backup', raw); } catch(e){}
+  db = { registros: [], config: { dark: false } };
+  loadFuncionarios(); loadMateriais(); applyDark();
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
+  checkAccess(); updateModeUI(); renderList();
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} checkAccess(); hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+    else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); checkAccess(); showAuth(); }
+  });
+  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard'); if (!card) return;
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const dot = document.getElementById('syncDot'), txt = document.getElementById('syncText');
+  const email = currentUser ? (currentUser.email || '') : '';
+  let color = '#2E7D32', msg = '';
+  if (state === 'ok') { color = '#2E7D32'; msg = 'Sincronizado na nuvem' + (email ? (' · ' + email) : ''); }
+  else if (state === 'connecting') { color = '#999'; msg = 'Conectando…' + (email ? (' · ' + email) : ''); }
+  else if (state === 'offline') { color = '#F9A825'; msg = 'Offline — salvo neste aparelho; sincroniza ao voltar a internet.'; }
+  else if (state === 'denied') { color = '#E53935'; msg = 'SEM PERMISSÃO de acesso. Verifique a regra do Firestore' + (email ? (' — você: ' + email) : '') + '.'; }
+  else if (state === 'error') { color = '#E53935'; msg = 'Falha ao salvar na nuvem' + (extra ? (' (' + extra + ')') : '') + '.'; }
+  dot.style.background = color; txt.textContent = msg;
+}
+function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
+function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
+function traduzAuth(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('invalid-email')) return 'E-mail inválido.';
+  if (c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Use "Entrar".';
+  if (c.includes('weak-password')) return 'Senha fraca (mín. 6 caracteres).';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('invalid-login')) return 'E-mail ou senha incorretos.';
+  if (c.includes('user-not-found')) return 'Conta não encontrada. Toque em "Criar conta".';
+  if (c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde e tente de novo.';
+  if (c.includes('network')) return 'Sem conexão. Verifique a internet.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+function loginEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || !pass) { authError('Preencha e-mail e senha.'); return; }
+  FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function registerEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || pass.length < 6) { authError('Informe e-mail e senha de ao menos 6 caracteres.'); return; }
+  FB.createUserWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function resetSenha() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { authError('Digite seu e-mail no campo acima para enviar o link.'); return; }
+  FB.sendPasswordResetEmail(FB.auth, email).then(() => authInfo('Enviamos um link para redefinir a senha no seu e-mail.')).catch(err => authError(traduzAuth(err)));
+}
+function alterarSenha() {
+  if (!FB || !currentUser) return;
+  const nova = prompt('Nova senha (mín. 6 caracteres):');
+  if (!nova) return;
+  if (nova.length < 6) { showToast('Senha muito curta (mín. 6).'); return; }
+  FB.updatePassword(currentUser, nova).then(() => showToast('Senha alterada ✔️')).catch(err => {
+    if (err && err.code && err.code.includes('recent-login')) {
+      FB.sendPasswordResetEmail(FB.auth, currentUser.email).then(() => showToast('Por segurança, enviamos um link de troca ao seu e-mail.')).catch(() => showToast('Entre novamente para trocar a senha.'));
+    } else showToast('Não foi possível alterar a senha.');
+  });
+}
+function logout() { if (FB) FB.signOut(FB.auth); }
+function startCloudListeners() {
+  clearCloudListeners();
+  const funcRef = FB.doc(FB.fs, 'shared', 'emenda_funcionarios');
+  FB.getDoc(funcRef).then(s => { if (!s.exists()) FB.setDoc(funcRef, { list: JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT)) }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(funcRef, s => {
+    const d = s.data(); if (d && d.list) { FUNCIONARIOS = d.list; saveFuncionarios(); }
+  }, () => {}));
+  const matERef = FB.doc(FB.fs, 'shared', 'emenda_mat_emenda');
+  cloudUnsub.push(FB.onSnapshot(matERef, s => {
+    const d = s.data(); if (d && d.list) { MATERIAIS_EMENDA = d.list; saveMatEmenda(); }
+  }, () => {}));
+  const matMRef = FB.doc(FB.fs, 'shared', 'emenda_mat_manta');
+  cloudUnsub.push(FB.onSnapshot(matMRef, s => {
+    const d = s.data(); if (d && d.list) { MATERIAIS_MANTA = d.list; saveMatManta(); }
+  }, () => {}));
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'emendas'), s => {
+    db.registros = s.docs.map(d => d.data());
+    cacheSnapshot();
+    setSync(navigator.onLine ? 'ok' : 'offline');
+    if (document.getElementById('listView').style.display !== 'none') renderList();
+  }, err => {
+    const code = (err && err.code) || '';
+    if (code.includes('permission-denied')) setSync('denied'); else setSync('error', code);
+  }));
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch(e){} }); cloudUnsub = []; }
+function migrarLocalParaNuvem() {
+  if (MODE !== 'cloud' || !FB) { showToast('Disponível no modo nuvem.'); return; }
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem('ctv_emenda_local_backup') || localStorage.getItem(STORE_KEY) || 'null'); } catch(e){}
+  const arr = (local && local.registros) || [];
+  if (!arr.length) { showToast('Nenhum registro local para enviar.'); return; }
+  if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a nuvem?')) return;
+  Promise.all(arr.map(r => FB.setDoc(FB.doc(FB.fs, 'emendas', r.id), JSON.parse(JSON.stringify(r)))))
+    .then(() => showToast('Registros enviados ✔️')).catch(() => showToast('Falha ao enviar alguns registros.'));
+}
+function updateModeUI() {
+  const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
+  const mig = document.getElementById('btnMigrar'); if (mig) mig.style.display = (MODE === 'cloud') ? '' : 'none';
+}
+function showUserChip(user) {
+  const c = document.getElementById('userChip'); if (c) { c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; }
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = '';
+}
+function showAuth() {
+  const c = document.getElementById('userChip'); if (c) c.style.display = 'none';
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none';
+  document.getElementById('authOverlay').classList.add('open');
+}
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
 /* ═══ BOOT ═══ */
-loadFuncionarios();
-loadMateriais();
-loadLocal();
-applyDark();
-checkAccess();
-renderList();
 (function loadLogo(){
   fetch('logo-benetech.png').then(r=>r.blob()).then(b=>{
     const rd=new FileReader();
@@ -1279,12 +1512,46 @@ renderList();
     rd.readAsDataURL(b);
   }).catch(()=>{});
 })();
+window.__EMENDA = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+if (!window.__EMENDA.wantCloud) bootLocal();
 
 // Proteção console
 (function(){
   console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
   console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 e Lei nº 9.610/98.','font-size:11px;color:#333');
 })();
+</script>
+<script type="module">
+  const R = window.__EMENDA;
+  if (R && R.wantCloud) {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
+      ]);
+      const app = appMod.initializeApp(R.firebaseConfig);
+      const auth = authMod.getAuth(app);
+      const fs = fsMod.getFirestore(app);
+      try { await fsMod.enableIndexedDbPersistence(fs); } catch(e){}
+      R.bootCloud({
+        app, auth, fs,
+        signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+        createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
+        sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+        updatePassword: authMod.updatePassword,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        signOut: authMod.signOut,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
+        serverTimestamp: fsMod.serverTimestamp
+      });
+    } catch(e) {
+      console.warn('Firebase indisponível — modo local.', e);
+      R.bootLocal();
+    }
+  }
 </script>
 <div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
 <script src="app-update.js"></script>
