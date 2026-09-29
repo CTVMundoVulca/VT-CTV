@@ -555,7 +555,6 @@ function saveMatManta() { try { localStorage.setItem(MAT_MANTA_STORE, JSON.strin
 
 const FABRICANTES = ['VIPAFIX','BENETECH'];
 
-const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br','michael.lopes@benetechbrasil.com.br'];
 
 /* ══════════════ CONFIGURAÇÃO FIREBASE ══════════════ */
 const firebaseConfig = {
@@ -596,7 +595,7 @@ function checkAccess() {
     return true;
   }
   const userEmail = localStorage.getItem('ctv_user_email') || '';
-  if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+  if (userEmail) {
     mainApp.style.display = '';
     denied.style.display = 'none';
     return true;
@@ -1279,32 +1278,33 @@ function gerarPDF() {
 <meta name="created" content="${ts}">
 <title>Emenda #${esc(r.numEmenda)} — TAG ${esc(r.tag)}</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;font-size:10px;color:#1a1a2e}
+body{margin:0;font-family:Arial,sans-serif;font-size:9px;color:#1a1a2e}
 .toolbar{background:#f5f5f5;padding:8px 14px;display:flex;gap:8px;border-bottom:1px solid #ddd}
 .toolbar button{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
 .toolbar .btn-back{background:#001a33;color:#fff}
 .toolbar .btn-print{background:#43a6ea;color:#fff}
-.hdr{background:#001a33;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #43a6ea}
-.hdr-left{display:flex;align-items:center;gap:12px}
-.hdr-logo{height:30px;background:#fff;padding:3px 6px;border-radius:4px}
-.hdr h1{font-size:14px;margin:0} .hdr .ref{font-size:9px;color:#aaa}
-.sec{background:#001a33;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;margin:10px 14px 4px;border-left:3px solid #43a6ea}
-table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:9px}
-th,td{border:1px solid #ccc;padding:3px 5px;text-align:left;vertical-align:top}
+.hdr{background:#001a33;color:#fff;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #43a6ea}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-logo{height:26px;background:#fff;padding:2px 5px;border-radius:4px}
+.hdr h1{font-size:12px;margin:0} .hdr .ref{font-size:8px;color:#aaa}
+.sec{background:#001a33;color:#fff;font-size:9px;font-weight:700;padding:3px 8px;margin:6px 14px 2px;border-left:3px solid #43a6ea}
+table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:8px}
+th,td{border:1px solid #ccc;padding:2px 4px;text-align:left;vertical-align:top}
 th{background:#0D1B2A;color:#fff;font-weight:600}
-.meta-row{display:flex;flex-wrap:wrap;gap:3px 16px;padding:6px 14px;font-size:10px}
+.meta-row{display:flex;flex-wrap:wrap;gap:2px 14px;padding:4px 14px;font-size:9px}
 .meta-row b{color:#555}
 .check-tbl td:first-child{width:60%;font-weight:600}
-.assin-area{display:flex;justify-content:space-around;gap:20px;padding:20px 14px}
+.assin-area{display:flex;justify-content:space-around;gap:20px;padding:10px 14px}
 .assin-area div{flex:1;text-align:center}
-.assin-area img{max-width:100%;height:60px;object-fit:contain}
-.assin-area .ln{border-top:1px solid #333;margin-top:4px;padding-top:3px;font-size:9px;color:#333}
-.assin-area .doc{font-size:8px;color:#555}
+.assin-area img{max-width:100%;height:50px;object-fit:contain}
+.assin-area .ln{border-top:1px solid #333;margin-top:3px;padding-top:2px;font-size:8px;color:#333}
+.assin-area .doc{font-size:7px;color:#555}
+.foto-section{page-break-before:always}
 .foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px}
-.footer{text-align:center;padding:12px 14px 8px;font-size:8px;color:#999;border-top:1px solid #e0e0e0;margin-top:16px}
-.footer .legal{font-size:6px;color:#bbb;margin-top:3px}
+.footer{text-align:center;padding:8px 14px 6px;font-size:7px;color:#999;border-top:1px solid #e0e0e0;margin-top:10px}
+.footer .legal{font-size:6px;color:#bbb;margin-top:2px}
 .wm{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1}
-@media print{.toolbar{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:8mm;size:A4}}
+@media print{.toolbar{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:6mm;size:A4}}
 </style></head><body>
 <div class="toolbar"><button class="btn-back" onclick="window.close()">← Voltar</button><button class="btn-print" onclick="window.print()">🖨 Imprimir / Salvar PDF</button></div>
 <div class="hdr"><div class="hdr-left">${LOGO_B64 ? `<img src="${LOGO_B64}" class="hdr-logo" alt="Benetech">` : ''}<div><h1>REGISTRO DE EMENDA DE CORREIA</h1><div style="font-size:9px;color:#aaa;margin-top:2px">FOR GTO 054 — REV.08</div></div></div><div class="ref">Emenda #${esc(r.numEmenda)}<br>TAG: ${esc(r.tag)}</div></div>
@@ -1316,7 +1316,7 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 
 <div class="sec">3. MATERIAIS DA EMENDA</div>
 <table><tr><th>Material</th><th>Fabricante</th><th>Lote</th><th>Qtd</th><th>Validade</th></tr>${matEmendaRows}</table>
-<div class="sec" style="margin-top:6px">3.1 MATERIAIS DA MANTA</div>
+<div class="sec" style="margin-top:4px">3.1 MATERIAIS DA MANTA</div>
 <table><tr><th>Material</th><th>Fabricante</th><th>Lote</th><th>Qtd</th><th>Validade</th></tr>${matMantaRows}</table>
 
 <div class="sec">4. EQUIPAMENTOS DE MEDIÇÃO</div>
@@ -1363,11 +1363,11 @@ ${r.obsPrensa ? `<div style="padding:4px 14px;font-size:9px"><b>Observações:</
 
 <div class="sec">9/10. LIBERAÇÕES</div>
 <div class="assin-area">
-<div>${r.assTecnico ? `<img src="${r.assTecnico}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libTecnico) || 'Técnico de Área'}</div><div class="doc">${esc(r.libTecnicoDoc)} · ${fmtData(r.libTecnicoData)}</div></div>
-<div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
+<div>${r.assTecnico ? `<img src="${r.assTecnico}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.libTecnico) || 'Técnico de Área'}</div><div class="doc">${esc(r.libTecnicoDoc)} · ${fmtData(r.libTecnicoData)}</div></div>
+<div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
 </div>
 
-${fotosHTML ? `<div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div><div class="foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px">${fotosHTML}</div>` : ''}
+${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div><div class="foto-grid">${fotosHTML}</div></div>` : ''}
 
 <div class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div>
 <div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div>
