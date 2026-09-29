@@ -1361,13 +1361,9 @@ ${r.obsPrensa ? `<div style="padding:4px 14px;font-size:9px"><b>Observações:</
 <tr><td>Tempo</td><td colspan="3">${esc(r.probTempo)}</td></tr>
 <tr><td>Proc. Retomada</td><td colspan="3">${esc(r.procRetomada)}</td></tr></table>
 
-<div class="sec">9. LIBERAÇÃO DO TÉCNICO DE ÁREA</div>
+<div class="sec">9/10. LIBERAÇÕES</div>
 <div class="assin-area">
 <div>${r.assTecnico ? `<img src="${r.assTecnico}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libTecnico) || 'Técnico de Área'}</div><div class="doc">${esc(r.libTecnicoDoc)} · ${fmtData(r.libTecnicoData)}</div></div>
-</div>
-
-<div class="sec">10. LIBERAÇÃO DO SUPERVISOR DE ÁREA</div>
-<div class="assin-area">
 <div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
 </div>
 
