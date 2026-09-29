@@ -357,7 +357,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
   <!-- FOTOS -->
   <div class="card">
-    <div class="section-title">📷 REGISTRO FOTOGRÁFICO</div>
+    <div class="section-title">📷 ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
     <div class="foto-grid" id="fotoGrid"></div>
     <button class="btn btn-ghost btn-sm btn-block" onclick="addFotoSlot()" style="margin-top:8px">+ Adicionar foto</button>
   </div>
@@ -975,7 +975,7 @@ ${r.obsPrensa ? `<div style="padding:4px 14px;font-size:9px"><b>Observações:</
 <div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
 </div>
 
-${fotosHTML ? `<div class="sec">REGISTRO FOTOGRÁFICO</div><div class="foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px">${fotosHTML}</div>` : ''}
+${fotosHTML ? `<div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div><div class="foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px">${fotosHTML}</div>` : ''}
 
 <div class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div>
 <div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div>
