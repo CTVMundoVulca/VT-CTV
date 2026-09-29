@@ -47,7 +47,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
 textarea { resize: vertical; min-height: 60px; }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%236b7280' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.row > div { flex: 1 1 calc(50% - 4px); min-width: 0; }
+.row > div { flex: 1 1 calc(50% - 4px); min-width: 120px; }
+@media (max-width: 360px) { .row > div { flex: 1 1 100%; } }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; }
 .btn-primary { background: var(--blue); color: #fff; }
 .btn-success { background: var(--success); color: #fff; }
@@ -58,8 +59,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* efetivo dinâmico */
 .ef-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 6px; padding: 8px; background: var(--bg); border-radius: 8px; flex-wrap: wrap; position: relative; padding-right: 40px; }
-.ef-row > div { flex: 1 1 calc(50% - 6px); min-width: 0; }
+.ef-row > div { flex: 1 1 calc(50% - 6px); min-width: 120px; }
 .ef-row .ef-remove { position: absolute; right: 8px; top: 8px; flex: 0 0 32px; background: var(--danger); color: #fff; border: none; border-radius: 6px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
+@media (max-width: 420px) { .ef-row > div { flex: 1 1 100%; } }
 
 /* checklist grid */
 .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -582,6 +584,7 @@ let FB = null;
 let currentUser = null;
 let cloudUnsub = [];
 let booted = false;
+let formDirty = false;
 
 /* ═══ CONTROLE DE ACESSO ═══ */
 function checkAccess() {
@@ -662,7 +665,7 @@ function showToast(msg) { const t = document.getElementById('toast'); t.textCont
 /* ═══ NAVEGAÇÃO ═══ */
 function goBack() {
   if (document.getElementById('editorView').style.display !== 'none') {
-    salvarRegistro(true);
+    if (formDirty) salvarRegistro(true);
     showList();
   } else {
     window.location.href = 'index.html';
@@ -897,7 +900,7 @@ function addFotoSlot() {
 }
 function capturarFoto(idx) {
   const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.type = 'file'; input.accept = 'image/*';
   input.onchange = e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
@@ -1074,6 +1077,7 @@ function recalcular() {
 
 /* ═══ OPEN EDITOR ═══ */
 function openEditor() {
+  formDirty = false;
   document.getElementById('f_tag').value = cur.tag || '';
   document.getElementById('f_data').value = cur.data || '';
   document.getElementById('f_num_emenda').value = cur.numEmenda || '';
@@ -1240,6 +1244,7 @@ function salvarRegistro(silent) {
   collectEditor();
   persistRegistro(cur);
   curIdx = db.registros.findIndex(r => r.id === cur.id);
+  formDirty = false;
   if (!silent) showToast('Registro salvo ✔️');
 }
 
@@ -1256,6 +1261,8 @@ function fmtData(d) { if (!d) return ''; const p = d.split('-'); return p[2] + '
 
 function gerarPDF() {
   collectEditor();
+  persistRegistro(cur);
+  formDirty = false;
   const r = cur;
   const ts = new Date().toISOString();
 
@@ -1475,9 +1482,18 @@ function startCloudListeners() {
     const d = s.data(); if (d && d.list) { MATERIAIS_MANTA = d.list; saveMatManta(); }
   }, () => {}));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'emendas'), s => {
+    const editorOpen = document.getElementById('editorView').style.display !== 'none';
+    const editingId = (editorOpen && cur) ? cur.id : null;
     db.registros = s.docs.map(d => d.data());
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
+    if (editingId) {
+      const freshIdx = db.registros.findIndex(r => r.id === editingId);
+      if (freshIdx >= 0) {
+        curIdx = freshIdx;
+        if (!formDirty) { cur = db.registros[freshIdx]; openEditor(); }
+      }
+    }
     if (document.getElementById('listView').style.display !== 'none') renderList();
   }, err => {
     const code = (err && err.code) || '';
@@ -1518,6 +1534,9 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
     rd.readAsDataURL(b);
   }).catch(()=>{});
 })();
+document.getElementById('editorView').addEventListener('input', function() { formDirty = true; });
+document.getElementById('editorView').addEventListener('change', function() { formDirty = true; });
+
 window.__EMENDA = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
 if (!window.__EMENDA.wantCloud) bootLocal();
 
