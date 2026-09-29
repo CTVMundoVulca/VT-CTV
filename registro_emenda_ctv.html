@@ -1,0 +1,1007 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOFTWARE PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS              ║
+  ║  © 2024-2026 CTV Consultoria Técnica em Vulcanização               ║
+  ║  CNPJ: 65.601.481/0001-36                                         ║
+  ║  Autor: Glauber Dutra                                              ║
+  ║                                                                    ║
+  ║  Este software é protegido pela Lei nº 9.609/98 (Lei do Software)  ║
+  ║  e pela Lei nº 9.610/98 (Lei de Direitos Autorais).                ║
+  ║  É vedada a reprodução, distribuição, modificação ou utilização    ║
+  ║  deste código, total ou parcialmente, sem autorização expressa     ║
+  ║  por escrito do titular dos direitos.                              ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
+<title>Registro de Emenda — CTV</title>
+<style>
+:root {
+  --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
+  --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
+  --success: #10b981; --warn: #f59e0b; --danger: #ef4444;
+  --radius: 12px;
+}
+html[data-dark="1"] {
+  --bg: #0a0f1a; --card: #131a2b; --text: #e4e8f1; --text-light: #8892a4;
+  --border: #1e2a3f; --navy: #000d1a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 80px; }
+.topbar { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 90; }
+.topbar h1 { font-size: 15px; font-weight: 700; flex: 1; }
+.topbar button { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px 8px; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--blue); margin-bottom: 10px; padding: 6px 10px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
+.section-title span { background: var(--blue); color: #fff; font-size: 11px; font-weight: 900; padding: 2px 7px; border-radius: 4px; }
+.fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 8px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
+input, select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,166,234,.15); }
+textarea { resize: vertical; min-height: 60px; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%236b7280' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+.row { display: flex; gap: 8px; }
+.row > div { flex: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; }
+
+/* efetivo dinâmico */
+.ef-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 6px; padding: 8px; background: var(--bg); border-radius: 8px; }
+.ef-row > div { flex: 1; }
+.ef-row .ef-remove { flex: 0 0 32px; background: var(--danger); color: #fff; border: none; border-radius: 6px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; margin-bottom: 2px; }
+
+/* checklist grid */
+.check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.check-grid > div { display: flex; gap: 6px; align-items: center; }
+.check-grid label.fld { margin: 0; flex: 1; font-size: 10px; }
+.check-grid select { flex: 0 0 80px; padding: 6px 8px; font-size: 12px; }
+
+/* fotos */
+.foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.foto-slot { border: 2px dashed var(--border); border-radius: 8px; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; }
+.foto-slot img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; }
+.foto-slot .foto-label { font-size: 9px; color: var(--text-light); text-align: center; padding: 2px 4px; }
+.foto-slot .foto-add { font-size: 24px; color: var(--text-light); }
+.foto-slot .foto-del { position: absolute; top: 2px; right: 2px; background: var(--danger); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: none; }
+.foto-slot:hover .foto-del { display: block; }
+
+/* assinatura */
+.sig-box { border: 1px dashed var(--border); border-radius: 10px; background: var(--bg); position: relative; margin-bottom: 8px; }
+.sig-box canvas { width: 100%; height: 120px; display: block; touch-action: none; }
+.sig-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-light); font-size: 13px; pointer-events: none; }
+
+/* lista */
+.list-view .reg-item { background: var(--card); margin: 8px 12px; border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); cursor: pointer; }
+.reg-item h3 { font-size: 14px; font-weight: 700; }
+.reg-item .meta { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+/* toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: .3s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* print */
+@media print { .topbar, .btn, .no-print { display: none !important; } }
+
+/* acesso restrito */
+.access-denied { text-align: center; padding: 60px 20px; }
+.access-denied h2 { font-size: 20px; margin-bottom: 12px; }
+.access-denied p { color: var(--text-light); }
+</style>
+</head>
+<body>
+
+<!-- TELA DE ACESSO RESTRITO -->
+<div id="accessDenied" class="access-denied" style="display:none">
+  <div style="font-size:48px;margin-bottom:16px">🔒</div>
+  <h2>Acesso Restrito</h2>
+  <p>Este módulo está em fase de testes e disponível apenas para administradores.</p>
+  <p style="margin-top:20px"><a href="index.html" style="color:var(--blue)">← Voltar ao menu</a></p>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp">
+
+<div class="topbar">
+  <button onclick="goBack()" title="Voltar">←</button>
+  <h1 id="topTitle">Registro de Emenda</h1>
+  <button id="darkBtn" onclick="toggleDark()" title="Tema">🌙</button>
+</div>
+
+<!-- VIEW: LISTA -->
+<div id="listView">
+  <div style="padding:12px;display:flex;gap:8px">
+    <button class="btn btn-primary btn-block" onclick="novoRegistro()">+ Novo Registro de Emenda</button>
+  </div>
+  <div id="listContainer" class="list-view"></div>
+</div>
+
+<!-- VIEW: EDITOR -->
+<div id="editorView" style="display:none">
+
+  <!-- 1. CABEÇALHO -->
+  <div class="card">
+    <div class="section-title"><span>1</span> IDENTIFICAÇÃO</div>
+    <div class="row">
+      <div><label class="fld">Equipamento (TAG)</label><input type="text" id="f_tag" placeholder="Ex: 171203"></div>
+      <div><label class="fld">Data</label><input type="date" id="f_data"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Número da Emenda</label><input type="number" id="f_num_emenda" placeholder="1"></div>
+      <div><label class="fld">OM</label><input type="text" id="f_om" placeholder="N/A"></div>
+    </div>
+  </div>
+
+  <!-- 2. EFETIVO -->
+  <div class="card">
+    <div class="section-title"><span>2</span> EFETIVO</div>
+    <div id="efetivoList"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addEfetivo()" style="margin-top:6px">+ Adicionar pessoa</button>
+  </div>
+
+  <!-- 3. MATERIAIS DA EMENDA -->
+  <div class="card">
+    <div class="section-title"><span>3</span> MATERIAIS DA EMENDA</div>
+    <div id="materiaisEmendaList"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addMaterialEmenda()" style="margin-top:6px">+ Adicionar material</button>
+
+    <div class="section-title" style="margin-top:16px"><span>3.1</span> MATERIAIS DA MANTA</div>
+    <div id="materiaisMantaList"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addMaterialManta()" style="margin-top:6px">+ Adicionar material</button>
+  </div>
+
+  <!-- 4. EQUIPAMENTOS DE MEDIÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>4</span> EQUIPAMENTOS DE MEDIÇÃO UTILIZADOS</div>
+    <div id="equipMedicaoList"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addEquipMedicao()" style="margin-top:6px">+ Adicionar equipamento</button>
+  </div>
+
+  <!-- 5. DADOS EMENDA -->
+  <div class="card">
+    <div class="section-title"><span>5</span> DADOS EMENDA</div>
+    <div class="row">
+      <div><label class="fld">Tipo Correia</label>
+        <select id="f_tipo_correia"><option value="Lona">Lona</option><option value="Cabo Aço">Cabo Aço</option></select>
+      </div>
+      <div><label class="fld">Tipo Emenda</label>
+        <select id="f_tipo_emenda"><option value="Frio">Frio</option><option value="Quente">Quente</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Especificação Correia (Fab/Modelo)</label><input type="text" id="f_espec_correia" placeholder="Fabricante / Modelo"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Largura Correia [mm]</label><input type="number" id="f_largura"></div>
+      <div><label class="fld">Tamanho / Trecho [m]</label><input type="number" id="f_tamanho_trecho"></div>
+    </div>
+
+    <!-- Cabo Aço -->
+    <div id="caboAcoFields" style="display:none;margin-top:10px">
+      <label class="fld" style="font-weight:700;color:var(--blue)">CABO AÇO</label>
+      <div class="row">
+        <div><label class="fld">1 Estágio [mm]</label><input type="text" id="f_estagio1" value="N/A"></div>
+        <div><label class="fld">2 Estágio [mm]</label><input type="text" id="f_estagio2" value="N/A"></div>
+        <div><label class="fld">3 Estágio [mm]</label><input type="text" id="f_estagio3" value="N/A"></div>
+      </div>
+      <div class="row">
+        <div><label class="fld">Chanfro [mm]</label><input type="text" id="f_chanfro" value="N/A"></div>
+      </div>
+    </div>
+
+    <!-- Lona -->
+    <div id="lonaFields" style="margin-top:10px">
+      <label class="fld" style="font-weight:700;color:var(--blue)">LONA</label>
+      <div class="row">
+        <div><label class="fld">Quant. Lona</label><input type="number" id="f_qt_lona"></div>
+        <div><label class="fld">Quant. Passes</label><input type="number" id="f_qt_passes"></div>
+      </div>
+      <div class="row">
+        <div><label class="fld">Compr. Passe [mm]</label><input type="number" id="f_compr_passe"></div>
+        <div><label class="fld">Fechamento [mm]</label><input type="text" id="f_fechamento" value="N/A"></div>
+      </div>
+    </div>
+
+    <!-- Dimensões Emenda -->
+    <label class="fld" style="font-weight:700;color:var(--blue);margin-top:10px">DIMENSÕES EMENDA</label>
+    <div class="row">
+      <div><label class="fld">Viés [mm]</label><input type="number" id="f_vies"></div>
+      <div><label class="fld">Compr. Total Emenda [mm]</label><input type="number" id="f_compr_total_emenda"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Manta Inferior [mm]</label><input type="text" id="f_manta_inf" value="N/A"></div>
+      <div><label class="fld">Manta Superior [mm]</label><input type="text" id="f_manta_sup" value="N/A"></div>
+    </div>
+
+    <!-- Check List -->
+    <label class="fld" style="font-weight:700;color:var(--blue);margin-top:10px">CHECK LIST</label>
+    <div class="check-grid">
+      <div><label class="fld">Emenda Lixada?</label><select id="f_ck_lixada"><option value="Sim">Sim</option><option value="Não">Não</option><option value="N/A">N/A</option></select></div>
+      <div><label class="fld">Emenda Limpa?</label><select id="f_ck_limpa"><option value="Sim">Sim</option><option value="Não">Não</option><option value="N/A">N/A</option></select></div>
+      <div><label class="fld">Umidade / Óleo?</label><select id="f_ck_umidade"><option value="Não">Não</option><option value="Sim">Sim</option><option value="N/A">N/A</option></select></div>
+      <div><label class="fld">Alinhada?</label><select id="f_ck_alinhada"><option value="Sim">Sim</option><option value="Não">Não</option><option value="N/A">N/A</option></select></div>
+    </div>
+  </div>
+
+  <!-- 6. CHECK LIST DA VULCANIZAÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>6</span> CHECK LIST DA VULCANIZAÇÃO</div>
+
+    <label class="fld" style="font-weight:700;color:var(--blue)">AMBIENTE</label>
+    <div class="row">
+      <div><label class="fld">Temp. Ambiente °C</label><input type="number" step="0.1" id="f_temp_ambiente"></div>
+      <div><label class="fld">Umidade Relativa %</label><input type="number" step="0.1" id="f_umidade_ambiente"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Temp. Ponto de Orvalho °C</label><input type="number" step="0.1" id="f_temp_orvalho"></div>
+      <div><label class="fld">Temp. Superfície °C</label><input type="number" step="0.1" id="f_temp_superficie"></div>
+    </div>
+    <div>
+      <label class="fld">Clima</label>
+      <select id="f_clima"><option value="Seco">Seco</option><option value="Úmido">Úmido</option><option value="Chuvoso">Chuvoso</option></select>
+    </div>
+
+    <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">APLICAÇÃO COLA</label>
+    <div class="row">
+      <div><label class="fld">1ª Demão (hora)</label><input type="time" id="f_demao1"></div>
+      <div><label class="fld">2ª Demão (hora)</label><input type="time" id="f_demao2"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">3ª Demão (hora)</label><input type="time" id="f_demao3" placeholder="N/A"></div>
+      <div><label class="fld">Fechada (hora)</label><input type="time" id="f_hora_fechada"></div>
+    </div>
+    <div>
+      <label class="fld">Rodilhada?</label>
+      <select id="f_rodilhada"><option value="Sim">Sim</option><option value="Não">Não</option><option value="N/A">N/A</option></select>
+    </div>
+
+    <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">VULCANIZAÇÃO</label>
+    <div class="row">
+      <div><label class="fld">Temperatura Vulc. °C</label><input type="text" id="f_temp_vulc" value="N/A"></div>
+      <div><label class="fld">Tempo Vulc. (Min)</label><input type="text" id="f_tempo_vulc" value="N/A"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Pressão [Kg/cm²]</label><input type="text" id="f_pressao_vulc" value="N/A"></div>
+      <div><label class="fld">Temp. Abertura Prensa °C</label><input type="text" id="f_temp_abertura" value="N/A"></div>
+    </div>
+    <div>
+      <label class="fld">Hora Abertura Prensa</label><input type="text" id="f_hora_abertura" value="N/A">
+    </div>
+
+    <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">INSPEÇÃO PÓS-VULCANIZAÇÃO</label>
+    <div class="check-grid">
+      <div><label class="fld">Menor valor Dureza ShoreA</label><input type="text" id="f_dureza_shore" value="-" style="flex:0 0 80px;padding:6px 8px;font-size:12px"></div>
+      <div><label class="fld">Presença Bolha?</label><select id="f_ck_bolha"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+      <div><label class="fld">Feito Acabamento?</label><select id="f_ck_acabamento"><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+      <div><label class="fld">Faltou Material?</label><select id="f_ck_faltou_mat"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+    </div>
+  </div>
+
+  <!-- 7. PRENSA -->
+  <div class="card">
+    <div class="section-title"><span>7</span> PRENSA</div>
+    <div class="row">
+      <div><label class="fld">Série Prensa Utilizada</label><input type="text" id="f_serie_prensa" value="N/A"></div>
+      <div><label class="fld">Prensa Testada Antes?</label><select id="f_prensa_testada"><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Painéis Utilizados</label><input type="text" id="f_paineis" value="N/A"></div>
+      <div><label class="fld">Bombas Utilizadas</label><input type="text" id="f_bombas" value="N/A"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Data Teste</label><input type="text" id="f_data_teste" value="N/A"></div>
+      <div><label class="fld">Ass. Técnico Eletricista</label><input type="text" id="f_ass_eletricista" value="N/A"></div>
+    </div>
+    <div>
+      <label class="fld">Observações (Justificar desvios)</label>
+      <textarea id="f_obs_prensa" rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- 8. PROBLEMAS DURANTE VULCANIZAÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>8</span> PROBLEMAS DURANTE VULCANIZAÇÃO</div>
+    <div><label class="fld">Tipo de Problema</label><input type="text" id="f_tipo_problema" value="N/A"></div>
+    <label class="fld" style="margin-top:8px">Parâmetros encontrados no momento do problema</label>
+    <div class="row">
+      <div><label class="fld">Temperatura</label><input type="text" id="f_prob_temp" value="N/A"></div>
+      <div><label class="fld">Pressão</label><input type="text" id="f_prob_pressao" value="N/A"></div>
+      <div><label class="fld">Tempo</label><input type="text" id="f_prob_tempo" value="N/A"></div>
+    </div>
+    <div><label class="fld">Procedimento de Retomada</label><textarea id="f_proc_retomada">N/A</textarea></div>
+  </div>
+
+  <!-- 9. LIBERAÇÃO TÉCNICO -->
+  <div class="card">
+    <div class="section-title"><span>9</span> LIBERAÇÃO DO TÉCNICO DE ÁREA</div>
+    <div class="row">
+      <div><label class="fld">Liberado por</label>
+        <select id="f_lib_tecnico" onchange="autoFillLibTecnico()">
+          <option value="">Selecione</option>
+        </select>
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_tecnico_doc" readonly></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_lib_tecnico_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_tecnico"></canvas><div class="sig-ph" id="ph_tecnico">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('tecnico')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('tecnico')">Confirmar</button></div>
+  </div>
+
+  <!-- 10. LIBERAÇÃO SUPERVISOR -->
+  <div class="card">
+    <div class="section-title"><span>10</span> LIBERAÇÃO DO SUPERVISOR DE ÁREA</div>
+    <div class="row">
+      <div><label class="fld">Liberado por</label>
+        <select id="f_lib_super" onchange="autoFillLibSuper()">
+          <option value="">Selecione</option>
+          <option value="Glauber Dutra">Glauber Dutra</option>
+        </select>
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_super_doc" readonly></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_lib_super_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_supervisor"></canvas><div class="sig-ph" id="ph_supervisor">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('supervisor')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('supervisor')">Confirmar</button></div>
+  </div>
+
+  <!-- FOTOS -->
+  <div class="card">
+    <div class="section-title">📷 REGISTRO FOTOGRÁFICO</div>
+    <div class="foto-grid" id="fotoGrid"></div>
+    <button class="btn btn-ghost btn-sm btn-block" onclick="addFotoSlot()" style="margin-top:8px">+ Adicionar foto</button>
+  </div>
+
+  <!-- AÇÕES -->
+  <div class="card no-print">
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-primary btn-block" onclick="salvarRegistro()">💾 Salvar</button>
+      <button class="btn btn-success btn-block" onclick="gerarPDF()">📄 Gerar PDF</button>
+      <button class="btn btn-danger btn-block" onclick="excluirRegistro()">🗑 Excluir</button>
+    </div>
+  </div>
+
+</div><!-- editorView -->
+</div><!-- mainApp -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ BASE DE DADOS FUNCIONÁRIOS ═══ */
+const FUNCIONARIOS = [
+  {nome:'ADILSON ANDRADE DOS SANTOS',doc:'096.749.787-63'},
+  {nome:'ALCEMAR JOSÉ DA CONCEIÇÃO',doc:'70001258'},
+  {nome:'ALEX RODRIGUES DAS NEVES',doc:'4826263562'},
+  {nome:'ALLAN ALMEIDA OLIVEIRA',doc:'19346602724'},
+  {nome:'BRUNO CLAUDIO PAULO PORTO',doc:'195.023.607-29'},
+  {nome:'BRUNO SOUZA NERES',doc:'70001272'},
+  {nome:'CLAUDIO HENRIQUE RODRIGUES SOARES',doc:'133.184.636-63'},
+  {nome:'CLEITON DO NASCIMENTO SILVA',doc:'17504037737'},
+  {nome:'DOUGLAS DA SILVA DOS SANTOS',doc:'70162129'},
+  {nome:'ERICK VINICIUS COSTA COSTA',doc:'619.594.593-38'},
+  {nome:'EVERSON SOUZA RIBEIRO',doc:'093.524.567-77'},
+  {nome:'GABRIEL VIEIRA COSTA',doc:'70136280'},
+  {nome:'GLAUBER DUTRA DA SILVA',doc:'146.380.647-79'},
+  {nome:'IZAIAS BATISTA MARTINS',doc:'140.616.877-78'},
+  {nome:'JEFFERSON FERREIRA DE SOUZA',doc:'122.518.037-69'},
+  {nome:'JEFFERSON SILVA SANTOS',doc:'20617331740'},
+  {nome:'JEREMIAS DOS SANTOS BRITO',doc:'70156736'},
+  {nome:'JHENIFESON DUARTE',doc:'20790601710'},
+  {nome:'JOÃO HENRIQUE CORREIA',doc:'18553634701'},
+  {nome:'JOÃO PEDRO PEREIRA CHAYIDY SILVA',doc:'094.119.451-55'},
+  {nome:'JORGE LUIZ PINTO',doc:'70022177'},
+  {nome:'JOÃO PEDRO TRINDADE PEREIRA',doc:'14280661790'},
+  {nome:'KLEBSON DOS SANTOS JANEIRO',doc:'7917186709'},
+  {nome:'LUCAS GONÇALVEZ',doc:'16897143212'},
+  {nome:'LUCAS JORDÃO CETTO',doc:'70115063'},
+  {nome:'MANOEL ANSELMO SOUZA PEREIRA',doc:'70023629'},
+  {nome:'MAURICIO DA COSTA LAMANA',doc:'027.586.668-80'},
+  {nome:'MURILO S. CUNHA',doc:'13576117734'},
+  {nome:'PAULO ERQUES ALMEIDA SOUZA',doc:'70007628'},
+  {nome:'PAULO HENRIQUE DE SOUZA PINHEIRO',doc:'097.926.065-56'},
+  {nome:'PAULO HENRIQUE SOARES ALVES',doc:'15549441730'},
+  {nome:'RAFAEL BELEM BRANDÃO',doc:'161.358.777.55'},
+  {nome:'RAMON RICARDO DE AVILA GOMES',doc:'175.522.877-56'},
+  {nome:'ROBERT DO ESPÍRITO SANTO CAMILO',doc:'16459848777'},
+  {nome:'ROBERTO FONTES BISPO',doc:'715.474.605-04'},
+  {nome:'SAMUEL DOS SANTOS',doc:'3725896852'},
+  {nome:'SANDRO VIANA',doc:'70061341'},
+  {nome:'SERGIO CARDOZO',doc:'1730485790'},
+  {nome:'THIAGO FERREIRA BARBOSA',doc:'12319871705'},
+  {nome:'VICENTE EDIVINO DOS SANTOS',doc:'70001250'},
+  {nome:'VINICIUS FONSECA DE OLIVEIRA',doc:'70652713'},
+  {nome:'WELLINGTON ALEXANDRE MARQUES',doc:'70120338'}
+];
+
+const MATERIAIS_EMENDA = ['CIMENTO VIPAL','CATALISADOR VIPAL','LIGAÇÃO 0060 BLT1.2MT','LIGAÇÃO 0083 BLSC 1.5ST','LIGAÇÃO 0205 BLSC 5.0ST','SOLVENTE 0131 SOL-1 3.6','CIMENTO 0069 CIMSC-ST 3.6','CIMENTO 0065 CIMT-ST 3.6','CIMENTO 0066 CIMT-MT 3.6'];
+const MATERIAIS_MANTA = ['COBERTURA 0087 CBSC8.0ST','COBERTURA 0084 CBSC4.0ST','COBERTURA 0086 CBSC6.0ST'];
+
+const FABRICANTES = ['VIPAFIX','CONTINENTAL','GOODYEAR','BRIDGESTONE'];
+
+const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br','michael.lopes@benetechbrasil.com.br'];
+
+const STORE_KEY = 'ctv_emendas_v1';
+let db = { registros: [], config: { dark: false } };
+let cur = null;
+let curIdx = -1;
+let fotoCount = 0;
+
+/* ═══ CONTROLE DE ACESSO ═══ */
+function checkAccess() {
+  const mainApp = document.getElementById('mainApp');
+  const denied = document.getElementById('accessDenied');
+  const userEmail = localStorage.getItem('ctv_user_email') || '';
+  if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+    mainApp.style.display = '';
+    denied.style.display = 'none';
+    return true;
+  }
+  mainApp.style.display = 'none';
+  denied.style.display = '';
+  return false;
+}
+
+/* ═══ PERSISTÊNCIA ═══ */
+function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && d.registros) db = d; } catch(e){} if (!db.config) db.config = { dark: false }; }
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+
+/* ═══ TEMA ═══ */
+function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; }
+function toggleDark() { db.config.dark = !db.config.dark; saveLocal(); applyDark(); }
+
+/* ═══ TOAST ═══ */
+let toastTimer = null;
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+
+/* ═══ NAVEGAÇÃO ═══ */
+function goBack() {
+  if (document.getElementById('editorView').style.display !== 'none') {
+    salvarRegistro(true);
+    showList();
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+function showList() {
+  document.getElementById('listView').style.display = '';
+  document.getElementById('editorView').style.display = 'none';
+  document.getElementById('topTitle').textContent = 'Registro de Emenda';
+  renderList();
+}
+function showEditor() {
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('editorView').style.display = '';
+  document.getElementById('topTitle').textContent = 'Emenda #' + (cur.numEmenda || '?');
+}
+
+/* ═══ LISTA ═══ */
+function renderList() {
+  const c = document.getElementById('listContainer');
+  if (!db.registros.length) { c.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light)">Nenhum registro de emenda.</div>'; return; }
+  c.innerHTML = db.registros.map((r, i) => `<div class="reg-item" onclick="abrirRegistro(${i})"><h3>Emenda #${r.numEmenda || '?'} — TAG ${r.tag || '?'}</h3><div class="meta">${r.data || 'Sem data'} · OM: ${r.om || 'N/A'} · ${r.tipoEmenda || ''} · ${r.tipoCorreia || ''}</div></div>`).join('');
+}
+
+/* ═══ CRIAR / ABRIR ═══ */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function novoRegistro() {
+  const today = new Date().toISOString().split('T')[0];
+  cur = {
+    id: uid(), tag: '', data: today, numEmenda: '', om: 'N/A',
+    efetivo: [],
+    materiaisEmenda: [], materiaisManta: [],
+    equipMedicao: [],
+    tipoCorreia: 'Lona', tipoEmenda: 'Frio', especCorreia: '',
+    largura: '', tamanhoTrecho: '',
+    estagio1: 'N/A', estagio2: 'N/A', estagio3: 'N/A', chanfro: 'N/A',
+    qtLona: '', qtPasses: '', comprPasse: '', fechamento: 'N/A',
+    vies: '', comprTotalEmenda: '', mantaInf: 'N/A', mantaSup: 'N/A',
+    ckLixada: 'Sim', ckLimpa: 'Sim', ckUmidade: 'Não', ckAlinhada: 'Sim',
+    tempAmbiente: '', umidadeAmbiente: '', tempOrvalho: '', tempSuperficie: '', clima: 'Seco',
+    demao1: '', demao2: '', demao3: '', horaFechada: '', rodilhada: 'Sim',
+    tempVulc: 'N/A', tempoVulc: 'N/A', pressaoVulc: 'N/A', tempAbertura: 'N/A', horaAbertura: 'N/A',
+    durezaShore: '-', ckBolha: 'Não', ckAcabamento: 'Sim', ckFaltouMat: 'Não',
+    seriePrensas: 'N/A', prensaTestada: 'N/A', paineis: 'N/A', bombas: 'N/A', dataTeste: 'N/A', assEletricista: 'N/A', obsPrensa: '',
+    tipoProblema: 'N/A', probTemp: 'N/A', probPressao: 'N/A', probTempo: 'N/A', procRetomada: 'N/A',
+    libTecnico: '', libTecnicoDoc: '', libTecnicoData: today, assTecnico: null,
+    libSuper: '', libSuperDoc: '', libSuperData: today, assSupervisor: null,
+    fotos: [],
+    criadoEm: Date.now()
+  };
+  db.registros.unshift(cur);
+  curIdx = 0;
+  saveLocal();
+  openEditor();
+}
+
+function abrirRegistro(i) {
+  cur = db.registros[i];
+  curIdx = i;
+  openEditor();
+}
+
+/* ═══ POPULATE SELECT DE FUNCIONÁRIOS ═══ */
+function funcOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  FUNCIONARIOS.forEach(f => { html += `<option value="${f.nome}"${f.nome === selected ? ' selected' : ''}>${f.nome}</option>`; });
+  return html;
+}
+
+/* ═══ EFETIVO ═══ */
+function renderEfetivo() {
+  const c = document.getElementById('efetivoList');
+  c.innerHTML = (cur.efetivo || []).map((e, i) => `<div class="ef-row"><div><label class="fld">Nome</label><select onchange="cur.efetivo[${i}].nome=this.value;autoDocEfetivo(${i})">${funcOptions(e.nome)}</select></div><div><label class="fld">Matrícula/CPF</label><input type="text" value="${esc(e.doc)}" readonly id="efDoc${i}"></div><button class="ef-remove" onclick="cur.efetivo.splice(${i},1);renderEfetivo()">×</button></div>`).join('');
+}
+function addEfetivo() { cur.efetivo.push({ nome: '', doc: '' }); renderEfetivo(); }
+function autoDocEfetivo(i) {
+  const f = FUNCIONARIOS.find(x => x.nome === cur.efetivo[i].nome);
+  cur.efetivo[i].doc = f ? f.doc : '';
+  document.getElementById('efDoc' + i).value = cur.efetivo[i].doc;
+}
+
+/* ═══ MATERIAIS EMENDA ═══ */
+function matEmendaOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  MATERIAIS_EMENDA.forEach(m => { html += `<option value="${m}"${m === selected ? ' selected' : ''}>${m}</option>`; });
+  return html;
+}
+function renderMateriaisEmenda() {
+  const c = document.getElementById('materiaisEmendaList');
+  c.innerHTML = (cur.materiaisEmenda || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisEmenda[${i}].material=this.value">${matEmendaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisEmenda[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisEmenda[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisEmenda[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisEmenda[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisEmenda.splice(${i},1);renderMateriaisEmenda()">×</button></div>`).join('');
+}
+function addMaterialEmenda() { cur.materiaisEmenda.push({ material: '', fabricante: 'VIPAFIX', lote: '', qtd: '', validade: '' }); renderMateriaisEmenda(); }
+
+function fabOptions(selected) {
+  let html = '';
+  FABRICANTES.forEach(f => { html += `<option value="${f}"${f === selected ? ' selected' : ''}>${f}</option>`; });
+  return html;
+}
+
+/* ═══ MATERIAIS MANTA ═══ */
+function matMantaOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  MATERIAIS_MANTA.forEach(m => { html += `<option value="${m}"${m === selected ? ' selected' : ''}>${m}</option>`; });
+  return html;
+}
+function renderMateriaisManta() {
+  const c = document.getElementById('materiaisMantaList');
+  c.innerHTML = (cur.materiaisManta || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisManta[${i}].material=this.value">${matMantaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisManta[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisManta[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisManta[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisManta[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisManta.splice(${i},1);renderMateriaisManta()">×</button></div>`).join('');
+}
+function addMaterialManta() { cur.materiaisManta.push({ material: '', fabricante: 'VIPAFIX', lote: '', qtd: '', validade: '' }); renderMateriaisManta(); }
+
+/* ═══ EQUIPAMENTOS DE MEDIÇÃO ═══ */
+function renderEquipMedicao() {
+  const c = document.getElementById('equipMedicaoList');
+  c.innerHTML = (cur.equipMedicao || []).map((e, i) => `<div class="ef-row" style="flex-wrap:wrap"><div><label class="fld">Equipamento</label><input type="text" value="${esc(e.equip)}" onchange="cur.equipMedicao[${i}].equip=this.value"></div><div><label class="fld">Marca/Modelo</label><input type="text" value="${esc(e.marca)}" onchange="cur.equipMedicao[${i}].marca=this.value"></div><div><label class="fld">Cód./Patrimônio</label><input type="text" value="${esc(e.codigo)}" onchange="cur.equipMedicao[${i}].codigo=this.value"></div><div><label class="fld">Nº Certificado</label><input type="text" value="${esc(e.certificado)}" onchange="cur.equipMedicao[${i}].certificado=this.value"></div><div><label class="fld">Data Calibração</label><input type="date" value="${esc(e.dataCal)}" onchange="cur.equipMedicao[${i}].dataCal=this.value"></div><div><label class="fld">Validade</label><input type="date" value="${esc(e.validadeCal)}" onchange="cur.equipMedicao[${i}].validadeCal=this.value"></div><button class="ef-remove" onclick="cur.equipMedicao.splice(${i},1);renderEquipMedicao()">×</button></div>`).join('');
+}
+function addEquipMedicao() { cur.equipMedicao.push({ equip: '', marca: '', codigo: '', certificado: '', dataCal: '', validadeCal: '' }); renderEquipMedicao(); }
+
+/* ═══ LIBERAÇÕES ═══ */
+function autoFillLibTecnico() {
+  const sel = document.getElementById('f_lib_tecnico');
+  const f = FUNCIONARIOS.find(x => x.nome === sel.value);
+  document.getElementById('f_lib_tecnico_doc').value = f ? f.doc : '';
+}
+function autoFillLibSuper() {
+  const sel = document.getElementById('f_lib_super');
+  const map = { 'Glauber Dutra': '146.380.647-79' };
+  document.getElementById('f_lib_super_doc').value = map[sel.value] || '';
+}
+
+/* ═══ FOTOS ═══ */
+const FOTO_LABELS = ['Material de emenda','Material de emenda','Termômetro a laser','Termo higrômetro','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda','Emenda'];
+function renderFotos() {
+  const grid = document.getElementById('fotoGrid');
+  const fotos = cur.fotos || [];
+  grid.innerHTML = fotos.map((f, i) => `<div class="foto-slot">${f.data ? `<img src="${f.data}"><button class="foto-del" onclick="event.stopPropagation();removerFoto(${i})">×</button>` : `<div class="foto-add" onclick="capturarFoto(${i})">📷</div>`}<div class="foto-label">${i + 1}. ${f.label || FOTO_LABELS[i] || 'Emenda'}</div></div>`).join('');
+}
+function addFotoSlot() {
+  const idx = cur.fotos.length;
+  cur.fotos.push({ label: FOTO_LABELS[idx] || 'Emenda', data: null });
+  renderFotos();
+}
+function capturarFoto(idx) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
+        saveLocal(); renderFotos();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function removerFoto(idx) { cur.fotos[idx].data = null; renderFotos(); saveLocal(); }
+
+/* ═══ ASSINATURA ═══ */
+const sigState = {};
+function initSignature(id) {
+  const canvas = document.getElementById('sig_' + id); if (!canvas) return;
+  canvas.width = 800; canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  const getPos = e => { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [(t.clientX - r.left) * (canvas.width / r.width), (t.clientY - r.top) * (canvas.height / r.height)]; };
+  const start = e => { e.preventDefault(); drawing = true; ctx.beginPath(); const [x, y] = getPos(e); ctx.moveTo(x, y); };
+  const move = e => { if (!drawing) return; e.preventDefault(); const [x, y] = getPos(e); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a1a2e'; ctx.lineTo(x, y); ctx.stroke(); };
+  const end = () => { drawing = false; };
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false }); canvas.addEventListener('touchmove', move, { passive: false }); canvas.addEventListener('touchend', end);
+  sigState[id] = false;
+}
+function limparAssinatura(id) {
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  sigState[id] = false;
+  if (id === 'tecnico') cur.assTecnico = null;
+  else cur.assSupervisor = null;
+  const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = '';
+}
+function compressSig(canvas) {
+  const tmp = document.createElement('canvas'); tmp.width = 400; tmp.height = 100;
+  const ctx = tmp.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 400, 100);
+  ctx.drawImage(canvas, 0, 0, 400, 100);
+  return tmp.toDataURL('image/jpeg', 0.6);
+}
+function confirmarAssinatura(id) {
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  if (!d.some(v => v !== 0)) { showToast('Desenhe a assinatura antes.'); return; }
+  sigState[id] = true;
+  const compressed = compressSig(c);
+  if (id === 'tecnico') cur.assTecnico = compressed;
+  else cur.assSupervisor = compressed;
+  const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none';
+  showToast('Assinatura confirmada ✔️');
+}
+function restoreSignature(id, src) {
+  if (!src) return;
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  const img = new Image();
+  img.onload = () => { c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); sigState[id] = true; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none'; };
+  img.src = src;
+}
+
+/* ═══ TIPO CORREIA TOGGLE ═══ */
+function toggleTipoCorreia() {
+  const tipo = document.getElementById('f_tipo_correia').value;
+  document.getElementById('caboAcoFields').style.display = tipo === 'Cabo Aço' ? '' : 'none';
+  document.getElementById('lonaFields').style.display = tipo === 'Lona' ? '' : 'none';
+}
+
+/* ═══ OPEN EDITOR ═══ */
+function openEditor() {
+  document.getElementById('f_tag').value = cur.tag || '';
+  document.getElementById('f_data').value = cur.data || '';
+  document.getElementById('f_num_emenda').value = cur.numEmenda || '';
+  document.getElementById('f_om').value = cur.om || 'N/A';
+
+  renderEfetivo();
+  renderMateriaisEmenda();
+  renderMateriaisManta();
+  renderEquipMedicao();
+
+  document.getElementById('f_tipo_correia').value = cur.tipoCorreia || 'Lona';
+  document.getElementById('f_tipo_emenda').value = cur.tipoEmenda || 'Frio';
+  document.getElementById('f_espec_correia').value = cur.especCorreia || '';
+  document.getElementById('f_largura').value = cur.largura || '';
+  document.getElementById('f_tamanho_trecho').value = cur.tamanhoTrecho || '';
+  document.getElementById('f_estagio1').value = cur.estagio1 || 'N/A';
+  document.getElementById('f_estagio2').value = cur.estagio2 || 'N/A';
+  document.getElementById('f_estagio3').value = cur.estagio3 || 'N/A';
+  document.getElementById('f_chanfro').value = cur.chanfro || 'N/A';
+  document.getElementById('f_qt_lona').value = cur.qtLona || '';
+  document.getElementById('f_qt_passes').value = cur.qtPasses || '';
+  document.getElementById('f_compr_passe').value = cur.comprPasse || '';
+  document.getElementById('f_fechamento').value = cur.fechamento || 'N/A';
+  document.getElementById('f_vies').value = cur.vies || '';
+  document.getElementById('f_compr_total_emenda').value = cur.comprTotalEmenda || '';
+  document.getElementById('f_manta_inf').value = cur.mantaInf || 'N/A';
+  document.getElementById('f_manta_sup').value = cur.mantaSup || 'N/A';
+  document.getElementById('f_ck_lixada').value = cur.ckLixada || 'Sim';
+  document.getElementById('f_ck_limpa').value = cur.ckLimpa || 'Sim';
+  document.getElementById('f_ck_umidade').value = cur.ckUmidade || 'Não';
+  document.getElementById('f_ck_alinhada').value = cur.ckAlinhada || 'Sim';
+  toggleTipoCorreia();
+
+  document.getElementById('f_temp_ambiente').value = cur.tempAmbiente || '';
+  document.getElementById('f_umidade_ambiente').value = cur.umidadeAmbiente || '';
+  document.getElementById('f_temp_orvalho').value = cur.tempOrvalho || '';
+  document.getElementById('f_temp_superficie').value = cur.tempSuperficie || '';
+  document.getElementById('f_clima').value = cur.clima || 'Seco';
+  document.getElementById('f_demao1').value = cur.demao1 || '';
+  document.getElementById('f_demao2').value = cur.demao2 || '';
+  document.getElementById('f_demao3').value = cur.demao3 || '';
+  document.getElementById('f_hora_fechada').value = cur.horaFechada || '';
+  document.getElementById('f_rodilhada').value = cur.rodilhada || 'Sim';
+  document.getElementById('f_temp_vulc').value = cur.tempVulc || 'N/A';
+  document.getElementById('f_tempo_vulc').value = cur.tempoVulc || 'N/A';
+  document.getElementById('f_pressao_vulc').value = cur.pressaoVulc || 'N/A';
+  document.getElementById('f_temp_abertura').value = cur.tempAbertura || 'N/A';
+  document.getElementById('f_hora_abertura').value = cur.horaAbertura || 'N/A';
+  document.getElementById('f_dureza_shore').value = cur.durezaShore || '-';
+  document.getElementById('f_ck_bolha').value = cur.ckBolha || 'Não';
+  document.getElementById('f_ck_acabamento').value = cur.ckAcabamento || 'Sim';
+  document.getElementById('f_ck_faltou_mat').value = cur.ckFaltouMat || 'Não';
+
+  document.getElementById('f_serie_prensa').value = cur.seriePrensas || 'N/A';
+  document.getElementById('f_prensa_testada').value = cur.prensaTestada || 'N/A';
+  document.getElementById('f_paineis').value = cur.paineis || 'N/A';
+  document.getElementById('f_bombas').value = cur.bombas || 'N/A';
+  document.getElementById('f_data_teste').value = cur.dataTeste || 'N/A';
+  document.getElementById('f_ass_eletricista').value = cur.assEletricista || 'N/A';
+  document.getElementById('f_obs_prensa').value = cur.obsPrensa || '';
+
+  document.getElementById('f_tipo_problema').value = cur.tipoProblema || 'N/A';
+  document.getElementById('f_prob_temp').value = cur.probTemp || 'N/A';
+  document.getElementById('f_prob_pressao').value = cur.probPressao || 'N/A';
+  document.getElementById('f_prob_tempo').value = cur.probTempo || 'N/A';
+  document.getElementById('f_proc_retomada').value = cur.procRetomada || 'N/A';
+
+  // Liberações
+  const selTec = document.getElementById('f_lib_tecnico');
+  selTec.innerHTML = funcOptions(cur.libTecnico || '');
+  document.getElementById('f_lib_tecnico_doc').value = cur.libTecnicoDoc || '';
+  document.getElementById('f_lib_tecnico_data').value = cur.libTecnicoData || '';
+
+  document.getElementById('f_lib_super').value = cur.libSuper || '';
+  document.getElementById('f_lib_super_doc').value = cur.libSuperDoc || '';
+  document.getElementById('f_lib_super_data').value = cur.libSuperData || '';
+
+  // Assinaturas
+  ['tecnico', 'supervisor'].forEach(id => {
+    initSignature(id);
+    const src = id === 'tecnico' ? cur.assTecnico : cur.assSupervisor;
+    restoreSignature(id, src);
+  });
+
+  // Fotos
+  if (!cur.fotos || !cur.fotos.length) {
+    cur.fotos = FOTO_LABELS.slice(0, 6).map(l => ({ label: l, data: null }));
+  }
+  renderFotos();
+
+  // Listener tipo correia
+  document.getElementById('f_tipo_correia').addEventListener('change', toggleTipoCorreia);
+
+  showEditor();
+}
+
+/* ═══ COLETAR EDITOR ═══ */
+function collectEditor() {
+  cur.tag = document.getElementById('f_tag').value.trim();
+  cur.data = document.getElementById('f_data').value;
+  cur.numEmenda = document.getElementById('f_num_emenda').value;
+  cur.om = document.getElementById('f_om').value.trim();
+  cur.tipoCorreia = document.getElementById('f_tipo_correia').value;
+  cur.tipoEmenda = document.getElementById('f_tipo_emenda').value;
+  cur.especCorreia = document.getElementById('f_espec_correia').value.trim();
+  cur.largura = document.getElementById('f_largura').value;
+  cur.tamanhoTrecho = document.getElementById('f_tamanho_trecho').value;
+  cur.estagio1 = document.getElementById('f_estagio1').value.trim();
+  cur.estagio2 = document.getElementById('f_estagio2').value.trim();
+  cur.estagio3 = document.getElementById('f_estagio3').value.trim();
+  cur.chanfro = document.getElementById('f_chanfro').value.trim();
+  cur.qtLona = document.getElementById('f_qt_lona').value;
+  cur.qtPasses = document.getElementById('f_qt_passes').value;
+  cur.comprPasse = document.getElementById('f_compr_passe').value;
+  cur.fechamento = document.getElementById('f_fechamento').value.trim();
+  cur.vies = document.getElementById('f_vies').value;
+  cur.comprTotalEmenda = document.getElementById('f_compr_total_emenda').value;
+  cur.mantaInf = document.getElementById('f_manta_inf').value.trim();
+  cur.mantaSup = document.getElementById('f_manta_sup').value.trim();
+  cur.ckLixada = document.getElementById('f_ck_lixada').value;
+  cur.ckLimpa = document.getElementById('f_ck_limpa').value;
+  cur.ckUmidade = document.getElementById('f_ck_umidade').value;
+  cur.ckAlinhada = document.getElementById('f_ck_alinhada').value;
+  cur.tempAmbiente = document.getElementById('f_temp_ambiente').value;
+  cur.umidadeAmbiente = document.getElementById('f_umidade_ambiente').value;
+  cur.tempOrvalho = document.getElementById('f_temp_orvalho').value;
+  cur.tempSuperficie = document.getElementById('f_temp_superficie').value;
+  cur.clima = document.getElementById('f_clima').value;
+  cur.demao1 = document.getElementById('f_demao1').value;
+  cur.demao2 = document.getElementById('f_demao2').value;
+  cur.demao3 = document.getElementById('f_demao3').value;
+  cur.horaFechada = document.getElementById('f_hora_fechada').value;
+  cur.rodilhada = document.getElementById('f_rodilhada').value;
+  cur.tempVulc = document.getElementById('f_temp_vulc').value.trim();
+  cur.tempoVulc = document.getElementById('f_tempo_vulc').value.trim();
+  cur.pressaoVulc = document.getElementById('f_pressao_vulc').value.trim();
+  cur.tempAbertura = document.getElementById('f_temp_abertura').value.trim();
+  cur.horaAbertura = document.getElementById('f_hora_abertura').value.trim();
+  cur.durezaShore = document.getElementById('f_dureza_shore').value.trim();
+  cur.ckBolha = document.getElementById('f_ck_bolha').value;
+  cur.ckAcabamento = document.getElementById('f_ck_acabamento').value;
+  cur.ckFaltouMat = document.getElementById('f_ck_faltou_mat').value;
+  cur.seriePrensas = document.getElementById('f_serie_prensa').value.trim();
+  cur.prensaTestada = document.getElementById('f_prensa_testada').value;
+  cur.paineis = document.getElementById('f_paineis').value.trim();
+  cur.bombas = document.getElementById('f_bombas').value.trim();
+  cur.dataTeste = document.getElementById('f_data_teste').value.trim();
+  cur.assEletricista = document.getElementById('f_ass_eletricista').value.trim();
+  cur.obsPrensa = document.getElementById('f_obs_prensa').value.trim();
+  cur.tipoProblema = document.getElementById('f_tipo_problema').value.trim();
+  cur.probTemp = document.getElementById('f_prob_temp').value.trim();
+  cur.probPressao = document.getElementById('f_prob_pressao').value.trim();
+  cur.probTempo = document.getElementById('f_prob_tempo').value.trim();
+  cur.procRetomada = document.getElementById('f_proc_retomada').value.trim();
+  cur.libTecnico = document.getElementById('f_lib_tecnico').value;
+  cur.libTecnicoDoc = document.getElementById('f_lib_tecnico_doc').value;
+  cur.libTecnicoData = document.getElementById('f_lib_tecnico_data').value;
+  cur.libSuper = document.getElementById('f_lib_super').value;
+  cur.libSuperDoc = document.getElementById('f_lib_super_doc').value;
+  cur.libSuperData = document.getElementById('f_lib_super_data').value;
+}
+
+function salvarRegistro(silent) {
+  collectEditor();
+  db.registros[curIdx] = cur;
+  saveLocal();
+  if (!silent) showToast('Registro salvo ✔️');
+}
+
+function excluirRegistro() {
+  if (!confirm('Excluir este registro de emenda?')) return;
+  db.registros.splice(curIdx, 1);
+  saveLocal();
+  showList();
+  showToast('Registro excluído.');
+}
+
+/* ═══ GERAR PDF ═══ */
+function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtData(d) { if (!d) return ''; const p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+
+function gerarPDF() {
+  collectEditor();
+  const r = cur;
+  const ts = new Date().toISOString();
+
+  const efetivoRows = (r.efetivo || []).map(e => `<tr><td>${esc(e.nome)}</td><td>${esc(e.doc)}</td></tr>`).join('') || '<tr><td colspan="2">-</td></tr>';
+  const matEmendaRows = (r.materiaisEmenda || []).map(m => `<tr><td>${esc(m.material)}</td><td>${esc(m.fabricante)}</td><td>${esc(m.lote)}</td><td>${esc(m.qtd)}</td><td>${fmtData(m.validade)}</td></tr>`).join('') || '<tr><td colspan="5">-</td></tr>';
+  const matMantaRows = (r.materiaisManta || []).map(m => `<tr><td>${esc(m.material)}</td><td>${esc(m.fabricante)}</td><td>${esc(m.lote)}</td><td>${esc(m.qtd)}</td><td>${fmtData(m.validade)}</td></tr>`).join('') || '<tr><td colspan="5">-</td></tr>';
+  const equipRows = (r.equipMedicao || []).map(e => `<tr><td>${esc(e.equip)}</td><td>${esc(e.marca)}</td><td>${esc(e.codigo)}</td><td>${esc(e.certificado)}</td><td>${fmtData(e.dataCal)}</td><td>${fmtData(e.validadeCal)}</td></tr>`).join('') || '<tr><td colspan="6">-</td></tr>';
+
+  const fotosHTML = (r.fotos || []).filter(f => f.data).map((f, i) => `<div style="text-align:center"><img src="${f.data}" style="width:100%;max-height:200px;object-fit:contain;border:1px solid #ccc;border-radius:4px"><div style="font-size:8px;color:#666;margin-top:2px">${i + 1}. ${esc(f.label)}</div></div>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="created" content="${ts}">
+<title>Emenda #${esc(r.numEmenda)} — TAG ${esc(r.tag)}</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;font-size:10px;color:#1a1a2e}
+.hdr{background:#001a33;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #43a6ea}
+.hdr h1{font-size:14px;margin:0} .hdr .ref{font-size:9px;color:#aaa}
+.sec{background:#001a33;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;margin:10px 14px 4px;border-left:3px solid #43a6ea}
+table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:9px}
+th,td{border:1px solid #ccc;padding:3px 5px;text-align:left;vertical-align:top}
+th{background:#0D1B2A;color:#fff;font-weight:600}
+.meta-row{display:flex;flex-wrap:wrap;gap:3px 16px;padding:6px 14px;font-size:10px}
+.meta-row b{color:#555}
+.check-tbl td:first-child{width:60%;font-weight:600}
+.assin-area{display:flex;justify-content:space-around;gap:20px;padding:20px 14px}
+.assin-area div{flex:1;text-align:center}
+.assin-area img{max-width:100%;height:60px;object-fit:contain}
+.assin-area .ln{border-top:1px solid #333;margin-top:4px;padding-top:3px;font-size:9px;color:#333}
+.assin-area .doc{font-size:8px;color:#555}
+.foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px}
+.footer{text-align:center;padding:12px 14px 8px;font-size:8px;color:#999;border-top:1px solid #e0e0e0;margin-top:16px}
+.footer .legal{font-size:6px;color:#bbb;margin-top:3px}
+.wm{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:8mm;size:A4}}
+</style></head><body>
+<div class="hdr"><div><h1>REGISTRO DE EMENDA DE CORREIA</h1><div style="font-size:9px;color:#aaa;margin-top:2px">FOR GTO 054 — REV.08</div></div><div class="ref">Emenda #${esc(r.numEmenda)}<br>TAG: ${esc(r.tag)}</div></div>
+
+<div class="meta-row"><div><b>Equipamento (TAG):</b> ${esc(r.tag)}</div><div><b>Data:</b> ${fmtData(r.data)}</div><div><b>Nº Emenda:</b> ${esc(r.numEmenda)}</div><div><b>OM:</b> ${esc(r.om)}</div></div>
+
+<div class="sec">2. EFETIVO</div>
+<table><tr><th>Nome</th><th>Matrícula / CPF</th></tr>${efetivoRows}</table>
+
+<div class="sec">3. MATERIAIS DA EMENDA</div>
+<table><tr><th>Material</th><th>Fabricante</th><th>Lote</th><th>Qtd</th><th>Validade</th></tr>${matEmendaRows}</table>
+<div class="sec" style="margin-top:6px">3.1 MATERIAIS DA MANTA</div>
+<table><tr><th>Material</th><th>Fabricante</th><th>Lote</th><th>Qtd</th><th>Validade</th></tr>${matMantaRows}</table>
+
+<div class="sec">4. EQUIPAMENTOS DE MEDIÇÃO</div>
+<table><tr><th>Equipamento</th><th>Marca/Modelo</th><th>Cód./Patrimônio</th><th>Nº Certificado</th><th>Data Calib.</th><th>Validade</th></tr>${equipRows}</table>
+
+<div class="sec">5. DADOS EMENDA</div>
+<div class="meta-row"><div><b>Tipo Correia:</b> ${esc(r.tipoCorreia)}</div><div><b>Tipo Emenda:</b> ${esc(r.tipoEmenda)}</div><div><b>Especificação:</b> ${esc(r.especCorreia) || '-'}</div><div><b>Largura:</b> ${esc(r.largura)} mm</div><div><b>Tamanho/Trecho:</b> ${esc(r.tamanhoTrecho)} m</div></div>
+<table class="check-tbl"><tr><td>Viés [mm]</td><td>${esc(r.vies)}</td><td>Compr. Total Emenda [mm]</td><td>${esc(r.comprTotalEmenda)}</td></tr>
+<tr><td>Manta Inferior [mm]</td><td>${esc(r.mantaInf)}</td><td>Manta Superior [mm]</td><td>${esc(r.mantaSup)}</td></tr>
+${r.tipoCorreia === 'Lona' ? `<tr><td>Quant. Lona</td><td>${esc(r.qtLona)}</td><td>Quant. Passes</td><td>${esc(r.qtPasses)}</td></tr><tr><td>Compr. Passe [mm]</td><td>${esc(r.comprPasse)}</td><td>Fechamento [mm]</td><td>${esc(r.fechamento)}</td></tr>` : `<tr><td>1 Estágio [mm]</td><td>${esc(r.estagio1)}</td><td>2 Estágio [mm]</td><td>${esc(r.estagio2)}</td></tr><tr><td>3 Estágio [mm]</td><td>${esc(r.estagio3)}</td><td>Chanfro [mm]</td><td>${esc(r.chanfro)}</td></tr>`}
+<tr><td>Emenda Lixada?</td><td>${esc(r.ckLixada)}</td><td>Emenda Limpa?</td><td>${esc(r.ckLimpa)}</td></tr>
+<tr><td>Umidade/Óleo?</td><td>${esc(r.ckUmidade)}</td><td>Alinhada?</td><td>${esc(r.ckAlinhada)}</td></tr></table>
+
+<div class="sec">6. CHECK LIST DA VULCANIZAÇÃO</div>
+<table class="check-tbl">
+<tr><th colspan="4" style="background:#43a6ea">Ambiente</th></tr>
+<tr><td>Temp. Ambiente °C</td><td>${esc(r.tempAmbiente)}</td><td>Umidade Relativa %</td><td>${esc(r.umidadeAmbiente)}</td></tr>
+<tr><td>Temp. Ponto Orvalho °C</td><td>${esc(r.tempOrvalho)}</td><td>Temp. Superfície °C</td><td>${esc(r.tempSuperficie)}</td></tr>
+<tr><td>Clima</td><td colspan="3">${esc(r.clima)}</td></tr>
+<tr><th colspan="4" style="background:#43a6ea">Aplicação Cola</th></tr>
+<tr><td>1ª Demão</td><td>${esc(r.demao1)}</td><td>2ª Demão</td><td>${esc(r.demao2)}</td></tr>
+<tr><td>3ª Demão</td><td>${esc(r.demao3) || 'N/A'}</td><td>Fechada</td><td>${esc(r.horaFechada)}</td></tr>
+<tr><td>Rodilhada?</td><td colspan="3">${esc(r.rodilhada)}</td></tr>
+<tr><th colspan="4" style="background:#43a6ea">Vulcanização</th></tr>
+<tr><td>Temp. Vulc. °C</td><td>${esc(r.tempVulc)}</td><td>Tempo Vulc. (Min)</td><td>${esc(r.tempoVulc)}</td></tr>
+<tr><td>Pressão [Kg/cm²]</td><td>${esc(r.pressaoVulc)}</td><td>Temp. Abertura Prensa °C</td><td>${esc(r.tempAbertura)}</td></tr>
+<tr><td>Hora Abertura Prensa</td><td colspan="3">${esc(r.horaAbertura)}</td></tr>
+<tr><th colspan="4" style="background:#43a6ea">Inspeção Pós-Vulcanização</th></tr>
+<tr><td>Menor valor Dureza ShoreA</td><td>${esc(r.durezaShore)}</td><td>Presença Bolha?</td><td>${esc(r.ckBolha)}</td></tr>
+<tr><td>Feito Acabamento?</td><td>${esc(r.ckAcabamento)}</td><td>Faltou Material?</td><td>${esc(r.ckFaltouMat)}</td></tr></table>
+
+<div class="sec">7. PRENSA</div>
+<table class="check-tbl"><tr><td>Série Prensa</td><td>${esc(r.seriePrensas)}</td><td>Prensa Testada?</td><td>${esc(r.prensaTestada)}</td></tr>
+<tr><td>Painéis</td><td>${esc(r.paineis)}</td><td>Bombas</td><td>${esc(r.bombas)}</td></tr>
+<tr><td>Data Teste</td><td>${esc(r.dataTeste)}</td><td>Ass. Téc. Eletricista</td><td>${esc(r.assEletricista)}</td></tr></table>
+${r.obsPrensa ? `<div style="padding:4px 14px;font-size:9px"><b>Observações:</b> ${esc(r.obsPrensa)}</div>` : ''}
+
+<div class="sec">8. PROBLEMAS DURANTE VULCANIZAÇÃO</div>
+<table class="check-tbl"><tr><td>Tipo Problema</td><td colspan="3">${esc(r.tipoProblema)}</td></tr>
+<tr><td>Temperatura</td><td>${esc(r.probTemp)}</td><td>Pressão</td><td>${esc(r.probPressao)}</td></tr>
+<tr><td>Tempo</td><td colspan="3">${esc(r.probTempo)}</td></tr>
+<tr><td>Proc. Retomada</td><td colspan="3">${esc(r.procRetomada)}</td></tr></table>
+
+<div class="sec">9. LIBERAÇÃO DO TÉCNICO DE ÁREA</div>
+<div class="assin-area">
+<div>${r.assTecnico ? `<img src="${r.assTecnico}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libTecnico) || 'Técnico de Área'}</div><div class="doc">${esc(r.libTecnicoDoc)} · ${fmtData(r.libTecnicoData)}</div></div>
+</div>
+
+<div class="sec">10. LIBERAÇÃO DO SUPERVISOR DE ÁREA</div>
+<div class="assin-area">
+<div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:60px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
+</div>
+
+${fotosHTML ? `<div class="sec">REGISTRO FOTOGRÁFICO</div><div class="foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px">${fotosHTML}</div>` : ''}
+
+<div class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div>
+<div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div>
+<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\/script>
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (w) { setTimeout(() => URL.revokeObjectURL(url), 60000); }
+  else { URL.revokeObjectURL(url); showToast('Permita pop-ups para gerar o PDF.'); }
+}
+
+/* ═══ BOOT ═══ */
+loadLocal();
+applyDark();
+checkAccess();
+renderList();
+
+// Proteção console
+(function(){
+  console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
+  console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 e Lei nº 9.610/98.','font-size:11px;color:#333');
+})();
+</script>
+<div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script src="app-update.js"></script>
+</body>
+</html>
