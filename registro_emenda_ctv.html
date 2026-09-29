@@ -171,17 +171,17 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <div class="section-title"><span>5</span> DADOS EMENDA</div>
     <div class="row">
       <div><label class="fld">Tipo Correia</label>
-        <select id="f_tipo_correia"><option value="Lona">Lona</option><option value="Cabo Aço">Cabo Aço</option></select>
+        <select id="f_tipo_correia" onchange="recalcular()"><option value="Lona">Lona</option><option value="Cabo Aço">Cabo Aço</option></select>
       </div>
       <div><label class="fld">Tipo Emenda</label>
-        <select id="f_tipo_emenda"><option value="Frio">Frio</option><option value="Quente">Quente</option></select>
+        <select id="f_tipo_emenda" onchange="recalcular()"><option value="Frio">Frio</option><option value="Quente">Quente</option></select>
       </div>
     </div>
     <div class="row">
       <div><label class="fld">Especificação Correia (Fab/Modelo)</label><input type="text" id="f_espec_correia" placeholder="Fabricante / Modelo"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Largura Correia [mm]</label><input type="number" id="f_largura"></div>
+      <div><label class="fld">Largura Correia [mm]</label><input type="number" id="f_largura" onchange="recalcular()"></div>
       <div><label class="fld">Tamanho / Trecho [m]</label><input type="number" id="f_tamanho_trecho"></div>
     </div>
 
@@ -202,7 +202,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <div id="lonaFields" style="margin-top:10px">
       <label class="fld" style="font-weight:700;color:var(--blue)">LONA</label>
       <div class="row">
-        <div><label class="fld">Quant. Lona</label><input type="number" id="f_qt_lona"></div>
+        <div><label class="fld">Quant. Lona</label><input type="number" id="f_qt_lona" onchange="recalcular()"></div>
         <div><label class="fld">Quant. Passes</label><input type="number" id="f_qt_passes"></div>
       </div>
       <div class="row">
@@ -215,7 +215,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <label class="fld" style="font-weight:700;color:var(--blue);margin-top:10px">DIMENSÕES EMENDA</label>
     <div class="row">
       <div><label class="fld">Viés [mm]</label><input type="number" id="f_vies"></div>
-      <div><label class="fld">Compr. Total Emenda [mm]</label><input type="number" id="f_compr_total_emenda"></div>
+      <div><label class="fld">Compr. Total Emenda [mm]</label><input type="number" id="f_compr_total_emenda" onchange="recalcular()"></div>
     </div>
     <div class="row">
       <div><label class="fld">Manta Inferior [mm]</label><input type="text" id="f_manta_inf" value="N/A"></div>
@@ -247,12 +247,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     </div>
     <div>
       <label class="fld">Clima</label>
-      <select id="f_clima"><option value="Seco">Seco</option><option value="Úmido">Úmido</option><option value="Chuvoso">Chuvoso</option></select>
+      <select id="f_clima"><option value="Seco">Seco</option><option value="Chuva">Chuva</option></select>
     </div>
 
     <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">APLICAÇÃO COLA</label>
     <div class="row">
-      <div><label class="fld">1ª Demão (hora)</label><input type="time" id="f_demao1"></div>
+      <div><label class="fld">1ª Demão (hora)</label><input type="time" id="f_demao1" onchange="recalcular()"></div>
       <div><label class="fld">2ª Demão (hora)</label><input type="time" id="f_demao2"></div>
     </div>
     <div class="row">
@@ -290,7 +290,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   <div class="card">
     <div class="section-title"><span>7</span> PRENSA</div>
     <div class="row">
-      <div><label class="fld">Série Prensa Utilizada</label><input type="text" id="f_serie_prensa" value="N/A"></div>
+      <div><label class="fld">Série Prensa Utilizada</label><select id="f_serie_prensa"><option value="N/A">N/A</option><option value="Nilos">Nilos</option><option value="Sampla">Sampla</option></select></div>
       <div><label class="fld">Prensa Testada Antes?</label><select id="f_prensa_testada"><option value="N/A">N/A</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
     </div>
     <div class="row">
@@ -344,7 +344,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <div><label class="fld">Liberado por</label>
         <select id="f_lib_super" onchange="autoFillLibSuper()">
           <option value="">Selecione</option>
-          <option value="Glauber Dutra">Glauber Dutra</option>
+          <option value="GLAUBER DUTRA DA SILVA">GLAUBER DUTRA DA SILVA</option>
+          <option value="BRUNO SOUZA NERES">BRUNO SOUZA NERES</option>
         </select>
       </div>
       <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_super_doc" readonly></div>
@@ -426,7 +427,7 @@ const FUNCIONARIOS = [
 const MATERIAIS_EMENDA = ['CIMENTO VIPAL','CATALISADOR VIPAL','LIGAÇÃO 0060 BLT1.2MT','LIGAÇÃO 0083 BLSC 1.5ST','LIGAÇÃO 0205 BLSC 5.0ST','SOLVENTE 0131 SOL-1 3.6','CIMENTO 0069 CIMSC-ST 3.6','CIMENTO 0065 CIMT-ST 3.6','CIMENTO 0066 CIMT-MT 3.6'];
 const MATERIAIS_MANTA = ['COBERTURA 0087 CBSC8.0ST','COBERTURA 0084 CBSC4.0ST','COBERTURA 0086 CBSC6.0ST'];
 
-const FABRICANTES = ['VIPAFIX','CONTINENTAL','GOODYEAR','BRIDGESTONE'];
+const FABRICANTES = ['VIPAFIX','BENETECH'];
 
 const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br'];
 
@@ -558,7 +559,7 @@ function renderMateriaisEmenda() {
   const c = document.getElementById('materiaisEmendaList');
   c.innerHTML = (cur.materiaisEmenda || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisEmenda[${i}].material=this.value">${matEmendaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisEmenda[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisEmenda[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisEmenda[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisEmenda[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisEmenda.splice(${i},1);renderMateriaisEmenda()">×</button></div>`).join('');
 }
-function addMaterialEmenda() { cur.materiaisEmenda.push({ material: '', fabricante: 'VIPAFIX', lote: '', qtd: '', validade: '' }); renderMateriaisEmenda(); }
+function addMaterialEmenda() { const te = document.getElementById('f_tipo_emenda'); const fab = te && te.value === 'Quente' ? 'BENETECH' : 'VIPAFIX'; cur.materiaisEmenda.push({ material: '', fabricante: fab, lote: '', qtd: '', validade: '' }); renderMateriaisEmenda(); }
 
 function fabOptions(selected) {
   let html = '';
@@ -576,12 +577,22 @@ function renderMateriaisManta() {
   const c = document.getElementById('materiaisMantaList');
   c.innerHTML = (cur.materiaisManta || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisManta[${i}].material=this.value">${matMantaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisManta[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisManta[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisManta[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisManta[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisManta.splice(${i},1);renderMateriaisManta()">×</button></div>`).join('');
 }
-function addMaterialManta() { cur.materiaisManta.push({ material: '', fabricante: 'VIPAFIX', lote: '', qtd: '', validade: '' }); renderMateriaisManta(); }
+function addMaterialManta() { const te = document.getElementById('f_tipo_emenda'); const fab = te && te.value === 'Quente' ? 'BENETECH' : 'VIPAFIX'; cur.materiaisManta.push({ material: '', fabricante: fab, lote: '', qtd: '', validade: '' }); renderMateriaisManta(); }
 
 /* ═══ EQUIPAMENTOS DE MEDIÇÃO ═══ */
 function renderEquipMedicao() {
   const c = document.getElementById('equipMedicaoList');
-  c.innerHTML = (cur.equipMedicao || []).map((e, i) => `<div class="ef-row" style="flex-wrap:wrap"><div><label class="fld">Equipamento</label><input type="text" value="${esc(e.equip)}" onchange="cur.equipMedicao[${i}].equip=this.value"></div><div><label class="fld">Marca/Modelo</label><input type="text" value="${esc(e.marca)}" onchange="cur.equipMedicao[${i}].marca=this.value"></div><div><label class="fld">Cód./Patrimônio</label><input type="text" value="${esc(e.codigo)}" onchange="cur.equipMedicao[${i}].codigo=this.value"></div><div><label class="fld">Nº Certificado</label><input type="text" value="${esc(e.certificado)}" onchange="cur.equipMedicao[${i}].certificado=this.value"></div><div><label class="fld">Data Calibração</label><input type="date" value="${esc(e.dataCal)}" onchange="cur.equipMedicao[${i}].dataCal=this.value"></div><div><label class="fld">Validade</label><input type="date" value="${esc(e.validadeCal)}" onchange="cur.equipMedicao[${i}].validadeCal=this.value"></div><button class="ef-remove" onclick="cur.equipMedicao.splice(${i},1);renderEquipMedicao()">×</button></div>`).join('');
+  c.innerHTML = (cur.equipMedicao || []).map((e, i) => `<div class="ef-row" style="flex-wrap:wrap"><div><label class="fld">Equipamento</label><input type="text" value="${esc(e.equip)}" onchange="cur.equipMedicao[${i}].equip=this.value"></div><div><label class="fld">Marca/Modelo</label><input type="text" value="${esc(e.marca)}" onchange="cur.equipMedicao[${i}].marca=this.value"></div><div><label class="fld">Cód./Patrimônio</label><input type="text" value="${esc(e.codigo)}" onchange="cur.equipMedicao[${i}].codigo=this.value"></div><div><label class="fld">Nº Certificado</label><input type="text" value="${esc(e.certificado)}" onchange="cur.equipMedicao[${i}].certificado=this.value"></div><div><label class="fld">Data Calibração</label><input type="date" value="${esc(e.dataCal)}" onchange="cur.equipMedicao[${i}].dataCal=this.value;autoValidadeCal(${i})"></div><div><label class="fld">Validade</label><input type="date" value="${esc(e.validadeCal)}" onchange="cur.equipMedicao[${i}].validadeCal=this.value" id="eqVal${i}"></div><button class="ef-remove" onclick="cur.equipMedicao.splice(${i},1);renderEquipMedicao()">×</button></div>`).join('');
+}
+function autoValidadeCal(i) {
+  const dc = cur.equipMedicao[i].dataCal;
+  if (!dc) return;
+  const d = new Date(dc);
+  d.setFullYear(d.getFullYear() + 1);
+  const v = d.toISOString().split('T')[0];
+  cur.equipMedicao[i].validadeCal = v;
+  const el = document.getElementById('eqVal' + i);
+  if (el) el.value = v;
 }
 function addEquipMedicao() { cur.equipMedicao.push({ equip: '', marca: '', codigo: '', certificado: '', dataCal: '', validadeCal: '' }); renderEquipMedicao(); }
 
@@ -593,8 +604,8 @@ function autoFillLibTecnico() {
 }
 function autoFillLibSuper() {
   const sel = document.getElementById('f_lib_super');
-  const map = { 'Glauber Dutra': '146.380.647-79' };
-  document.getElementById('f_lib_super_doc').value = map[sel.value] || '';
+  const f = FUNCIONARIOS.find(x => x.nome === sel.value);
+  document.getElementById('f_lib_super_doc').value = f ? f.doc : '';
 }
 
 /* ═══ FOTOS ═══ */
@@ -690,6 +701,102 @@ function toggleTipoCorreia() {
   document.getElementById('lonaFields').style.display = tipo === 'Lona' ? '' : 'none';
 }
 
+/* ═══ CÁLCULOS AUTOMÁTICOS ═══ */
+function recalcular() {
+  const tc = document.getElementById('f_tipo_correia').value;
+  const te = document.getElementById('f_tipo_emenda').value;
+  const larg = parseFloat(document.getElementById('f_largura').value) || 0;
+  const qtLona = parseFloat(document.getElementById('f_qt_lona').value) || 0;
+  const comprTotal = parseFloat(document.getElementById('f_compr_total_emenda').value) || 0;
+  const demao1 = document.getElementById('f_demao1').value;
+
+  toggleTipoCorreia();
+
+  // Viés: Frio = largura/2 | Quente = largura * 0.364
+  if (larg > 0) {
+    if (te === 'Frio') document.getElementById('f_vies').value = Math.round(larg / 2);
+    else if (te === 'Quente') document.getElementById('f_vies').value = Math.round(larg * 0.364);
+  }
+
+  // Lona: Quant. Passes = lonas - 1
+  if (tc === 'Lona' && qtLona > 0) {
+    document.getElementById('f_qt_passes').value = qtLona - 1;
+    // Compr. Passe = comprimento total / passes
+    const passes = qtLona - 1;
+    if (comprTotal > 0 && passes > 0) document.getElementById('f_compr_passe').value = Math.round(comprTotal / passes);
+  }
+
+  // Cabo Aço + Quente: 1 Estágio = comprimento total - 180
+  if (tc === 'Cabo Aço' && te === 'Quente' && comprTotal > 0) {
+    const est1 = comprTotal - 180;
+    document.getElementById('f_estagio1').value = est1;
+    document.getElementById('f_estagio2').value = Math.round((est1 / 2) + 20);
+  } else if (tc === 'Cabo Aço') {
+    document.getElementById('f_estagio1').value = 'N/A';
+    document.getElementById('f_estagio2').value = 'N/A';
+  }
+
+  // Chanfro: Cabo Aço = 60
+  document.getElementById('f_chanfro').value = tc === 'Cabo Aço' ? '60' : 'N/A';
+
+  // Fabricante automático para novos materiais
+  // (não altera materiais já adicionados, apenas define o padrão)
+
+  // === CHECK LIST VULCANIZAÇÃO ===
+
+  // 2ª Demão = 1ª Demão + 1h
+  if (demao1) {
+    const [h, m] = demao1.split(':').map(Number);
+    const d2h = h + 1;
+    document.getElementById('f_demao2').value = String(d2h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+
+  // Fechada: Cabo Aço = 2ª demão + 3h | Quente = +30min | Frio = +10min
+  const demao2 = document.getElementById('f_demao2').value;
+  if (demao2) {
+    const [h2, m2] = demao2.split(':').map(Number);
+    let fh, fm;
+    if (tc === 'Cabo Aço') { fh = h2 + 3; fm = m2; }
+    else if (te === 'Quente') { fh = h2; fm = m2 + 30; }
+    else if (te === 'Frio') { fh = h2; fm = m2 + 10; }
+    if (fh !== undefined) {
+      if (fm >= 60) { fh += Math.floor(fm / 60); fm = fm % 60; }
+      document.getElementById('f_hora_fechada').value = String(fh).padStart(2,'0') + ':' + String(fm).padStart(2,'0');
+    }
+  }
+
+  // Rodilhada: Frio = Sim, senão N/A
+  document.getElementById('f_rodilhada').value = te === 'Frio' ? 'Sim' : 'N/A';
+
+  // Temp Vulcanização: Quente = 150°
+  document.getElementById('f_temp_vulc').value = te === 'Quente' ? '150°' : 'N/A';
+
+  // Tempo Vulc: Quente = 45
+  document.getElementById('f_tempo_vulc').value = te === 'Quente' ? '45' : 'N/A';
+
+  // Pressão: Cabo Aço = 10 | Lona+Quente = 8
+  if (tc === 'Cabo Aço') document.getElementById('f_pressao_vulc').value = '10';
+  else if (tc === 'Lona' && te === 'Quente') document.getElementById('f_pressao_vulc').value = '8';
+  else document.getElementById('f_pressao_vulc').value = 'N/A';
+
+  // Temp Abertura Prensa: Quente = 60°
+  document.getElementById('f_temp_abertura').value = te === 'Quente' ? '60°' : 'N/A';
+
+  // Hora Abertura Prensa: Quente = fechada + 4h
+  const hFechada = document.getElementById('f_hora_fechada').value;
+  if (te === 'Quente' && hFechada) {
+    const [hf, mf] = hFechada.split(':').map(Number);
+    const ha = hf + 4;
+    document.getElementById('f_hora_abertura').value = String(ha).padStart(2,'0') + ':' + String(mf).padStart(2,'0');
+  } else if (te !== 'Quente') {
+    document.getElementById('f_hora_abertura').value = 'N/A';
+  }
+
+  // Data Teste Prensa: Quente = data do registro
+  const dataReg = document.getElementById('f_data').value;
+  document.getElementById('f_data_teste').value = te === 'Quente' ? (dataReg || 'N/A') : 'N/A';
+}
+
 /* ═══ OPEN EDITOR ═══ */
 function openEditor() {
   document.getElementById('f_tag').value = cur.tag || '';
@@ -723,7 +830,6 @@ function openEditor() {
   document.getElementById('f_ck_limpa').value = cur.ckLimpa || 'Sim';
   document.getElementById('f_ck_umidade').value = cur.ckUmidade || 'Não';
   document.getElementById('f_ck_alinhada').value = cur.ckAlinhada || 'Sim';
-  toggleTipoCorreia();
 
   document.getElementById('f_temp_ambiente').value = cur.tempAmbiente || '';
   document.getElementById('f_umidade_ambiente').value = cur.umidadeAmbiente || '';
@@ -782,9 +888,7 @@ function openEditor() {
   }
   renderFotos();
 
-  // Listener tipo correia
-  document.getElementById('f_tipo_correia').addEventListener('change', toggleTipoCorreia);
-
+  toggleTipoCorreia();
   showEditor();
 }
 
