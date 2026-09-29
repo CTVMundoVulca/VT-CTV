@@ -138,8 +138,10 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   <div style="padding:12px;display:flex;gap:8px">
     <button class="btn btn-primary btn-block" onclick="novoRegistro()">+ Novo Registro de Emenda</button>
   </div>
-  <div style="padding:0 12px 8px;display:flex;gap:8px">
-    <button class="btn btn-ghost btn-block btn-sm" onclick="abrirModalEfetivo()">👥 Gerenciar Efetivo</button>
+  <div style="padding:0 12px 8px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalEfetivo()">👥 Efetivo</button>
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalMat('emenda')">🧪 Mat. Emenda</button>
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalMat('manta')">🧱 Mat. Manta</button>
   </div>
   <div id="listContainer" class="list-view"></div>
 </div>
@@ -413,6 +415,26 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   </div>
 </div>
 
+<!-- MODAL GERENCIAR MATERIAIS -->
+<div id="modalMat" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalMat()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalMatTitle">Gerenciar Materiais</h2>
+      <button onclick="fecharModalMat()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="func-add-row">
+        <input type="text" id="novoMatNome" placeholder="Nome do material" style="text-transform:uppercase">
+        <button class="btn btn-success btn-sm" onclick="adicionarMaterial()">+</button>
+      </div>
+      <div id="matList"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-block" onclick="fecharModalMat()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -474,8 +496,18 @@ function saveFuncionarios() {
   try { localStorage.setItem(FUNC_STORE_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){}
 }
 
-const MATERIAIS_EMENDA = ['CIMENTO VIPAL','CATALISADOR VIPAL','LIGAÇÃO 0060 BLT1.2MT','LIGAÇÃO 0083 BLSC 1.5ST','LIGAÇÃO 0205 BLSC 5.0ST','SOLVENTE 0131 SOL-1 3.6','CIMENTO 0069 CIMSC-ST 3.6','CIMENTO 0065 CIMT-ST 3.6','CIMENTO 0066 CIMT-MT 3.6'];
-const MATERIAIS_MANTA = ['COBERTURA 0087 CBSC8.0ST','COBERTURA 0084 CBSC4.0ST','COBERTURA 0086 CBSC6.0ST'];
+const MATERIAIS_EMENDA_DEFAULT = ['CIMENTO VIPAL','CATALISADOR VIPAL','LIGAÇÃO 0060 BLT1.2MT','LIGAÇÃO 0083 BLSC 1.5ST','LIGAÇÃO 0205 BLSC 5.0ST','SOLVENTE 0131 SOL-1 3.6','CIMENTO 0069 CIMSC-ST 3.6','CIMENTO 0065 CIMT-ST 3.6','CIMENTO 0066 CIMT-MT 3.6'];
+const MATERIAIS_MANTA_DEFAULT = ['COBERTURA 0087 CBSC8.0ST','COBERTURA 0084 CBSC4.0ST','COBERTURA 0086 CBSC6.0ST'];
+const MAT_EMENDA_STORE = 'ctv_emenda_mat_emenda';
+const MAT_MANTA_STORE = 'ctv_emenda_mat_manta';
+let MATERIAIS_EMENDA = [];
+let MATERIAIS_MANTA = [];
+function loadMateriais() {
+  try { const s = JSON.parse(localStorage.getItem(MAT_EMENDA_STORE)); if (Array.isArray(s) && s.length) { MATERIAIS_EMENDA = s; } else { MATERIAIS_EMENDA = [...MATERIAIS_EMENDA_DEFAULT]; } } catch(e){ MATERIAIS_EMENDA = [...MATERIAIS_EMENDA_DEFAULT]; }
+  try { const s = JSON.parse(localStorage.getItem(MAT_MANTA_STORE)); if (Array.isArray(s) && s.length) { MATERIAIS_MANTA = s; } else { MATERIAIS_MANTA = [...MATERIAIS_MANTA_DEFAULT]; } } catch(e){ MATERIAIS_MANTA = [...MATERIAIS_MANTA_DEFAULT]; }
+}
+function saveMatEmenda() { try { localStorage.setItem(MAT_EMENDA_STORE, JSON.stringify(MATERIAIS_EMENDA)); } catch(e){} }
+function saveMatManta() { try { localStorage.setItem(MAT_MANTA_STORE, JSON.stringify(MATERIAIS_MANTA)); } catch(e){} }
 
 const FABRICANTES = ['VIPAFIX','BENETECH'];
 
@@ -694,6 +726,46 @@ function removerFuncionario(i) {
   saveFuncionarios();
   renderFuncList();
   showToast('Funcionário removido');
+}
+
+/* ═══ GERENCIAR MATERIAIS ═══ */
+let matModalTipo = '';
+function abrirModalMat(tipo) {
+  matModalTipo = tipo;
+  document.getElementById('modalMatTitle').textContent = tipo === 'emenda' ? 'Materiais da Emenda' : 'Materiais da Manta';
+  document.getElementById('novoMatNome').value = '';
+  document.getElementById('modalMat').style.display = '';
+  renderMatList();
+}
+function fecharModalMat() {
+  document.getElementById('modalMat').style.display = 'none';
+}
+function getMatArray() { return matModalTipo === 'emenda' ? MATERIAIS_EMENDA : MATERIAIS_MANTA; }
+function renderMatList() {
+  const arr = getMatArray();
+  const c = document.getElementById('matList');
+  c.innerHTML = arr.map((m, i) => `<div class="func-item"><div class="func-name">${esc(m)}</div><button class="func-del" onclick="removerMaterial(${i})" title="Remover">×</button></div>`).join('');
+}
+function adicionarMaterial() {
+  const nome = document.getElementById('novoMatNome').value.trim().toUpperCase();
+  if (!nome) { showToast('Informe o nome do material'); return; }
+  const arr = getMatArray();
+  if (arr.includes(nome)) { showToast('Material já existe'); return; }
+  arr.push(nome);
+  arr.sort((a, b) => a.localeCompare(b));
+  if (matModalTipo === 'emenda') saveMatEmenda(); else saveMatManta();
+  document.getElementById('novoMatNome').value = '';
+  renderMatList();
+  showToast('Material adicionado');
+}
+function removerMaterial(i) {
+  const arr = getMatArray();
+  const nome = arr[i];
+  if (!confirm('Remover ' + nome + '?')) return;
+  arr.splice(i, 1);
+  if (matModalTipo === 'emenda') saveMatEmenda(); else saveMatManta();
+  renderMatList();
+  showToast('Material removido');
 }
 
 /* ═══ FOTOS ═══ */
@@ -1190,6 +1262,7 @@ ${fotosHTML ? `<div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
 
 /* ═══ BOOT ═══ */
 loadFuncionarios();
+loadMateriais();
 loadLocal();
 applyDark();
 checkAccess();
