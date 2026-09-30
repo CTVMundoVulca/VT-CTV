@@ -423,10 +423,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   <div class="card">
     <div class="section-title"><span>11</span> LIBERAÇÃO DO CLIENTE / FISCAL</div>
     <div class="row">
-      <div><label class="fld">Liberado por</label>
-        <input type="text" id="f_lib_cliente" placeholder="Nome do Cliente / Fiscal">
+      <div><label class="fld">Liberado por <a href="#" onclick="event.preventDefault();abrirModalFiscal()" style="font-size:11px;color:var(--orange);margin-left:6px">⚙ Gerenciar</a></label>
+        <select id="f_lib_cliente" onchange="autoFillLibCliente()">
+          <option value="">Selecione</option>
+        </select>
       </div>
-      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_cliente_doc" placeholder="CPF ou matrícula"></div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_cliente_doc" readonly></div>
     </div>
     <div><label class="fld">Data</label><input type="date" id="f_lib_cliente_data"></div>
     <label class="fld">Assinatura</label>
@@ -490,6 +492,27 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     </div>
     <div class="modal-footer" style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-block" onclick="fecharModalMat()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR FISCAIS -->
+<div id="modalFiscal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalFiscal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Gerenciar Fiscais / Clientes</h2>
+      <button onclick="fecharModalFiscal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="func-add-row">
+        <input type="text" id="novoFiscalNome" placeholder="Nome completo" style="text-transform:uppercase">
+        <input type="text" id="novoFiscalDoc" placeholder="Matrícula/CPF" style="flex:0 0 130px">
+        <button class="btn btn-success btn-sm" onclick="adicionarFiscal()">+</button>
+      </div>
+      <div id="fiscalList"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-block" onclick="fecharModalFiscal()">Fechar</button>
     </div>
   </div>
 </div>
@@ -570,6 +593,27 @@ function saveMatManta() { try { localStorage.setItem(MAT_MANTA_STORE, JSON.strin
 
 const FABRICANTES = ['VIPAFIX','BENETECH'];
 
+const FISCAIS_DEFAULT = [
+  {nome:'OTÁVIO GOBBI',doc:'454828'}
+];
+const FISCAL_STORE_KEY = 'ctv_emenda_fiscais';
+let FISCAIS = [];
+function loadFiscais() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FISCAL_STORE_KEY));
+    if (Array.isArray(saved) && saved.length) { FISCAIS = saved; return; }
+  } catch(e){}
+  FISCAIS = JSON.parse(JSON.stringify(FISCAIS_DEFAULT));
+}
+function saveFiscais() {
+  try { localStorage.setItem(FISCAL_STORE_KEY, JSON.stringify(FISCAIS)); } catch(e){}
+}
+function persistFiscais() {
+  if (MODE === 'cloud' && FB) {
+    FB.setDoc(FB.doc(FB.fs, 'shared', 'emenda_fiscais'), { list: FISCAIS }).catch(err => onWriteError(err));
+  }
+  saveFiscais();
+}
 
 /* ══════════════ CONFIGURAÇÃO FIREBASE ══════════════ */
 const firebaseConfig = {
@@ -822,6 +866,55 @@ function autoFillLibSuper() {
   const sel = document.getElementById('f_lib_super');
   const f = FUNCIONARIOS.find(x => x.nome === sel.value);
   document.getElementById('f_lib_super_doc').value = f ? f.doc : '';
+}
+function autoFillLibCliente() {
+  const sel = document.getElementById('f_lib_cliente');
+  const f = FISCAIS.find(x => x.nome === sel.value);
+  document.getElementById('f_lib_cliente_doc').value = f ? f.doc : '';
+}
+
+/* ═══ GERENCIAR FISCAIS / CLIENTES ═══ */
+function fiscalOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  FISCAIS.forEach(f => { html += `<option value="${f.nome}"${f.nome === selected ? ' selected' : ''}>${f.nome}</option>`; });
+  return html;
+}
+function abrirModalFiscal() {
+  document.getElementById('modalFiscal').style.display = '';
+  document.getElementById('novoFiscalNome').value = '';
+  document.getElementById('novoFiscalDoc').value = '';
+  renderFiscalList();
+}
+function fecharModalFiscal() {
+  document.getElementById('modalFiscal').style.display = 'none';
+  const selCli = document.getElementById('f_lib_cliente');
+  if (selCli) selCli.innerHTML = fiscalOptions(cur ? cur.libCliente : '');
+}
+function renderFiscalList() {
+  const c = document.getElementById('fiscalList');
+  c.innerHTML = FISCAIS.map((f, i) => `<div class="func-item"><div class="func-name">${esc(f.nome)}</div><div class="func-doc">${esc(f.doc)}</div><button class="func-del" onclick="removerFiscal(${i})" title="Remover">×</button></div>`).join('');
+}
+function adicionarFiscal() {
+  const nome = document.getElementById('novoFiscalNome').value.trim().toUpperCase();
+  const doc = document.getElementById('novoFiscalDoc').value.trim();
+  if (!nome) { showToast('Informe o nome'); return; }
+  if (!doc) { showToast('Informe a matrícula/CPF'); return; }
+  if (FISCAIS.some(f => f.nome === nome)) { showToast('Fiscal já existe'); return; }
+  FISCAIS.push({ nome, doc });
+  FISCAIS.sort((a, b) => a.nome.localeCompare(b.nome));
+  persistFiscais();
+  document.getElementById('novoFiscalNome').value = '';
+  document.getElementById('novoFiscalDoc').value = '';
+  renderFiscalList();
+  showToast('Fiscal adicionado');
+}
+function removerFiscal(i) {
+  const nome = FISCAIS[i].nome;
+  if (!confirm('Remover ' + nome + '?')) return;
+  FISCAIS.splice(i, 1);
+  persistFiscais();
+  renderFiscalList();
+  showToast('Fiscal removido');
 }
 
 /* ═══ GERENCIAR EFETIVO ═══ */
@@ -1173,7 +1266,8 @@ function openEditor() {
   document.getElementById('f_lib_super_doc').value = cur.libSuperDoc || '';
   document.getElementById('f_lib_super_data').value = cur.libSuperData || '';
 
-  document.getElementById('f_lib_cliente').value = cur.libCliente || '';
+  const selCli = document.getElementById('f_lib_cliente');
+  selCli.innerHTML = fiscalOptions(cur.libCliente || '');
   document.getElementById('f_lib_cliente_doc').value = cur.libClienteDoc || '';
   document.getElementById('f_lib_cliente_data').value = cur.libClienteData || '';
 
@@ -1259,8 +1353,8 @@ function collectEditor() {
   cur.libSuper = document.getElementById('f_lib_super').value;
   cur.libSuperDoc = document.getElementById('f_lib_super_doc').value;
   cur.libSuperData = document.getElementById('f_lib_super_data').value;
-  cur.libCliente = document.getElementById('f_lib_cliente').value.trim();
-  cur.libClienteDoc = document.getElementById('f_lib_cliente_doc').value.trim();
+  cur.libCliente = document.getElementById('f_lib_cliente').value;
+  cur.libClienteDoc = document.getElementById('f_lib_cliente_doc').value;
   cur.libClienteData = document.getElementById('f_lib_cliente_data').value;
 }
 
@@ -1410,7 +1504,7 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadFuncionarios(); loadMateriais(); loadLocal(); applyDark();
+  loadFuncionarios(); loadMateriais(); loadFiscais(); loadLocal(); applyDark();
   checkAccess(); updateModeUI(); renderList();
 }
 function bootCloud(api) {
@@ -1418,7 +1512,7 @@ function bootCloud(api) {
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_emenda_local_backup')) localStorage.setItem('ctv_emenda_local_backup', raw); } catch(e){}
   db = { registros: [], config: { dark: false } };
-  loadFuncionarios(); loadMateriais(); applyDark();
+  loadFuncionarios(); loadMateriais(); loadFiscais(); applyDark();
   try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
   checkAccess(); updateModeUI(); renderList();
   FB.onAuthStateChanged(FB.auth, user => {
@@ -1502,6 +1596,11 @@ function startCloudListeners() {
   const matMRef = FB.doc(FB.fs, 'shared', 'emenda_mat_manta');
   cloudUnsub.push(FB.onSnapshot(matMRef, s => {
     const d = s.data(); if (d && d.list) { MATERIAIS_MANTA = d.list; saveMatManta(); }
+  }, () => {}));
+  const fiscalRef = FB.doc(FB.fs, 'shared', 'emenda_fiscais');
+  FB.getDoc(fiscalRef).then(s => { if (!s.exists()) FB.setDoc(fiscalRef, { list: JSON.parse(JSON.stringify(FISCAIS_DEFAULT)) }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(fiscalRef, s => {
+    const d = s.data(); if (d && d.list) { FISCAIS = d.list; saveFiscais(); }
   }, () => {}));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'emendas'), s => {
     const editorOpen = document.getElementById('editorView').style.display !== 'none';
