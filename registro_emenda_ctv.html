@@ -419,6 +419,21 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('supervisor')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('supervisor')">Confirmar</button></div>
   </div>
 
+  <!-- 11. LIBERAÇÃO CLIENTE/FISCAL -->
+  <div class="card">
+    <div class="section-title"><span>11</span> LIBERAÇÃO DO CLIENTE / FISCAL</div>
+    <div class="row">
+      <div><label class="fld">Liberado por</label>
+        <input type="text" id="f_lib_cliente" placeholder="Nome do Cliente / Fiscal">
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_lib_cliente_doc" placeholder="CPF ou matrícula"></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_lib_cliente_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_cliente"></canvas><div class="sig-ph" id="ph_cliente">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('cliente')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('cliente')">Confirmar</button></div>
+  </div>
+
   <!-- FOTOS -->
   <div class="card">
     <div class="section-title">📷 ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
@@ -715,6 +730,7 @@ function novoRegistro() {
     tipoProblema: 'N/A', probTemp: 'N/A', probPressao: 'N/A', probTempo: 'N/A', procRetomada: 'N/A',
     libTecnico: '', libTecnicoDoc: '', libTecnicoData: today, assTecnico: null,
     libSuper: '', libSuperDoc: '', libSuperData: today, assSupervisor: null,
+    libCliente: '', libClienteDoc: '', libClienteData: today, assCliente: null,
     fotos: [],
     criadoEm: Date.now()
   };
@@ -943,7 +959,8 @@ function limparAssinatura(id) {
   c.getContext('2d').clearRect(0, 0, c.width, c.height);
   sigState[id] = false;
   if (id === 'tecnico') cur.assTecnico = null;
-  else cur.assSupervisor = null;
+  else if (id === 'supervisor') cur.assSupervisor = null;
+  else if (id === 'cliente') cur.assCliente = null;
   const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = '';
 }
 function compressSig(canvas) {
@@ -959,7 +976,8 @@ function confirmarAssinatura(id) {
   sigState[id] = true;
   const compressed = compressSig(c);
   if (id === 'tecnico') cur.assTecnico = compressed;
-  else cur.assSupervisor = compressed;
+  else if (id === 'supervisor') cur.assSupervisor = compressed;
+  else if (id === 'cliente') cur.assCliente = compressed;
   const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none';
   showToast('Assinatura confirmada ✔️');
 }
@@ -1155,10 +1173,14 @@ function openEditor() {
   document.getElementById('f_lib_super_doc').value = cur.libSuperDoc || '';
   document.getElementById('f_lib_super_data').value = cur.libSuperData || '';
 
+  document.getElementById('f_lib_cliente').value = cur.libCliente || '';
+  document.getElementById('f_lib_cliente_doc').value = cur.libClienteDoc || '';
+  document.getElementById('f_lib_cliente_data').value = cur.libClienteData || '';
+
   // Assinaturas
-  ['tecnico', 'supervisor'].forEach(id => {
+  ['tecnico', 'supervisor', 'cliente'].forEach(id => {
     initSignature(id);
-    const src = id === 'tecnico' ? cur.assTecnico : cur.assSupervisor;
+    const src = id === 'tecnico' ? cur.assTecnico : id === 'supervisor' ? cur.assSupervisor : cur.assCliente;
     restoreSignature(id, src);
   });
 
@@ -1237,6 +1259,9 @@ function collectEditor() {
   cur.libSuper = document.getElementById('f_lib_super').value;
   cur.libSuperDoc = document.getElementById('f_lib_super_doc').value;
   cur.libSuperData = document.getElementById('f_lib_super_data').value;
+  cur.libCliente = document.getElementById('f_lib_cliente').value.trim();
+  cur.libClienteDoc = document.getElementById('f_lib_cliente_doc').value.trim();
+  cur.libClienteData = document.getElementById('f_lib_cliente_data').value;
 }
 
 function salvarRegistro(silent) {
@@ -1361,10 +1386,11 @@ ${r.obsPrensa ? `<div style="padding:4px 14px;font-size:9px"><b>Observações:</
 <tr><td>Tempo</td><td colspan="3">${esc(r.probTempo)}</td></tr>
 <tr><td>Proc. Retomada</td><td colspan="3">${esc(r.procRetomada)}</td></tr></table>
 
-<div class="sec">9/10. LIBERAÇÕES</div>
+<div class="sec">9/10/11. LIBERAÇÕES</div>
 <div class="assin-area">
 <div>${r.assTecnico ? `<img src="${r.assTecnico}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.libTecnico) || 'Técnico de Área'}</div><div class="doc">${esc(r.libTecnicoDoc)} · ${fmtData(r.libTecnicoData)}</div></div>
 <div>${r.assSupervisor ? `<img src="${r.assSupervisor}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.libSuper) || 'Supervisor de Área'}</div><div class="doc">${esc(r.libSuperDoc)} · ${fmtData(r.libSuperData)}</div></div>
+<div>${r.assCliente ? `<img src="${r.assCliente}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.libCliente) || 'Cliente / Fiscal'}</div><div class="doc">${esc(r.libClienteDoc)} · ${fmtData(r.libClienteData)}</div></div>
 </div>
 
 ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div><div class="foto-grid">${fotosHTML}</div></div>` : ''}
