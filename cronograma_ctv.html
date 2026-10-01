@@ -1,0 +1,1052 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOFTWARE PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS              ║
+  ║  © 2024-2026 CTV Consultoria Técnica em Vulcanização               ║
+  ║  CNPJ: 65.601.481/0001-36                                         ║
+  ║  Autor: Glauber Dutra                                              ║
+  ║                                                                    ║
+  ║  Este software é protegido pela Lei nº 9.609/98 (Lei do Software)  ║
+  ║  e pela Lei nº 9.610/98 (Lei de Direitos Autorais).                ║
+  ║  É vedada a reprodução, distribuição, modificação ou utilização    ║
+  ║  deste código, total ou parcialmente, sem autorização expressa     ║
+  ║  por escrito do titular dos direitos.                              ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
+<title>Cronograma — CTV</title>
+<style>
+:root {
+  --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
+  --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
+  --success: #10b981; --warn: #f59e0b; --danger: #ef4444;
+  --radius: 12px;
+  --planned-color: #43a6ea; --actual-color: #10b981;
+}
+html[data-dark="1"] {
+  --bg: #0a0f1a; --card: #131a2b; --text: #e4e8f1; --text-light: #8892a4;
+  --border: #1e2a3f; --navy: #000d1a;
+  --planned-color: #5bb5f0; --actual-color: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; max-width: 100vw; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 80px; }
+.topbar { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 90; overflow: hidden; }
+.topbar h1 { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-btn { background: var(--blue); color: #fff; border: none; padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.menu-btn:active { filter: brightness(.9); }
+.icon-btn { background: var(--navy); border: 1px solid rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; }
+.icon-btn:active { background: var(--blue); color: #fff; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--blue); margin-bottom: 10px; padding: 6px 10px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
+.section-title span { background: var(--blue); color: #fff; font-size: 11px; font-weight: 900; padding: 2px 7px; border-radius: 4px; }
+.fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 8px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
+input, select, textarea { width: 100%; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,166,234,.15); }
+textarea { resize: vertical; min-height: 60px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > div { flex: 1 1 calc(50% - 4px); min-width: 120px; }
+@media (max-width: 360px) { .row > div { flex: 1 1 100%; } }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-warn { background: var(--warn); color: #fff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; }
+
+/* lista de cronogramas */
+.list-view .reg-item { background: var(--card); margin: 8px 12px; border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); cursor: pointer; }
+.reg-item h3 { font-size: 14px; font-weight: 700; }
+.reg-item .meta { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+.reg-item .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.reg-item .progress-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+/* tarefas */
+.task-item { background: var(--bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; position: relative; }
+.task-item.done { opacity: .7; }
+.task-item.done .task-name { text-decoration: line-through; }
+.task-item.late { border-left: 3px solid var(--danger); }
+.task-item.ontime { border-left: 3px solid var(--success); }
+.task-item.pending { border-left: 3px solid var(--warn); }
+.task-header { display: flex; align-items: center; gap: 8px; }
+.task-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); background: var(--card); cursor: pointer; display: grid; place-items: center; flex: 0 0 22px; font-size: 13px; }
+.task-check.checked { background: var(--success); border-color: var(--success); color: #fff; }
+.task-name { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; word-break: break-word; }
+.task-dates { font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 30px; }
+.task-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.task-actions button { background: none; border: none; font-size: 14px; cursor: pointer; padding: 2px 4px; color: var(--text-light); }
+
+/* curva S canvas */
+.chart-container { position: relative; width: 100%; }
+.chart-container canvas { width: 100%; height: auto; display: block; }
+
+/* legenda curva S */
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal-box { background: var(--card); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+.modal-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h2 { font-size: 15px; font-weight: 700; }
+.modal-header button { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-light); padding: 0 4px; }
+.modal-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+
+/* toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: .3s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* Gantt simplificado */
+.gantt-bar-bg { height: 18px; background: var(--border); border-radius: 4px; position: relative; overflow: hidden; margin-top: 4px; }
+.gantt-bar-planned { height: 100%; background: var(--planned-color); border-radius: 4px; opacity: .35; position: absolute; top: 0; }
+.gantt-bar-actual { height: 100%; background: var(--actual-color); border-radius: 4px; position: absolute; top: 0; }
+
+/* auth overlay */
+#authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+#authOverlay.open { display: flex; }
+.auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+
+/* tabs */
+.tabs { display: flex; gap: 0; margin: 10px 12px 0; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; border: 1px solid var(--border); border-bottom: none; }
+.tab-btn { flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 700; text-align: center; background: transparent; border: none; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: .15s; }
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: var(--card); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+@media print { .topbar, .btn, .no-print { display: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN (modo nuvem) -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
+    <h3 style="margin-bottom:6px">Cronograma</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px;font-size:12px;color:var(--text-light)">Entre com seu e-mail e senha. Se ainda não tem conta, toque em "Criar conta".</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary btn-block" onclick="loginEmail()" style="margin-bottom:8px">Entrar</button>
+    <button class="btn btn-ghost btn-block" onclick="registerEmail()" style="margin-bottom:10px">Criar conta</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp">
+
+<div class="topbar">
+  <a class="menu-btn" href="index.html" onclick="return goBack()" title="Voltar ao menu principal">🏠 Menu</a>
+  <h1 id="topTitle" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Cronograma</h1>
+  <span id="userChip" style="display:none;align-items:center;gap:6px;color:#ccc;font-size:11px">
+    <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="icon-btn" onclick="logout()" title="Sair" style="width:32px;height:32px;font-size:14px">⏻</button>
+  </span>
+  <button class="icon-btn" id="darkBtn" onclick="toggleDark()" title="Tema">🌙</button>
+</div>
+
+<!-- VIEW: LISTA DE CRONOGRAMAS -->
+<div id="listView">
+  <div class="card" id="modeBanner" style="display:none">
+    <div style="margin:0;color:#8a5a00;font-size:12px">📴 Modo local (só neste aparelho).</div>
+  </div>
+  <div class="card" id="syncCard" style="display:none;padding:11px 14px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+      <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+      <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+    </div>
+  </div>
+  <div style="padding:12px;display:flex;gap:8px">
+    <button class="btn btn-primary btn-block" onclick="novoCronograma()">+ Novo Cronograma</button>
+  </div>
+  <div style="padding:0 12px 8px">
+    <button class="btn btn-ghost btn-sm" id="btnSenha" style="display:none" onclick="alterarSenha()">🔑 Alterar minha senha</button>
+  </div>
+  <div id="listContainer" class="list-view"></div>
+</div>
+
+<!-- VIEW: EDITOR DE CRONOGRAMA -->
+<div id="editorView" style="display:none">
+
+  <!-- Cabeçalho do cronograma -->
+  <div class="card">
+    <div class="section-title"><span>1</span> IDENTIFICAÇÃO DO CRONOGRAMA</div>
+    <label class="fld">Nome do Cronograma</label>
+    <input type="text" id="f_nome" placeholder="Ex: Troca de correia TC-01">
+    <div class="row" style="margin-top:4px">
+      <div>
+        <label class="fld">Local / Equipamento</label>
+        <input type="text" id="f_local" placeholder="Ex: Linha 2 — Forno">
+      </div>
+      <div>
+        <label class="fld">Responsável</label>
+        <input type="text" id="f_responsavel" placeholder="Nome">
+      </div>
+    </div>
+    <div class="row" style="margin-top:4px">
+      <div>
+        <label class="fld">Data Início</label>
+        <input type="date" id="f_data_inicio">
+      </div>
+      <div>
+        <label class="fld">Data Fim Prevista</label>
+        <input type="date" id="f_data_fim">
+      </div>
+    </div>
+    <label class="fld">Observações</label>
+    <textarea id="f_obs" rows="2" placeholder="Observações gerais"></textarea>
+  </div>
+
+  <!-- Tabs: Tarefas | Curva S | Gantt -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tabTarefas" onclick="switchTab(this)">Tarefas</button>
+    <button class="tab-btn" data-tab="tabCurvaS" onclick="switchTab(this)">Curva S</button>
+    <button class="tab-btn" data-tab="tabGantt" onclick="switchTab(this)">Gantt</button>
+  </div>
+
+  <!-- TAB: TAREFAS -->
+  <div class="tab-content active" id="tabTarefas">
+    <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border);">
+      <div class="section-title"><span>2</span> TAREFAS</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="abrirModalTarefa()">+ Nova Tarefa</button>
+        <button class="btn btn-ghost btn-sm" onclick="reorderByDate()">↕ Ordenar por data</button>
+      </div>
+      <div id="taskList"></div>
+      <div id="taskEmpty" style="text-align:center;padding:30px 10px;color:var(--text-light);font-size:13px">
+        Nenhuma tarefa adicionada.<br>Toque em "+ Nova Tarefa" para começar.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CURVA S -->
+  <div class="tab-content" id="tabCurvaS">
+    <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border);">
+      <div class="section-title"><span>📊</span> CURVA S — PREVISTO × REALIZADO</div>
+      <div class="chart-container">
+        <canvas id="curvaCanvas" width="800" height="450"></canvas>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--planned-color)"></div> Previsto</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--actual-color)"></div> Realizado</div>
+      </div>
+      <div id="curvaStats" style="margin-top:12px;font-size:12px;color:var(--text-light);text-align:center"></div>
+    </div>
+  </div>
+
+  <!-- TAB: GANTT -->
+  <div class="tab-content" id="tabGantt">
+    <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border);">
+      <div class="section-title"><span>📅</span> VISÃO GANTT</div>
+      <div id="ganttContainer" style="overflow-x:auto"></div>
+      <div id="ganttEmpty" style="text-align:center;padding:30px 10px;color:var(--text-light);font-size:13px">
+        Adicione tarefas para visualizar o Gantt.
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações do editor -->
+  <div style="padding:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-success btn-block" onclick="salvarCronograma()">💾 Salvar</button>
+  </div>
+  <div style="padding:0 12px 8px;display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportarCSV()">📄 Exportar CSV</button>
+    <button class="btn btn-danger btn-sm" style="flex:1" onclick="excluirCronograma()">🗑 Excluir</button>
+  </div>
+</div>
+
+</div><!-- mainApp -->
+
+<!-- Modal Nova/Editar Tarefa -->
+<div id="modalTarefa" style="display:none">
+  <div class="modal-overlay" onclick="fecharModalTarefa()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modalTarefaTitulo">Nova Tarefa</h2>
+        <button onclick="fecharModalTarefa()">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="fld">Nome da Tarefa</label>
+        <input type="text" id="mt_nome" placeholder="Ex: Desmontar proteção">
+        <label class="fld">Descrição (opcional)</label>
+        <textarea id="mt_desc" rows="2" placeholder="Detalhes da tarefa"></textarea>
+        <div class="row" style="margin-top:4px">
+          <div>
+            <label class="fld">Data/Hora Início Previsto</label>
+            <input type="datetime-local" id="mt_inicio_prev">
+          </div>
+          <div>
+            <label class="fld">Data/Hora Fim Previsto</label>
+            <input type="datetime-local" id="mt_fim_prev">
+          </div>
+        </div>
+        <label class="fld">Peso / Importância (1–10)</label>
+        <input type="number" id="mt_peso" min="1" max="10" value="1" style="max-width:100px">
+      </div>
+      <div class="modal-footer" style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="fecharModalTarefa()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="salvarTarefa()">Salvar Tarefa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastEl" class="toast"></div>
+
+<script>
+/* ══════════════ DARK MODE ══════════════ */
+function toggleDark() {
+  const d = document.documentElement.dataset.dark === '1' ? '0' : '1';
+  document.documentElement.dataset.dark = d;
+  db.config.dark = d === '1';
+  saveLocal();
+  document.getElementById('darkBtn').textContent = d === '1' ? '☀️' : '🌙';
+  if (document.getElementById('editorView').style.display !== 'none') renderCurvaS();
+}
+function applyDark() {
+  const d = db.config.dark ? '1' : '0';
+  document.documentElement.dataset.dark = d;
+  document.getElementById('darkBtn').textContent = d === '1' ? '☀️' : '🌙';
+}
+
+/* ══════════════ TOAST ══════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ══════════════ NAVEGAÇÃO ══════════════ */
+function goBack() {
+  if (document.getElementById('editorView').style.display !== 'none') {
+    salvarCronograma(true);
+    showList();
+    return false;
+  }
+  return true;
+}
+function showList() {
+  document.getElementById('listView').style.display = '';
+  document.getElementById('editorView').style.display = 'none';
+  document.getElementById('topTitle').textContent = 'Cronograma';
+  renderList();
+}
+
+/* ══════════════ TABS ══════════════ */
+function switchTab(btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.tab).classList.add('active');
+  if (btn.dataset.tab === 'tabCurvaS') renderCurvaS();
+  if (btn.dataset.tab === 'tabGantt') renderGantt();
+}
+
+/* ══════════════ CONFIGURAÇÃO FIREBASE ══════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
+  authDomain: "rdo-benetech.firebaseapp.com",
+  projectId: "rdo-benetech",
+  storageBucket: "rdo-benetech.firebasestorage.app",
+  messagingSenderId: "784889553730",
+  appId: "1:784889553730:web:d0dcaad912a793a80f1edb"
+};
+function isConfigured() {
+  const k = firebaseConfig.apiKey, p = firebaseConfig.projectId;
+  return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p));
+}
+
+const STORE_KEY = 'ctv_cronogramas_v1';
+let db = { cronogramas: [], config: { dark: false } };
+let cur = null;
+let curIdx = -1;
+let editingTaskIdx = -1;
+let formDirty = false;
+
+let MODE = 'local';
+let FB = null;
+let currentUser = null;
+let cloudUnsub = [];
+let booted = false;
+
+/* ══════════════ PERSISTÊNCIA ══════════════ */
+function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && d.cronogramas) db = d; } catch(e){} if (!db.config) db.config = { dark: false }; }
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+
+function persistCronograma(crono) {
+  const clean = JSON.parse(JSON.stringify(crono));
+  const i = db.cronogramas.findIndex(r => r.id === clean.id);
+  if (i >= 0) db.cronogramas[i] = clean; else db.cronogramas.push(clean);
+  if (MODE === 'cloud' && FB) {
+    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'cronogramas', clean.id), clean)
+      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .catch(err => onWriteError(err));
+    cacheSnapshot();
+    if (!navigator.onLine) setSync('offline');
+  } else { saveLocal(); }
+}
+function removeCronogramaStore(id) {
+  db.cronogramas = db.cronogramas.filter(r => r.id !== id);
+  if (MODE === 'cloud' && FB) {
+    FB.deleteDoc(FB.doc(FB.fs, 'cronogramas', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    cacheSnapshot();
+  } else { saveLocal(); }
+}
+function onWriteError(err) {
+  const code = (err && err.code) || '';
+  if (code.includes('permission-denied')) setSync('denied');
+  else if (!navigator.onLine || code.includes('unavailable')) setSync('offline');
+  else setSync('error', code);
+}
+
+/* ══════════════ LISTA DE CRONOGRAMAS ══════════════ */
+function renderList() {
+  const c = document.getElementById('listContainer');
+  const arr = db.cronogramas.slice().sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  if (!arr.length) { c.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-light)">Nenhum cronograma criado.<br>Toque em "+ Novo Cronograma" para começar.</div>'; return; }
+  c.innerHTML = arr.map((r, i) => {
+    const tasks = r.tarefas || [];
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const pctColor = pct >= 100 ? 'var(--success)' : pct > 0 ? 'var(--blue)' : 'var(--border)';
+    return '<div class="reg-item" onclick="abrirCronograma(\'' + r.id + '\')">' +
+      '<h3>' + esc(r.nome || 'Sem nome') + '</h3>' +
+      '<div class="meta">' + esc(r.local || '') + (r.responsavel ? ' · ' + esc(r.responsavel) : '') + '</div>' +
+      '<div class="meta">' + (r.dataInicio ? formatDate(r.dataInicio) : '') + (r.dataFim ? ' → ' + formatDate(r.dataFim) : '') + ' · ' + done + '/' + total + ' tarefas (' + pct + '%)</div>' +
+      '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:' + pctColor + '"></div></div>' +
+      '</div>';
+  }).join('');
+}
+
+function novoCronograma() {
+  const now = new Date();
+  cur = {
+    id: 'crono_' + now.getTime() + '_' + Math.random().toString(36).substr(2, 6),
+    nome: '',
+    local: '',
+    responsavel: '',
+    dataInicio: now.toISOString().slice(0, 10),
+    dataFim: '',
+    obs: '',
+    tarefas: [],
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString()
+  };
+  curIdx = -1;
+  formDirty = false;
+  openEditor();
+}
+
+function abrirCronograma(id) {
+  const idx = db.cronogramas.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  cur = JSON.parse(JSON.stringify(db.cronogramas[idx]));
+  curIdx = idx;
+  formDirty = false;
+  openEditor();
+}
+
+function openEditor() {
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('editorView').style.display = '';
+  document.getElementById('topTitle').textContent = cur.nome || 'Novo Cronograma';
+
+  document.getElementById('f_nome').value = cur.nome || '';
+  document.getElementById('f_local').value = cur.local || '';
+  document.getElementById('f_responsavel').value = cur.responsavel || '';
+  document.getElementById('f_data_inicio').value = cur.dataInicio || '';
+  document.getElementById('f_data_fim').value = cur.dataFim || '';
+  document.getElementById('f_obs').value = cur.obs || '';
+
+  // reset tabs
+  document.querySelectorAll('.tab-btn')[0].click();
+  renderTasks();
+}
+
+/* ══════════════ TAREFAS ══════════════ */
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  const empty = document.getElementById('taskEmpty');
+  const tasks = cur.tarefas || [];
+  if (!tasks.length) { list.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  const now = new Date();
+  list.innerHTML = tasks.map((t, i) => {
+    let status = 'pending';
+    if (t.done) status = 'done';
+    else if (t.fimPrev && new Date(t.fimPrev) < now) status = 'late';
+    else if (t.inicioPrev && new Date(t.inicioPrev) <= now) status = 'ontime';
+
+    return '<div class="task-item ' + status + '">' +
+      '<div class="task-header">' +
+        '<div class="task-check ' + (t.done ? 'checked' : '') + '" onclick="toggleTask(' + i + ')">' + (t.done ? '✓' : '') + '</div>' +
+        '<div class="task-name">' + (i + 1) + '. ' + esc(t.nome) + '</div>' +
+      '</div>' +
+      '<div class="task-dates">' +
+        'Previsto: ' + formatDT(t.inicioPrev) + ' → ' + formatDT(t.fimPrev) +
+        (t.done && t.doneAt ? '<br>Concluído: ' + formatDT(t.doneAt) : '') +
+        (t.peso && t.peso > 1 ? ' · Peso: ' + t.peso : '') +
+      '</div>' +
+      '<div class="task-actions">' +
+        '<button onclick="editarTarefa(' + i + ')" title="Editar">✏️</button>' +
+        '<button onclick="moverTarefa(' + i + ',-1)" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button onclick="moverTarefa(' + i + ',1)" title="Descer"' + (i === tasks.length - 1 ? ' disabled' : '') + '>▼</button>' +
+        '<button onclick="removerTarefa(' + i + ')" title="Remover">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleTask(i) {
+  if (!cur || !cur.tarefas[i]) return;
+  const t = cur.tarefas[i];
+  t.done = !t.done;
+  t.doneAt = t.done ? new Date().toISOString() : null;
+  formDirty = true;
+  renderTasks();
+  salvarCronograma(true);
+}
+
+function abrirModalTarefa(idx) {
+  editingTaskIdx = typeof idx === 'number' ? idx : -1;
+  const modal = document.getElementById('modalTarefa');
+  modal.style.display = '';
+  document.getElementById('modalTarefaTitulo').textContent = editingTaskIdx >= 0 ? 'Editar Tarefa' : 'Nova Tarefa';
+
+  if (editingTaskIdx >= 0 && cur.tarefas[editingTaskIdx]) {
+    const t = cur.tarefas[editingTaskIdx];
+    document.getElementById('mt_nome').value = t.nome || '';
+    document.getElementById('mt_desc').value = t.desc || '';
+    document.getElementById('mt_inicio_prev').value = toLocalDT(t.inicioPrev);
+    document.getElementById('mt_fim_prev').value = toLocalDT(t.fimPrev);
+    document.getElementById('mt_peso').value = t.peso || 1;
+  } else {
+    document.getElementById('mt_nome').value = '';
+    document.getElementById('mt_desc').value = '';
+    const lastTask = cur.tarefas.length > 0 ? cur.tarefas[cur.tarefas.length - 1] : null;
+    document.getElementById('mt_inicio_prev').value = lastTask && lastTask.fimPrev ? toLocalDT(lastTask.fimPrev) : '';
+    document.getElementById('mt_fim_prev').value = '';
+    document.getElementById('mt_peso').value = 1;
+  }
+  setTimeout(() => document.getElementById('mt_nome').focus(), 100);
+}
+function editarTarefa(i) { abrirModalTarefa(i); }
+function fecharModalTarefa() { document.getElementById('modalTarefa').style.display = 'none'; editingTaskIdx = -1; }
+
+function salvarTarefa() {
+  const nome = document.getElementById('mt_nome').value.trim();
+  if (!nome) { showToast('Informe o nome da tarefa.'); return; }
+  const inicioPrev = fromLocalDT(document.getElementById('mt_inicio_prev').value);
+  const fimPrev = fromLocalDT(document.getElementById('mt_fim_prev').value);
+  const peso = parseInt(document.getElementById('mt_peso').value) || 1;
+  const desc = document.getElementById('mt_desc').value.trim();
+
+  if (editingTaskIdx >= 0 && cur.tarefas[editingTaskIdx]) {
+    const t = cur.tarefas[editingTaskIdx];
+    t.nome = nome; t.desc = desc; t.inicioPrev = inicioPrev; t.fimPrev = fimPrev; t.peso = peso;
+  } else {
+    cur.tarefas.push({
+      id: 't_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      nome, desc, inicioPrev, fimPrev, peso,
+      done: false, doneAt: null
+    });
+  }
+  formDirty = true;
+  fecharModalTarefa();
+  renderTasks();
+}
+
+function removerTarefa(i) {
+  if (!confirm('Remover tarefa "' + cur.tarefas[i].nome + '"?')) return;
+  cur.tarefas.splice(i, 1);
+  formDirty = true;
+  renderTasks();
+}
+
+function moverTarefa(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= cur.tarefas.length) return;
+  const tmp = cur.tarefas[i];
+  cur.tarefas[i] = cur.tarefas[j];
+  cur.tarefas[j] = tmp;
+  formDirty = true;
+  renderTasks();
+}
+
+function reorderByDate() {
+  cur.tarefas.sort((a, b) => (a.inicioPrev || '').localeCompare(b.inicioPrev || ''));
+  formDirty = true;
+  renderTasks();
+  showToast('Tarefas ordenadas por data.');
+}
+
+/* ══════════════ SALVAR CRONOGRAMA ══════════════ */
+function salvarCronograma(silent) {
+  if (!cur) return;
+  cur.nome = document.getElementById('f_nome').value.trim();
+  cur.local = document.getElementById('f_local').value.trim();
+  cur.responsavel = document.getElementById('f_responsavel').value.trim();
+  cur.dataInicio = document.getElementById('f_data_inicio').value;
+  cur.dataFim = document.getElementById('f_data_fim').value;
+  cur.obs = document.getElementById('f_obs').value.trim();
+  cur.updatedAt = new Date().toISOString();
+
+  document.getElementById('topTitle').textContent = cur.nome || 'Cronograma';
+  persistCronograma(cur);
+  formDirty = false;
+  if (!silent) showToast('Cronograma salvo.');
+}
+
+function excluirCronograma() {
+  if (!cur) return;
+  if (!confirm('Excluir cronograma "' + (cur.nome || 'sem nome') + '"? Essa ação não pode ser desfeita.')) return;
+  removeCronogramaStore(cur.id);
+  cur = null; curIdx = -1;
+  showList();
+  showToast('Cronograma excluído.');
+}
+
+/* ══════════════ CURVA S ══════════════ */
+function renderCurvaS() {
+  const canvas = document.getElementById('curvaCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  const tasks = (cur && cur.tarefas) || [];
+  const stats = document.getElementById('curvaStats');
+
+  if (!tasks.length || !tasks.some(t => t.fimPrev)) {
+    canvas.width = 800 * dpr; canvas.height = 300 * dpr;
+    canvas.style.height = '300px';
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, 800, 300);
+    ctx.fillStyle = getCSS('--text-light');
+    ctx.font = '14px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Adicione tarefas com datas previstas para gerar a Curva S.', 400, 150);
+    stats.textContent = '';
+    return;
+  }
+
+  const totalWeight = tasks.reduce((s, t) => s + (t.peso || 1), 0);
+  const sortedPrev = tasks.filter(t => t.fimPrev).slice().sort((a, b) => a.fimPrev.localeCompare(b.fimPrev));
+  const sortedActual = tasks.filter(t => t.done && t.doneAt).slice().sort((a, b) => a.doneAt.localeCompare(b.doneAt));
+
+  let allDates = [];
+  sortedPrev.forEach(t => { allDates.push(t.inicioPrev || t.fimPrev); allDates.push(t.fimPrev); });
+  sortedActual.forEach(t => { allDates.push(t.doneAt); });
+  allDates.push(new Date().toISOString());
+  allDates = allDates.filter(Boolean).sort();
+
+  const minDate = new Date(allDates[0]);
+  const maxDate = new Date(allDates[allDates.length - 1]);
+  const span = Math.max(maxDate - minDate, 3600000);
+
+  const W = 800, H = 450;
+  const pad = { top: 40, right: 30, bottom: 60, left: 55 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.height = (H * canvas.clientWidth / W) + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const textColor = getCSS('--text');
+  const lightColor = getCSS('--text-light');
+  const borderColor = getCSS('--border');
+  const plannedColor = getCSS('--planned-color');
+  const actualColor = getCSS('--actual-color');
+
+  // grid
+  ctx.strokeStyle = borderColor; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (ch * i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  }
+
+  // eixo Y labels
+  ctx.fillStyle = lightColor; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (ch * (4 - i) / 4);
+    ctx.fillText((i * 25) + '%', pad.left - 8, y + 4);
+  }
+
+  // build planned curve (cumulative %)
+  let prevCum = 0;
+  let plannedPoints = [{ x: pad.left, y: pad.top + ch }];
+  sortedPrev.forEach(t => {
+    prevCum += (t.peso || 1);
+    const pct = prevCum / totalWeight;
+    const dt = new Date(t.fimPrev);
+    const x = pad.left + ((dt - minDate) / span) * cw;
+    const y = pad.top + ch * (1 - pct);
+    plannedPoints.push({ x, y });
+  });
+
+  // build actual curve
+  let actCum = 0;
+  let actualPoints = [{ x: pad.left, y: pad.top + ch }];
+  sortedActual.forEach(t => {
+    actCum += (t.peso || 1);
+    const pct = actCum / totalWeight;
+    const dt = new Date(t.doneAt);
+    const x = pad.left + ((dt - minDate) / span) * cw;
+    const y = pad.top + ch * (1 - pct);
+    actualPoints.push({ x, y });
+  });
+
+  // draw planned
+  drawCurve(ctx, plannedPoints, plannedColor, 3);
+  // draw actual
+  if (actualPoints.length > 1) drawCurve(ctx, actualPoints, actualColor, 3);
+
+  // draw points
+  plannedPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, plannedColor, 4); });
+  actualPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, actualColor, 4); });
+
+  // eixo X labels
+  ctx.fillStyle = lightColor; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  const nLabels = Math.min(6, Math.ceil(span / 86400000));
+  for (let i = 0; i <= nLabels; i++) {
+    const dt = new Date(minDate.getTime() + (span * i / nLabels));
+    const x = pad.left + (cw * i / nLabels);
+    ctx.fillText(formatDateShort(dt), x, H - pad.bottom + 18);
+  }
+
+  // eixo titles
+  ctx.fillStyle = textColor; ctx.font = 'bold 12px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Tempo', W / 2, H - 8);
+  ctx.save();
+  ctx.translate(14, pad.top + ch / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Progresso (%)', 0, 0);
+  ctx.restore();
+
+  // stats
+  const donePct = Math.round((actCum / totalWeight) * 100);
+  const prevPctNow = calcPlannedPctAt(tasks, totalWeight, new Date());
+  const spi = prevPctNow > 0 ? (donePct / prevPctNow).toFixed(2) : '—';
+  stats.innerHTML = 'Realizado: <b>' + donePct + '%</b> · Previsto até agora: <b>' + prevPctNow + '%</b> · SPI: <b>' + spi + '</b>' +
+    (parseFloat(spi) < 1 ? ' (atrasado)' : parseFloat(spi) >= 1 ? ' (no prazo ou adiantado)' : '');
+}
+
+function calcPlannedPctAt(tasks, totalWeight, refDate) {
+  let cum = 0;
+  tasks.forEach(t => {
+    if (t.fimPrev && new Date(t.fimPrev) <= refDate) cum += (t.peso || 1);
+  });
+  return Math.round((cum / totalWeight) * 100);
+}
+
+function drawCurve(ctx, pts, color, lw) {
+  if (pts.length < 2) return;
+  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    if (pts.length > 2 && i < pts.length - 1) {
+      const xc = (pts[i].x + pts[i + 1].x) / 2;
+      const yc = (pts[i].y + pts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+    } else {
+      ctx.lineTo(pts[i].x, pts[i].y);
+    }
+  }
+  ctx.stroke();
+}
+
+function drawDot(ctx, x, y, color, r) {
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(x, y, r - 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, r - 2.5, 0, Math.PI * 2); ctx.fill();
+}
+
+function getCSS(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+/* ══════════════ GANTT ══════════════ */
+function renderGantt() {
+  const container = document.getElementById('ganttContainer');
+  const empty = document.getElementById('ganttEmpty');
+  const tasks = (cur && cur.tarefas) || [];
+
+  if (!tasks.length || !tasks.some(t => t.fimPrev)) {
+    container.innerHTML = ''; empty.style.display = ''; return;
+  }
+  empty.style.display = 'none';
+
+  let allDates = [];
+  const now = new Date();
+  tasks.forEach(t => {
+    if (t.inicioPrev) allDates.push(new Date(t.inicioPrev));
+    if (t.fimPrev) allDates.push(new Date(t.fimPrev));
+    if (t.doneAt) allDates.push(new Date(t.doneAt));
+  });
+  allDates.push(now);
+  const minD = new Date(Math.min(...allDates));
+  const maxD = new Date(Math.max(...allDates));
+  const span = Math.max(maxD - minD, 3600000);
+
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:400px">';
+  html += '<thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);width:35%">Tarefa</th>';
+  html += '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Linha do tempo</th></tr></thead><tbody>';
+
+  tasks.forEach((t, i) => {
+    const ini = t.inicioPrev ? new Date(t.inicioPrev) : null;
+    const fim = t.fimPrev ? new Date(t.fimPrev) : null;
+    const done = t.doneAt ? new Date(t.doneAt) : null;
+
+    let pLeft = 0, pWidth = 0;
+    if (ini && fim) {
+      pLeft = ((ini - minD) / span) * 100;
+      pWidth = Math.max(((fim - ini) / span) * 100, 1);
+    }
+    let aLeft = 0, aWidth = 0;
+    if (ini && done) {
+      aLeft = ((ini - minD) / span) * 100;
+      aWidth = Math.max(((done - ini) / span) * 100, 1);
+    }
+
+    const rowBg = t.done ? 'rgba(16,185,129,.06)' : '';
+    html += '<tr style="background:' + rowBg + '">';
+    html += '<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600;' + (t.done ? 'text-decoration:line-through;opacity:.6' : '') + '">' + (i + 1) + '. ' + esc(t.nome) + '</td>';
+    html += '<td style="padding:6px 8px;border-bottom:1px solid var(--border)">';
+    html += '<div class="gantt-bar-bg">';
+    if (pWidth > 0) html += '<div class="gantt-bar-planned" style="left:' + pLeft + '%;width:' + pWidth + '%"></div>';
+    if (aWidth > 0) html += '<div class="gantt-bar-actual" style="left:' + aLeft + '%;width:' + aWidth + '%"></div>';
+    html += '</div></td></tr>';
+  });
+
+  // today marker info
+  const todayPct = ((now - minD) / span) * 100;
+  html += '</tbody></table>';
+  html += '<div style="position:relative;height:12px;margin-top:2px"><div style="position:absolute;left:calc(35% + ' + (todayPct * 0.65) + '%);width:1px;height:10px;background:var(--danger)"></div><div style="position:absolute;left:calc(35% + ' + (todayPct * 0.65) + '% + 4px);font-size:9px;color:var(--danger);white-space:nowrap">Hoje</div></div>';
+
+  container.innerHTML = html;
+}
+
+/* ══════════════ EXPORTAR CSV ══════════════ */
+function exportarCSV() {
+  if (!cur || !cur.tarefas.length) { showToast('Nenhuma tarefa para exportar.'); return; }
+  let csv = '﻿"#","Tarefa","Descrição","Início Previsto","Fim Previsto","Peso","Concluída","Data Conclusão"\n';
+  cur.tarefas.forEach((t, i) => {
+    csv += '"' + (i + 1) + '","' + (t.nome || '').replace(/"/g, '""') + '","' + (t.desc || '').replace(/"/g, '""') + '","' +
+      formatDT(t.inicioPrev) + '","' + formatDT(t.fimPrev) + '","' + (t.peso || 1) + '","' +
+      (t.done ? 'Sim' : 'Não') + '","' + (t.done ? formatDT(t.doneAt) : '') + '"\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = (cur.nome || 'cronograma').replace(/[^a-zA-Z0-9À-ÿ\s_-]/g, '') + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV exportado.');
+}
+
+/* ══════════════ UTILIDADES ══════════════ */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function formatDate(s) { if (!s) return ''; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
+function formatDateShort(d) { return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2); }
+function formatDT(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  return d.toLocaleDateString('pt-BR') + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+function toLocalDT(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off * 60000);
+  return local.toISOString().slice(0, 16);
+}
+function fromLocalDT(s) {
+  if (!s) return '';
+  return new Date(s).toISOString();
+}
+
+/* ══════════════ CLOUD / AUTH ══════════════ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  MODE = 'local';
+  loadLocal(); applyDark();
+  updateModeUI(); renderList();
+}
+function bootCloud(api) {
+  if (booted) return; booted = true;
+  MODE = 'cloud'; FB = api;
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_crono_local_backup')) localStorage.setItem('ctv_crono_local_backup', raw); } catch(e){}
+  db = { cronogramas: [], config: { dark: false } };
+  loadLocal();
+  applyDark(); updateModeUI(); renderList();
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+    else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
+  });
+  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard'); if (!card) return;
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const dot = document.getElementById('syncDot'), txt = document.getElementById('syncText');
+  const email = currentUser ? (currentUser.email || '') : '';
+  let color = '#2E7D32', msg = '';
+  if (state === 'ok') { color = '#2E7D32'; msg = 'Sincronizado na nuvem' + (email ? (' · ' + email) : ''); }
+  else if (state === 'connecting') { color = '#999'; msg = 'Conectando…' + (email ? (' · ' + email) : ''); }
+  else if (state === 'offline') { color = '#F9A825'; msg = 'Offline — salvo neste aparelho; sincroniza ao voltar a internet.'; }
+  else if (state === 'denied') { color = '#E53935'; msg = 'SEM PERMISSÃO de acesso. Verifique a regra do Firestore' + (email ? (' — você: ' + email) : '') + '.'; }
+  else if (state === 'error') { color = '#E53935'; msg = 'Falha ao salvar na nuvem' + (extra ? (' (' + extra + ')') : '') + '.'; }
+  dot.style.background = color; txt.textContent = msg;
+}
+
+function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
+function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
+function traduzAuth(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('invalid-email')) return 'E-mail inválido.';
+  if (c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Use "Entrar".';
+  if (c.includes('weak-password')) return 'Senha fraca (mín. 6 caracteres).';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('invalid-login')) return 'E-mail ou senha incorretos.';
+  if (c.includes('user-not-found')) return 'Conta não encontrada. Toque em "Criar conta".';
+  if (c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde e tente de novo.';
+  if (c.includes('network')) return 'Sem conexão. Verifique a internet.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+function loginEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || !pass) { authError('Preencha e-mail e senha.'); return; }
+  FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function registerEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || pass.length < 6) { authError('Informe e-mail e senha de ao menos 6 caracteres.'); return; }
+  FB.createUserWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function resetSenha() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { authError('Digite seu e-mail no campo acima para enviar o link.'); return; }
+  FB.sendPasswordResetEmail(FB.auth, email).then(() => authInfo('Enviamos um link para redefinir a senha no seu e-mail.')).catch(err => authError(traduzAuth(err)));
+}
+function alterarSenha() {
+  if (!FB || !currentUser) return;
+  const nova = prompt('Nova senha (mín. 6 caracteres):');
+  if (!nova) return;
+  if (nova.length < 6) { showToast('Senha muito curta (mín. 6).'); return; }
+  FB.updatePassword(currentUser, nova).then(() => showToast('Senha alterada.')).catch(err => {
+    if (err && err.code && err.code.includes('recent-login')) {
+      FB.sendPasswordResetEmail(FB.auth, currentUser.email).then(() => showToast('Por segurança, enviamos um link de troca ao seu e-mail.')).catch(() => showToast('Entre novamente para trocar a senha.'));
+    } else showToast('Não foi possível alterar a senha.');
+  });
+}
+function logout() { if (FB) FB.signOut(FB.auth); }
+
+function startCloudListeners() {
+  clearCloudListeners();
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'cronogramas'), s => {
+    const editorOpen = document.getElementById('editorView').style.display !== 'none';
+    const editingId = (editorOpen && cur) ? cur.id : null;
+    db.cronogramas = s.docs.map(d => d.data());
+    cacheSnapshot();
+    setSync(navigator.onLine ? 'ok' : 'offline');
+    if (editingId) {
+      const freshIdx = db.cronogramas.findIndex(r => r.id === editingId);
+      if (freshIdx >= 0) {
+        curIdx = freshIdx;
+        if (!formDirty) { cur = JSON.parse(JSON.stringify(db.cronogramas[freshIdx])); openEditor(); }
+      }
+    }
+    if (document.getElementById('listView').style.display !== 'none') renderList();
+  }, err => {
+    const code = (err && err.code) || '';
+    if (code.includes('permission-denied')) setSync('denied'); else setSync('error', code);
+  }));
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch(e){} }); cloudUnsub = []; }
+
+function updateModeUI() {
+  const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
+}
+function showUserChip(user) {
+  const c = document.getElementById('userChip'); if (c) { c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; }
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = '';
+}
+function showAuth() {
+  const c = document.getElementById('userChip'); if (c) c.style.display = 'none';
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none';
+  document.getElementById('authOverlay').classList.add('open');
+}
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
+/* ═══ BOOT ═══ */
+document.getElementById('editorView').addEventListener('input', function() { formDirty = true; });
+document.getElementById('editorView').addEventListener('change', function() { formDirty = true; });
+
+window.__CRONO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+if (!window.__CRONO.wantCloud) bootLocal();
+
+(function(){
+  console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
+  console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 e Lei nº 9.610/98.','font-size:11px;color:#333');
+})();
+</script>
+<script type="module">
+  const R = window.__CRONO;
+  if (R && R.wantCloud) {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
+      ]);
+      const app = appMod.initializeApp(R.firebaseConfig);
+      const auth = authMod.getAuth(app);
+      const fs = fsMod.getFirestore(app);
+      try { await fsMod.enableIndexedDbPersistence(fs); } catch(e){}
+      R.bootCloud({
+        app, auth, fs,
+        signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+        createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
+        sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+        updatePassword: authMod.updatePassword,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        signOut: authMod.signOut,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
+        serverTimestamp: fsMod.serverTimestamp
+      });
+    } catch(e) {
+      console.warn('Firebase indisponível — modo local.', e);
+      R.bootLocal();
+    }
+  }
+</script>
+<div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script src="app-update.js"></script>
+</body>
+</html>
