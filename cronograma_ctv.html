@@ -210,7 +210,7 @@ textarea { resize: vertical; min-height: 60px; }
   <!-- Tabs: Tarefas | Curva S | Gantt -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="tabTarefas" onclick="switchTab(this)">Tarefas</button>
-    <button class="tab-btn" data-tab="tabCurvaS" onclick="switchTab(this)">Curva S</button>
+    <button class="tab-btn" data-tab="tabDashboard" onclick="switchTab(this)">Dashboard</button>
     <button class="tab-btn" data-tab="tabGantt" onclick="switchTab(this)">Gantt</button>
   </div>
 
@@ -254,18 +254,36 @@ textarea { resize: vertical; min-height: 60px; }
     </div>
   </div>
 
-  <!-- TAB: CURVA S -->
-  <div class="tab-content" id="tabCurvaS">
-    <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border);">
-      <div class="section-title"><span>📊</span> CURVA S — PREVISTO × REALIZADO</div>
-      <div class="chart-container">
-        <canvas id="curvaCanvas" width="800" height="450"></canvas>
+  <!-- TAB: DASHBOARD -->
+  <div class="tab-content" id="tabDashboard">
+    <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border); padding:12px;">
+      <!-- KPI Cards -->
+      <div id="dashKPIs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"></div>
+      <!-- Progresso + Status -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-light);margin-bottom:6px">Progresso</div>
+          <canvas id="gaugeCanvas" width="200" height="200" style="display:block;margin:0 auto;max-width:120px;max-height:120px"></canvas>
+          <div id="gaugePct" style="font-size:20px;font-weight:800;margin-top:-4px;color:var(--text)"></div>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-light);margin-bottom:8px">Status das Tarefas</div>
+          <div id="dashStatusBars"></div>
+        </div>
       </div>
-      <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--planned-color)"></div> Previsto</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--actual-color)"></div> Realizado</div>
+      <!-- SPI Indicator -->
+      <div id="dashSPI" style="background:var(--bg);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px"></div>
+      <!-- Curva S -->
+      <div style="background:var(--bg);border-radius:10px;padding:12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-light);margin-bottom:8px">Curva S — Previsto × Realizado</div>
+        <div class="chart-container">
+          <canvas id="curvaCanvas" width="800" height="450"></canvas>
+        </div>
+        <div class="chart-legend" style="margin-top:8px">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--planned-color)"></div> Previsto</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--actual-color)"></div> Realizado</div>
+        </div>
       </div>
-      <div id="curvaStats" style="margin-top:12px;font-size:12px;color:var(--text-light);text-align:center"></div>
     </div>
   </div>
 
@@ -336,7 +354,7 @@ function toggleDark() {
   db.config.dark = d === '1';
   saveLocal();
   document.getElementById('darkBtn').textContent = d === '1' ? '☀️' : '🌙';
-  if (document.getElementById('editorView').style.display !== 'none') renderCurvaS();
+  if (document.getElementById('editorView').style.display !== 'none') renderDashboard();
 }
 function applyDark() {
   const d = db.config.dark ? '1' : '0';
@@ -373,7 +391,7 @@ function switchTab(btn) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(btn.dataset.tab).classList.add('active');
-  if (btn.dataset.tab === 'tabCurvaS') renderCurvaS();
+  if (btn.dataset.tab === 'tabDashboard') renderDashboard();
   if (btn.dataset.tab === 'tabGantt') renderGantt();
 }
 
@@ -680,35 +698,152 @@ function excluirCronograma() {
 }
 
 /* ══════════════ CURVA S ══════════════ */
-function renderCurvaS() {
+function renderDashboard() {
+  const tasks = (cur && cur.tarefas) || [];
+  const now = new Date();
+
+  let totalMin = 0, doneMin = 0, doneCount = 0, lateCount = 0, ontimeCount = 0, pendingCount = 0;
+  let minStart = null, maxEnd = null;
+  const totalWeight = tasks.reduce((s, t) => s + (t.peso || 1), 0);
+
+  tasks.forEach(t => {
+    if (t.inicioPrev && t.fimPrev) {
+      const s = new Date(t.inicioPrev), e = new Date(t.fimPrev);
+      const dm = (e - s) / 60000;
+      totalMin += dm;
+      if (!minStart || s < minStart) minStart = s;
+      if (!maxEnd || e > maxEnd) maxEnd = e;
+    }
+    if (t.done) { doneCount++; if (t.inicioPrev && t.fimPrev) doneMin += (new Date(t.fimPrev) - new Date(t.inicioPrev)) / 60000; }
+    else if (t.fimPrev && new Date(t.fimPrev) < now) lateCount++;
+    else if (t.inicioPrev && new Date(t.inicioPrev) <= now) ontimeCount++;
+    else pendingCount++;
+  });
+
+  const totalHrs = totalMin / 60;
+  const doneHrs = doneMin / 60;
+  const restHrs = Math.max(0, totalHrs - doneHrs);
+  const donePct = totalWeight > 0 ? Math.round((tasks.filter(t=>t.done).reduce((s,t)=>s+(t.peso||1),0)) / totalWeight * 100) : 0;
+  const prevPctNow = calcPlannedPctAt(tasks, totalWeight, now);
+  const spiVal = prevPctNow > 0 ? donePct / prevPctNow : null;
+
+  function fmtH(h) { return h >= 1 ? h.toFixed(1).replace('.', ',') + 'h' : Math.round(h * 60) + 'min'; }
+
+  // KPI cards
+  const kpis = document.getElementById('dashKPIs');
+  kpis.innerHTML =
+    kpiCard('⏱', 'Total', fmtH(totalHrs), '--blue') +
+    kpiCard('✅', 'Executado', fmtH(doneHrs), '--success') +
+    kpiCard('⏳', 'Restante', fmtH(restHrs), '--warn') +
+    kpiCard('📋', 'Tarefas', doneCount + '/' + tasks.length, '--text');
+
+  // Gauge
+  renderGauge(donePct);
+
+  // Status bars
+  const sb = document.getElementById('dashStatusBars');
+  const total = tasks.length || 1;
+  sb.innerHTML =
+    statusRow('Concluídas', doneCount, total, 'var(--success)') +
+    statusRow('Em andamento', ontimeCount, total, 'var(--blue)') +
+    statusRow('Atrasadas', lateCount, total, 'var(--danger)') +
+    statusRow('Pendentes', pendingCount, total, 'var(--warn)');
+
+  // SPI
+  const spiEl = document.getElementById('dashSPI');
+  let spiColor = 'var(--success)', spiIcon = '🟢', spiLabel = 'No prazo';
+  if (spiVal === null) { spiColor = 'var(--text-light)'; spiIcon = '⚪'; spiLabel = 'Sem dados'; }
+  else if (spiVal < 0.9) { spiColor = 'var(--danger)'; spiIcon = '🔴'; spiLabel = 'Atrasado'; }
+  else if (spiVal < 1) { spiColor = 'var(--warn)'; spiIcon = '🟡'; spiLabel = 'Atenção'; }
+  else { spiLabel = 'No prazo'; }
+
+  spiEl.innerHTML =
+    '<span style="font-size:20px">' + spiIcon + '</span>' +
+    '<div style="flex:1">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-light)">SPI — Índice de Performance</div>' +
+      '<div style="font-size:16px;font-weight:800;color:' + spiColor + '">' + (spiVal !== null ? spiVal.toFixed(2) : '—') + ' <span style="font-size:11px;font-weight:600">' + spiLabel + '</span></div>' +
+    '</div>' +
+    '<div style="text-align:right;font-size:10px;color:var(--text-light);line-height:1.5">' +
+      'Previsto: ' + prevPctNow + '%<br>Realizado: ' + donePct + '%' +
+    '</div>';
+
+  // S-Curve
+  renderCurvaS(tasks, totalWeight);
+}
+
+function kpiCard(icon, label, value, colorVar) {
+  return '<div style="background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center">' +
+    '<div style="font-size:16px;margin-bottom:2px">' + icon + '</div>' +
+    '<div style="font-size:18px;font-weight:800;color:var(' + colorVar + ')">' + value + '</div>' +
+    '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-light)">' + label + '</div>' +
+  '</div>';
+}
+
+function statusRow(label, count, total, color) {
+  const pct = Math.round(count / total * 100);
+  return '<div style="margin-bottom:6px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;margin-bottom:2px">' +
+      '<span>' + label + '</span><span style="color:' + color + '">' + count + '</span>' +
+    '</div>' +
+    '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">' +
+      '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;transition:width .4s"></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderGauge(pct) {
+  const canvas = document.getElementById('gaugeCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const size = 120;
+  canvas.width = size * dpr; canvas.height = size * dpr;
+  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+
+  const cx = size / 2, cy = size / 2, r = 46, lw = 10;
+  const startA = 0.75 * Math.PI, endA = 2.25 * Math.PI;
+  const progA = startA + (endA - startA) * (pct / 100);
+
+  ctx.strokeStyle = getCSS('--border'); ctx.lineWidth = lw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(cx, cy, r, startA, endA); ctx.stroke();
+
+  if (pct > 0) {
+    const grad = ctx.createLinearGradient(0, size, size, 0);
+    grad.addColorStop(0, getCSS('--blue'));
+    grad.addColorStop(1, getCSS('--success'));
+    ctx.strokeStyle = grad; ctx.lineWidth = lw; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, cy, r, startA, progA); ctx.stroke();
+  }
+
+  ctx.fillStyle = getCSS('--text'); ctx.font = 'bold 22px -apple-system, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(pct + '%', cx, cy);
+  document.getElementById('gaugePct').textContent = '';
+}
+
+function curvaLogistica(x) {
+  return 1 / (1 + Math.exp(-10 * (x - 0.5)));
+}
+
+function renderCurvaS(tasks, totalWeight) {
   const canvas = document.getElementById('curvaCanvas');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const tasks = (cur && cur.tarefas) || [];
-  const stats = document.getElementById('curvaStats');
 
   const container = canvas.parentElement;
   const W = container.clientWidth || 350;
-  const H = Math.max(220, Math.min(400, Math.round(W * 0.55)));
-
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  const H = Math.max(200, Math.min(350, Math.round(W * 0.5)));
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   if (!tasks.length || !tasks.some(t => t.fimPrev)) {
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = getCSS('--text-light');
-    ctx.font = '13px -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Adicione tarefas com datas previstas', W / 2, H / 2 - 8);
-    ctx.fillText('para gerar a Curva S.', W / 2, H / 2 + 12);
-    stats.textContent = '';
+    ctx.fillStyle = getCSS('--text-light'); ctx.font = '12px -apple-system, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Adicione tarefas para gerar a Curva S.', W / 2, H / 2);
     return;
   }
 
-  const totalWeight = tasks.reduce((s, t) => s + (t.peso || 1), 0);
   const sortedPrev = tasks.filter(t => t.fimPrev).slice().sort((a, b) => a.fimPrev.localeCompare(b.fimPrev));
   const sortedActual = tasks.filter(t => t.done && t.doneAt).slice().sort((a, b) => a.doneAt.localeCompare(b.doneAt));
 
@@ -722,13 +857,11 @@ function renderCurvaS() {
   const maxDate = new Date(allDates[allDates.length - 1]);
   const span = Math.max(maxDate - minDate, 3600000);
 
-  const pad = { top: 28, right: 16, bottom: 54, left: 42 };
+  const pad = { top: 20, right: 14, bottom: 48, left: 38 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top - pad.bottom;
 
   ctx.clearRect(0, 0, W, H);
-
-  const textColor = getCSS('--text');
   const lightColor = getCSS('--text-light');
   const borderColor = getCSS('--border');
   const plannedColor = getCSS('--planned-color');
@@ -739,71 +872,98 @@ function renderCurvaS() {
     const y = pad.top + (ch * i / 4);
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
   }
-
-  ctx.fillStyle = lightColor; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = lightColor; ctx.font = '9px -apple-system, sans-serif'; ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (ch * (4 - i) / 4);
-    ctx.fillText((i * 25) + '%', pad.left - 5, y + 3);
+    ctx.fillText((i * 25) + '%', pad.left - 4, y + 3);
   }
 
+  // Planned S-Curve using logistic function
   let prevCum = 0;
-  let plannedPoints = [{ x: pad.left, y: pad.top + ch }];
+  let plannedSteps = [{ t: 0, pct: 0 }];
   sortedPrev.forEach(t => {
     prevCum += (t.peso || 1);
-    const pct = prevCum / totalWeight;
+    const linearPct = prevCum / totalWeight;
     const dt = new Date(t.fimPrev);
-    const x = pad.left + ((dt - minDate) / span) * cw;
-    const y = pad.top + ch * (1 - pct);
-    plannedPoints.push({ x, y });
+    const tNorm = (dt - minDate) / span;
+    plannedSteps.push({ t: tNorm, pct: linearPct });
   });
 
+  const NUM_PTS = 80;
+  let plannedPoints = [];
+  for (let i = 0; i <= NUM_PTS; i++) {
+    const tNorm = i / NUM_PTS;
+    let linearPct = 0;
+    for (let j = plannedSteps.length - 1; j >= 0; j--) {
+      if (tNorm >= plannedSteps[j].t) { linearPct = plannedSteps[j].pct; break; }
+    }
+    const sPct = curvaLogistica(linearPct);
+    const x = pad.left + tNorm * cw;
+    const y = pad.top + ch * (1 - sPct);
+    plannedPoints.push({ x, y });
+  }
+
+  // Actual S-Curve
   let actCum = 0;
-  let actualPoints = [{ x: pad.left, y: pad.top + ch }];
+  let actualSteps = [{ t: 0, pct: 0 }];
   sortedActual.forEach(t => {
     actCum += (t.peso || 1);
-    const pct = actCum / totalWeight;
+    const linearPct = actCum / totalWeight;
     const dt = new Date(t.doneAt);
-    const x = pad.left + ((dt - minDate) / span) * cw;
-    const y = pad.top + ch * (1 - pct);
-    actualPoints.push({ x, y });
+    const tNorm = Math.min(1, Math.max(0, (dt - minDate) / span));
+    actualSteps.push({ t: tNorm, pct: linearPct });
   });
 
-  function ensureIncreasingX(pts) {
-    for (let i = 1; i < pts.length; i++) {
-      if (pts[i].x <= pts[i - 1].x) pts[i].x = pts[i - 1].x + 0.5;
+  let actualPoints = [];
+  if (actualSteps.length > 1) {
+    for (let i = 0; i <= NUM_PTS; i++) {
+      const tNorm = i / NUM_PTS;
+      let linearPct = 0;
+      for (let j = actualSteps.length - 1; j >= 0; j--) {
+        if (tNorm >= actualSteps[j].t) { linearPct = actualSteps[j].pct; break; }
+      }
+      const sPct = curvaLogistica(linearPct);
+      const x = pad.left + tNorm * cw;
+      const y = pad.top + ch * (1 - sPct);
+      actualPoints.push({ x, y });
     }
   }
-  ensureIncreasingX(plannedPoints);
-  ensureIncreasingX(actualPoints);
 
-  drawCurve(ctx, plannedPoints, plannedColor, 2.5);
-  if (actualPoints.length > 1) drawCurve(ctx, actualPoints, actualColor, 2.5);
+  // Draw filled area under planned curve
+  ctx.fillStyle = plannedColor.replace(')', ',.08)').replace('rgb', 'rgba');
+  ctx.beginPath();
+  ctx.moveTo(plannedPoints[0].x, pad.top + ch);
+  plannedPoints.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(plannedPoints[plannedPoints.length - 1].x, pad.top + ch);
+  ctx.closePath(); ctx.fill();
 
-  plannedPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, plannedColor, 3.5); });
-  actualPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, actualColor, 3.5); });
+  // Draw curves
+  ctx.strokeStyle = plannedColor; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(plannedPoints[0].x, plannedPoints[0].y);
+  for (let i = 1; i < plannedPoints.length; i++) ctx.lineTo(plannedPoints[i].x, plannedPoints[i].y);
+  ctx.stroke();
 
-  ctx.fillStyle = lightColor; ctx.font = '9px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  if (actualPoints.length > 1) {
+    ctx.strokeStyle = actualColor; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(actualPoints[0].x, actualPoints[0].y);
+    for (let i = 1; i < actualPoints.length; i++) ctx.lineTo(actualPoints[i].x, actualPoints[i].y);
+    ctx.stroke();
+  }
+
+  // X-axis labels
+  ctx.fillStyle = lightColor; ctx.font = '8px -apple-system, sans-serif'; ctx.textAlign = 'center';
   const nLabels = Math.min(5, Math.max(3, Math.ceil(span / (8 * 3600000)) + 1));
   for (let i = 0; i <= nLabels; i++) {
     const dt = new Date(minDate.getTime() + (span * i / nLabels));
     const x = pad.left + (cw * i / nLabels);
-    ctx.fillText(('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2), x, H - pad.bottom + 13);
-    ctx.fillText(('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2), x, H - pad.bottom + 24);
+    ctx.fillText(('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2), x, H - pad.bottom + 12);
+    ctx.fillText(('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2), x, H - pad.bottom + 22);
   }
 
-  ctx.fillStyle = textColor; ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('Tempo', W / 2, H - 5);
-  ctx.save();
-  ctx.translate(11, pad.top + ch / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('Progresso (%)', 0, 0);
-  ctx.restore();
-
-  const donePct = Math.round((actCum / totalWeight) * 100);
-  const prevPctNow = calcPlannedPctAt(tasks, totalWeight, new Date());
-  const spi = prevPctNow > 0 ? (donePct / prevPctNow).toFixed(2) : '—';
-  stats.innerHTML = 'Realizado: <b>' + donePct + '%</b> · Previsto até agora: <b>' + prevPctNow + '%</b> · SPI: <b>' + spi + '</b>' +
-    (parseFloat(spi) < 1 ? ' (atrasado)' : parseFloat(spi) >= 1 ? ' (no prazo ou adiantado)' : '');
+  ctx.fillStyle = getCSS('--text'); ctx.font = 'bold 9px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Tempo', W / 2, H - 4);
+  ctx.save(); ctx.translate(9, pad.top + ch / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Progresso (%)', 0, 0); ctx.restore();
 }
 
 function calcPlannedPctAt(tasks, totalWeight, refDate) {
@@ -812,50 +972,6 @@ function calcPlannedPctAt(tasks, totalWeight, refDate) {
     if (t.fimPrev && new Date(t.fimPrev) <= refDate) cum += (t.peso || 1);
   });
   return Math.round((cum / totalWeight) * 100);
-}
-
-function drawCurve(ctx, pts, color, lw) {
-  if (pts.length < 2) return;
-  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  if (pts.length === 2) { ctx.lineTo(pts[1].x, pts[1].y); ctx.stroke(); return; }
-  const n = pts.length, slope = [], tan = [];
-  for (let k = 0; k < n - 1; k++) {
-    const dx = pts[k + 1].x - pts[k].x;
-    slope[k] = dx > 0.01 ? (pts[k + 1].y - pts[k].y) / dx : 0;
-  }
-  tan[0] = slope[0];
-  for (let k = 1; k < n - 1; k++) {
-    if (slope[k - 1] * slope[k] <= 0) tan[k] = 0;
-    else tan[k] = (slope[k - 1] + slope[k]) / 2;
-  }
-  tan[n - 1] = slope[n - 2];
-  for (let k = 0; k < n - 1; k++) {
-    if (Math.abs(slope[k]) < 1e-8) { tan[k] = 0; tan[k + 1] = 0; }
-    else {
-      const a = tan[k] / slope[k], b = tan[k + 1] / slope[k];
-      const h = Math.hypot(a, b);
-      if (h > 3) { const s = 3 / h; tan[k] = s * a * slope[k]; tan[k + 1] = s * b * slope[k]; }
-    }
-  }
-  for (let k = 0; k < n - 1; k++) {
-    const dx = pts[k + 1].x - pts[k].x;
-    ctx.bezierCurveTo(
-      pts[k].x + dx / 3, pts[k].y + tan[k] * dx / 3,
-      pts[k + 1].x - dx / 3, pts[k + 1].y - tan[k + 1] * dx / 3,
-      pts[k + 1].x, pts[k + 1].y);
-  }
-  ctx.stroke();
-}
-
-function drawDot(ctx, x, y, color, r) {
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(x, y, r - 1.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(x, y, r - 2.5, 0, Math.PI * 2); ctx.fill();
 }
 
 function getCSS(v) {
@@ -975,23 +1091,33 @@ function exportarCSV() {
 /* ══════════════ IMPORTAR / BAIXAR MODELO ══════════════ */
 function baixarModelo() {
   const bom = '﻿';
-  const header = '"Tarefa";"Descrição";"Data (DD/MM/AAAA)";"Hora Início (HH:MM)";"Duração (minutos)";"Peso (1-10)"\n';
+  const instrucoes =
+    '"COMO PREENCHER O CRONOGRAMA"\n' +
+    '"1) Primeira tarefa: preencha Data, Hora Inicio e Duracao (minutos)"\n' +
+    '"2) Demais tarefas: deixe Data e Hora VAZIOS para encadear automaticamente apos a anterior"\n' +
+    '"3) Para pular horario (ex: almoco): preencha apenas a Hora (ex: 13:00)"\n' +
+    '"4) Para mudar de dia: preencha a Data (ex: 02/10/2026)"\n' +
+    '"5) Tarefas noturnas: a duracao pode ultrapassar meia-noite (ex: inicio 20:00 + 720 min = termino 08:00 dia seguinte)"\n' +
+    '"6) Apague estas instrucoes ou deixe como estao - o app ignora automaticamente"\n' +
+    '\n';
+  const header = '"Tarefa";"Descricao";"Data (DD/MM/AAAA)";"Hora Inicio (HH:MM)";"Duracao (minutos)";"Peso (1-10)"\n';
   const exemplos =
-    '"Isolamento elétrico e bloqueio";"Desligar e bloquear equipamento";"01/10/2026";"07:00";"60";"2"\n' +
-    '"Remoção das proteções";"Retirar proteções mecânicas";"";"";"60";"3"\n' +
-    '"Retirar tensão da correia";"";"";"";""60";"2"\n' +
-    '"Corte da correia velha";"";"";"";""120";"3"\n' +
-    '"Posicionamento da correia nova";"";"";"13:00";"180";"5"\n' +
-    '"Emenda da correia";"Preparar e colar";"02/10/2026";"07:00";"300";"5"\n' +
-    '"Vulcanização";"";"";"13:00";"300";"4"\n' +
-    '"Teste e liberação";"";""03/10/2026";"07:00";"120";"2"\n';
-  const csv = bom + header + exemplos;
+    '"Isolamento eletrico e bloqueio";"Desligar e bloquear equipamento";"01/10/2026";"07:00";"60";"2"\n' +
+    '"Remocao das protecoes";"Retirar protecoes mecanicas";"";"";"10";"3"\n' +
+    '"Retirar tensao da correia";"Levantar contra peso";"";"";"30";"2"\n' +
+    '"Corte da correia velha";"Usar faca para corte";"";"";"15";"3"\n' +
+    '"Posicionamento da correia nova";"Posicionar com guindaste";"";"";"180";"5"\n' +
+    '"Emenda da correia";"Usar prensa de vulcanizacao";"02/10/2026";"07:00";"120";"5"\n' +
+    '"Vulcanizacao";"Vulcanizar emenda";"";"13:00";"180";"4"\n' +
+    '"Teste e liberacao";"Organizacao da area";"03/10/2026";"07:00";"60";"2"\n';
+  const total = '\n"";"";"";"TOTAL";"655 min = 10h 55min";""\n';
+  const csv = bom + instrucoes + header + exemplos + total;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'modelo_cronograma.csv';
   a.click(); URL.revokeObjectURL(url);
-  showToast('Modelo baixado — preencha Hora Início + Duração em minutos; horários calculados automaticamente.');
+  showToast('Modelo baixado com instrucoes — abra no Excel, preencha e importe.');
 }
 
 function importarPlanilha(event) {
@@ -1015,11 +1141,16 @@ function processarCSV(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showToast('Arquivo vazio ou sem dados.'); return; }
 
-  const headerRaw = lines[0].toLowerCase();
-  const isModeloHeader = headerRaw.includes('tarefa') || headerRaw.includes('task');
-  const isDurMode = headerRaw.includes('dura');
-
-  const startIdx = isModeloHeader ? 1 : 0;
+  let headerIdx = -1;
+  for (let j = 0; j < Math.min(lines.length, 20); j++) {
+    const lr = lines[j].toLowerCase();
+    const sepCount = lr.split(sep).length - 1;
+    if ((lr.includes('tarefa') || lr.includes('task')) && sepCount >= 3) {
+      headerIdx = j; break;
+    }
+  }
+  const isDurMode = headerIdx >= 0 && lines[headerIdx].toLowerCase().includes('dura');
+  const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
   let count = 0;
   let lastEnd = null;
 
@@ -1138,10 +1269,14 @@ function lerExcel(file) {
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
       if (rows.length < 2) { showToast('Planilha vazia.'); return; }
 
-      const headerRaw = rows[0].map(c => String(c).toLowerCase());
-      const isHeader = headerRaw.some(h => h.includes('tarefa') || h.includes('task'));
-      const isDurMode = headerRaw.some(h => h.includes('dura'));
-      const startIdx = isHeader ? 1 : 0;
+      let headerIdx = -1;
+      for (let j = 0; j < Math.min(rows.length, 20); j++) {
+        const cells = rows[j].map(c => String(c).toLowerCase());
+        const hasTarefa = cells.some(h => h.includes('tarefa') || h.includes('task'));
+        if (hasTarefa && cells.length >= 4) { headerIdx = j; break; }
+      }
+      const isDurMode = headerIdx >= 0 && rows[headerIdx].some(c => String(c).toLowerCase().includes('dura'));
+      const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
       let count = 0;
       let lastEnd = null;
 
