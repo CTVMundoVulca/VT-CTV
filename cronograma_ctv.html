@@ -218,9 +218,14 @@ textarea { resize: vertical; min-height: 60px; }
   <div class="tab-content active" id="tabTarefas">
     <div class="card" style="border-radius: 0 0 var(--radius) var(--radius); margin-top:0; border-top: 1px solid var(--border);">
       <div class="section-title"><span>2</span> TAREFAS</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="abrirModalTarefa()">+ Nova Tarefa</button>
         <button class="btn btn-ghost btn-sm" onclick="reorderByDate()">↕ Ordenar por data</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="baixarModelo()">📥 Baixar Modelo</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('fileUpload').click()">📤 Importar Planilha</button>
+        <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarPlanilha(event)">
       </div>
       <div id="taskList"></div>
       <div id="taskEmpty" style="text-align:center;padding:30px 10px;color:var(--text-light);font-size:13px">
@@ -858,6 +863,196 @@ function exportarCSV() {
   a.href = url; a.download = (cur.nome || 'cronograma').replace(/[^a-zA-Z0-9À-ÿ\s_-]/g, '') + '.csv';
   a.click(); URL.revokeObjectURL(url);
   showToast('CSV exportado.');
+}
+
+/* ══════════════ IMPORTAR / BAIXAR MODELO ══════════════ */
+function baixarModelo() {
+  const bom = '﻿';
+  const header = '"Tarefa";"Descrição";"Data Início (DD/MM/AAAA)";"Hora Início (HH:MM)";"Data Fim (DD/MM/AAAA)";"Hora Fim (HH:MM)";"Peso (1-10)"\n';
+  const exemplos =
+    '"Isolamento elétrico e bloqueio";"Desligar e bloquear equipamento";"01/10/2026";"07:00";"01/10/2026";"08:00";"2"\n' +
+    '"Remoção das proteções";"Retirar proteções mecânicas";"01/10/2026";"08:00";"01/10/2026";"10:00";"3"\n' +
+    '"Corte da correia velha";"";"01/10/2026";"10:00";"01/10/2026";"12:00";"3"\n' +
+    '"Posicionamento da correia nova";"";"01/10/2026";"13:00";"01/10/2026";"16:00";"5"\n' +
+    '"Emenda da correia";"";"02/10/2026";"07:00";"02/10/2026";"12:00";"5"\n' +
+    '"Vulcanização";"";"02/10/2026";"13:00";"02/10/2026";"18:00";"4"\n' +
+    '"Teste e liberação";"";"03/10/2026";"07:00";"03/10/2026";"09:00";"2"\n';
+  const csv = bom + header + exemplos;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'modelo_cronograma.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Modelo baixado — abra no Excel, preencha e importe.');
+}
+
+function importarPlanilha(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    const reader = new FileReader();
+    reader.onload = function(e) { processarCSV(e.target.result); };
+    reader.readAsText(file, 'UTF-8');
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    importarExcel(file);
+  } else {
+    showToast('Formato não suportado. Use .csv ou .xlsx');
+  }
+}
+
+function processarCSV(text) {
+  const sep = text.indexOf(';') >= 0 ? ';' : ',';
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showToast('Arquivo vazio ou sem dados.'); return; }
+
+  const headerRaw = lines[0].toLowerCase();
+  const isModeloHeader = headerRaw.includes('tarefa') || headerRaw.includes('task');
+
+  const startIdx = isModeloHeader ? 1 : 0;
+  let count = 0;
+
+  for (let i = startIdx; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i], sep);
+    if (cols.length < 1 || !cols[0].trim()) continue;
+
+    const nome = cols[0].trim();
+    const desc = (cols[1] || '').trim();
+    const dataIni = (cols[2] || '').trim();
+    const horaIni = (cols[3] || '').trim();
+    const dataFim = (cols[4] || '').trim();
+    const horaFim = (cols[5] || '').trim();
+    const peso = parseInt(cols[6]) || 1;
+
+    const inicioPrev = parseDateTimeBR(dataIni, horaIni);
+    const fimPrev = parseDateTimeBR(dataFim, horaFim);
+
+    cur.tarefas.push({
+      id: 't_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      nome, desc, inicioPrev, fimPrev, peso: Math.min(Math.max(peso, 1), 10),
+      done: false, doneAt: null
+    });
+    count++;
+  }
+
+  if (count > 0) {
+    formDirty = true;
+    renderTasks();
+    showToast(count + ' tarefa(s) importada(s).');
+  } else {
+    showToast('Nenhuma tarefa encontrada no arquivo.');
+  }
+}
+
+function parseCSVLine(line, sep) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else current += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === sep) { result.push(current); current = ''; }
+      else current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function parseDateTimeBR(dateStr, timeStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+    const time = timeStr || '00:00';
+    try { return new Date(year + '-' + month + '-' + day + 'T' + time).toISOString(); } catch(e) { return ''; }
+  }
+  if (dateStr.includes('-')) {
+    const time = timeStr || '00:00';
+    try { return new Date(dateStr + 'T' + time).toISOString(); } catch(e) { return ''; }
+  }
+  return '';
+}
+
+function importarExcel(file) {
+  const XLSX_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  if (window.XLSX) { lerExcel(file); return; }
+  showToast('Carregando leitor Excel…');
+  const script = document.createElement('script');
+  script.src = XLSX_CDN;
+  script.onload = function() { lerExcel(file); };
+  script.onerror = function() { showToast('Não foi possível carregar o leitor Excel. Use CSV.'); };
+  document.head.appendChild(script);
+}
+
+function lerExcel(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (rows.length < 2) { showToast('Planilha vazia.'); return; }
+
+      const headerRaw = rows[0].map(c => String(c).toLowerCase());
+      const startIdx = headerRaw.some(h => h.includes('tarefa') || h.includes('task')) ? 1 : 0;
+      let count = 0;
+
+      for (let i = startIdx; i < rows.length; i++) {
+        const cols = rows[i];
+        const nome = String(cols[0] || '').trim();
+        if (!nome) continue;
+
+        const desc = String(cols[1] || '').trim();
+        const dataIni = excelDateStr(cols[2]);
+        const horaIni = excelTimeStr(cols[3]);
+        const dataFim = excelDateStr(cols[4]);
+        const horaFim = excelTimeStr(cols[5]);
+        const peso = parseInt(cols[6]) || 1;
+
+        const inicioPrev = parseDateTimeBR(dataIni, horaIni);
+        const fimPrev = parseDateTimeBR(dataFim, horaFim);
+
+        cur.tarefas.push({
+          id: 't_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          nome, desc, inicioPrev, fimPrev, peso: Math.min(Math.max(peso, 1), 10),
+          done: false, doneAt: null
+        });
+        count++;
+      }
+      if (count > 0) { formDirty = true; renderTasks(); showToast(count + ' tarefa(s) importada(s).'); }
+      else showToast('Nenhuma tarefa encontrada na planilha.');
+    } catch(err) { showToast('Erro ao ler planilha: ' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function excelDateStr(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'number') {
+    const d = new Date((val - 25569) * 86400000);
+    return ('0' + d.getUTCDate()).slice(-2) + '/' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '/' + d.getUTCFullYear();
+  }
+  return String(val).trim();
+}
+
+function excelTimeStr(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'number') {
+    const totalMin = Math.round(val * 1440);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return ('0' + h).slice(-2) + ':' + ('0' + m).slice(-2);
+  }
+  return String(val).trim();
 }
 
 /* ══════════════ UTILIDADES ══════════════ */
