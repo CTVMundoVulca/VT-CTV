@@ -86,7 +86,7 @@ textarea { resize: vertical; min-height: 60px; }
 
 /* curva S canvas */
 .chart-container { position: relative; width: 100%; }
-.chart-container canvas { width: 100%; height: auto; display: block; }
+.chart-container canvas { display: block; max-width: 100%; }
 
 /* legenda curva S */
 .chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 12px; }
@@ -629,19 +629,26 @@ function renderCurvaS() {
   const canvas = document.getElementById('curvaCanvas');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-
   const tasks = (cur && cur.tarefas) || [];
   const stats = document.getElementById('curvaStats');
 
+  const container = canvas.parentElement;
+  const W = container.clientWidth || 350;
+  const H = Math.max(220, Math.min(400, Math.round(W * 0.55)));
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
   if (!tasks.length || !tasks.some(t => t.fimPrev)) {
-    canvas.width = 800 * dpr; canvas.height = 300 * dpr;
-    canvas.style.height = '300px';
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, 800, 300);
+    ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = getCSS('--text-light');
-    ctx.font = '14px -apple-system, sans-serif';
+    ctx.font = '13px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Adicione tarefas com datas previstas para gerar a Curva S.', 400, 150);
+    ctx.fillText('Adicione tarefas com datas previstas', W / 2, H / 2 - 8);
+    ctx.fillText('para gerar a Curva S.', W / 2, H / 2 + 12);
     stats.textContent = '';
     return;
   }
@@ -660,14 +667,10 @@ function renderCurvaS() {
   const maxDate = new Date(allDates[allDates.length - 1]);
   const span = Math.max(maxDate - minDate, 3600000);
 
-  const W = 800, H = 450;
-  const pad = { top: 40, right: 30, bottom: 60, left: 55 };
+  const pad = { top: 28, right: 16, bottom: 46, left: 42 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top - pad.bottom;
 
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  canvas.style.height = (H * canvas.clientWidth / W) + 'px';
-  ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
 
   const textColor = getCSS('--text');
@@ -676,21 +679,18 @@ function renderCurvaS() {
   const plannedColor = getCSS('--planned-color');
   const actualColor = getCSS('--actual-color');
 
-  // grid
   ctx.strokeStyle = borderColor; ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (ch * i / 4);
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
   }
 
-  // eixo Y labels
-  ctx.fillStyle = lightColor; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = lightColor; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (ch * (4 - i) / 4);
-    ctx.fillText((i * 25) + '%', pad.left - 8, y + 4);
+    ctx.fillText((i * 25) + '%', pad.left - 5, y + 3);
   }
 
-  // build planned curve (cumulative %)
   let prevCum = 0;
   let plannedPoints = [{ x: pad.left, y: pad.top + ch }];
   sortedPrev.forEach(t => {
@@ -702,7 +702,6 @@ function renderCurvaS() {
     plannedPoints.push({ x, y });
   });
 
-  // build actual curve
   let actCum = 0;
   let actualPoints = [{ x: pad.left, y: pad.top + ch }];
   sortedActual.forEach(t => {
@@ -714,34 +713,40 @@ function renderCurvaS() {
     actualPoints.push({ x, y });
   });
 
-  // draw planned
-  drawCurve(ctx, plannedPoints, plannedColor, 3);
-  // draw actual
-  if (actualPoints.length > 1) drawCurve(ctx, actualPoints, actualColor, 3);
+  function ensureIncreasingX(pts) {
+    for (let i = 1; i < pts.length; i++) {
+      if (pts[i].x <= pts[i - 1].x) pts[i].x = pts[i - 1].x + 0.5;
+    }
+  }
+  ensureIncreasingX(plannedPoints);
+  ensureIncreasingX(actualPoints);
 
-  // draw points
-  plannedPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, plannedColor, 4); });
-  actualPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, actualColor, 4); });
+  drawCurve(ctx, plannedPoints, plannedColor, 2.5);
+  if (actualPoints.length > 1) drawCurve(ctx, actualPoints, actualColor, 2.5);
 
-  // eixo X labels
+  plannedPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, plannedColor, 3.5); });
+  actualPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, actualColor, 3.5); });
+
+  const spanH = span / 3600000;
   ctx.fillStyle = lightColor; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'center';
-  const nLabels = Math.min(6, Math.ceil(span / 86400000));
+  const nLabels = Math.min(6, Math.max(3, Math.ceil(spanH / 6) + 1));
   for (let i = 0; i <= nLabels; i++) {
     const dt = new Date(minDate.getTime() + (span * i / nLabels));
     const x = pad.left + (cw * i / nLabels);
-    ctx.fillText(formatDateShort(dt), x, H - pad.bottom + 18);
+    let lbl;
+    if (spanH <= 24) lbl = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2);
+    else lbl = formatDateShort(dt);
+    ctx.fillText(lbl, x, H - pad.bottom + 14);
   }
 
-  // eixo titles
-  ctx.fillStyle = textColor; ctx.font = 'bold 12px -apple-system, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('Tempo', W / 2, H - 8);
+  ctx.fillStyle = textColor; ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Tempo', W / 2, H - 5);
   ctx.save();
-  ctx.translate(14, pad.top + ch / 2);
+  ctx.translate(11, pad.top + ch / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.fillText('Progresso (%)', 0, 0);
   ctx.restore();
 
-  // stats
   const donePct = Math.round((actCum / totalWeight) * 100);
   const prevPctNow = calcPlannedPctAt(tasks, totalWeight, new Date());
   const spi = prevPctNow > 0 ? (donePct / prevPctNow).toFixed(2) : '—';
@@ -762,14 +767,32 @@ function drawCurve(ctx, pts, color, lw) {
   ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    if (pts.length > 2 && i < pts.length - 1) {
-      const xc = (pts[i].x + pts[i + 1].x) / 2;
-      const yc = (pts[i].y + pts[i + 1].y) / 2;
-      ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
-    } else {
-      ctx.lineTo(pts[i].x, pts[i].y);
+  if (pts.length === 2) { ctx.lineTo(pts[1].x, pts[1].y); ctx.stroke(); return; }
+  const n = pts.length, slope = [], tan = [];
+  for (let k = 0; k < n - 1; k++) {
+    const dx = pts[k + 1].x - pts[k].x;
+    slope[k] = dx > 0.01 ? (pts[k + 1].y - pts[k].y) / dx : 0;
+  }
+  tan[0] = slope[0];
+  for (let k = 1; k < n - 1; k++) {
+    if (slope[k - 1] * slope[k] <= 0) tan[k] = 0;
+    else tan[k] = (slope[k - 1] + slope[k]) / 2;
+  }
+  tan[n - 1] = slope[n - 2];
+  for (let k = 0; k < n - 1; k++) {
+    if (Math.abs(slope[k]) < 1e-8) { tan[k] = 0; tan[k + 1] = 0; }
+    else {
+      const a = tan[k] / slope[k], b = tan[k + 1] / slope[k];
+      const h = Math.hypot(a, b);
+      if (h > 3) { const s = 3 / h; tan[k] = s * a * slope[k]; tan[k + 1] = s * b * slope[k]; }
     }
+  }
+  for (let k = 0; k < n - 1; k++) {
+    const dx = pts[k + 1].x - pts[k].x;
+    ctx.bezierCurveTo(
+      pts[k].x + dx / 3, pts[k].y + tan[k] * dx / 3,
+      pts[k + 1].x - dx / 3, pts[k + 1].y - tan[k + 1] * dx / 3,
+      pts[k + 1].x, pts[k + 1].y);
   }
   ctx.stroke();
 }
@@ -810,9 +833,42 @@ function renderGantt() {
   const maxD = new Date(Math.max(...allDates));
   const span = Math.max(maxD - minD, 3600000);
 
+  const spanH = span / 3600000;
+  let tickInt;
+  if (spanH <= 8) tickInt = 1 * 3600000;
+  else if (spanH <= 16) tickInt = 2 * 3600000;
+  else if (spanH <= 36) tickInt = 4 * 3600000;
+  else if (spanH <= 72) tickInt = 8 * 3600000;
+  else if (spanH <= 168) tickInt = 24 * 3600000;
+  else tickInt = 48 * 3600000;
+
+  let ticks = [];
+  let tk0 = new Date(Math.ceil(minD.getTime() / tickInt) * tickInt);
+  while (tk0 < maxD) { ticks.push(new Date(tk0)); tk0 = new Date(tk0.getTime() + tickInt); }
+  while (ticks.length > 8) {
+    tickInt *= 2;
+    ticks = [];
+    tk0 = new Date(Math.ceil(minD.getTime() / tickInt) * tickInt);
+    while (tk0 < maxD) { ticks.push(new Date(tk0)); tk0 = new Date(tk0.getTime() + tickInt); }
+  }
+  const showFullDate = spanH > 24;
+
   let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:400px">';
   html += '<thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);width:35%">Tarefa</th>';
   html += '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Linha do tempo</th></tr></thead><tbody>';
+
+  html += '<tr><td style="padding:0;border-bottom:1px solid var(--border)"></td>';
+  html += '<td style="padding:0 8px 2px;border-bottom:1px solid var(--border);position:relative;height:20px">';
+  html += '<div style="position:relative;width:100%;height:100%">';
+  ticks.forEach(tk => {
+    const pct = ((tk - minD) / span) * 100;
+    if (pct >= 0 && pct <= 100) {
+      const hh = ('0' + tk.getHours()).slice(-2) + ':' + ('0' + tk.getMinutes()).slice(-2);
+      const lbl = showFullDate ? ('0' + tk.getDate()).slice(-2) + '/' + ('0' + (tk.getMonth() + 1)).slice(-2) + ' ' + hh : hh;
+      html += '<span style="position:absolute;left:' + pct + '%;transform:translateX(-50%);font-size:9px;color:var(--text-light);white-space:nowrap;top:3px">' + lbl + '</span>';
+    }
+  });
+  html += '</div></td></tr>';
 
   tasks.forEach((t, i) => {
     const ini = t.inicioPrev ? new Date(t.inicioPrev) : null;
@@ -840,7 +896,6 @@ function renderGantt() {
     html += '</div></td></tr>';
   });
 
-  // today marker info
   const todayPct = ((now - minD) / span) * 100;
   html += '</tbody></table>';
   html += '<div style="position:relative;height:12px;margin-top:2px"><div style="position:absolute;left:calc(35% + ' + (todayPct * 0.65) + '%);width:1px;height:10px;background:var(--danger)"></div><div style="position:absolute;left:calc(35% + ' + (todayPct * 0.65) + '% + 4px);font-size:9px;color:var(--danger);white-space:nowrap">Hoje</div></div>';
