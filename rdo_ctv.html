@@ -401,6 +401,7 @@ const STORE_KEY = 'ctv_rdo_v1';
 let db = { version: 1, rdos: [], config: { dark: false } };
 let cur = null;         // RDO em edição
 let editingId = null;
+let formDirty = false;
 
 const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
@@ -680,15 +681,15 @@ function blankRDO(dateKey) {
 }
 function newRDO(dateKey) {
   const d = loadDraft();
-  if (d && d.rdo && d.editingId == null) { cur = d.rdo; }   // retoma o RDO novo em preenchimento
-  else { cur = blankRDO(dateKey); }
+  if (d && d.rdo && d.editingId == null) { cur = d.rdo; formDirty = true; }
+  else { cur = blankRDO(dateKey); formDirty = false; }
   editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor();
 }
 function openRDO(id) {
   const r = db.rdos.find(x => x.id === id); if (!r) return;
   const d = loadDraft();
-  if (d && d.rdo && d.editingId === id) { cur = d.rdo; }     // retoma edições não salvas deste RDO
-  else { cur = JSON.parse(JSON.stringify(r)); }
+  if (d && d.rdo && d.editingId === id) { cur = d.rdo; formDirty = true; }
+  else { cur = JSON.parse(JSON.stringify(r)); formDirty = false; }
   editingId = id; fillEditor(); document.getElementById('hdrTitle').textContent = 'RDO ' + (r.numero || ''); goEditor();
 }
 
@@ -746,8 +747,8 @@ function syncSection(section) {
     return o;
   });
 }
-function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); saveDraftDebounced(); }
-function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); saveDraftDebounced(); }
+function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); formDirty = true; saveDraftDebounced(); }
+function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); formDirty = true; saveDraftDebounced(); }
 
 /* ── colaboradores (lista de nomes) ── */
 function colabList() { return (db.config.colaboradores || []).slice().sort((a, b) => a.localeCompare(b, 'pt')); }
@@ -832,6 +833,7 @@ function atualizarBannerRascunho() { const b = document.getElementById('rdoDraft
 function retomarRascunho() {
   const d = loadDraft(); if (!d || !d.rdo) return;
   cur = d.rdo; editingId = d.editingId || null;
+  formDirty = true;
   fillEditor();
   document.getElementById('hdrTitle').textContent = editingId ? ('RDO ' + (cur.numero || '')) : 'Novo RDO';
   goEditor();
@@ -842,6 +844,7 @@ function descartarRascunho() {
 }
 function limparRDO() {
   if (!confirm('Limpar os campos deste RDO? As informações não salvas serão descartadas.')) return;
+  formDirty = false;
   clearDraft();
   if (editingId) { const r = db.rdos.find(x => x.id === editingId); cur = r ? JSON.parse(JSON.stringify(r)) : blankRDO(); }
   else { cur = blankRDO(); editingId = null; }
@@ -856,14 +859,16 @@ function saveRDO() {
   cur.atualizadoEm = Date.now();
   persistRDO(cur);
   editingId = cur.id;
+  formDirty = false;
   clearDraft();
   document.getElementById('hdrTitle').textContent = 'RDO ' + (cur.numero || '');
   showToast('RDO salvo ✔️');
 }
 function deleteRDO() {
-  if (!editingId) { clearDraft(); goList(); return; }
+  if (!editingId) { formDirty = false; clearDraft(); goList(); return; }
   if (!confirm('Excluir este RDO?')) return;
   removeRDOStore(editingId);
+  formDirty = false;
   clearDraft();
   showToast('RDO excluído'); goList();
 }
@@ -923,7 +928,7 @@ function compressSig(canvas) {
   ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
   return tmp.toDataURL('image/jpeg', 0.6);
 }
-function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; const compressed = compressSig(c); if (id === 'benetech') cur.assBenetech = compressed; else cur.assFiscal = compressed; saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
+function confirmarAssinatura(id) { const c = document.getElementById('sig_' + id); if (!c) return; const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; if (!data.some(v => v !== 0)) { showToast('⚠ Desenhe a assinatura antes.'); return; } sigState[id] = true; const compressed = compressSig(c); if (id === 'benetech') cur.assBenetech = compressed; else cur.assFiscal = compressed; formDirty = true; saveDraftDebounced(); showToast('Assinatura confirmada ✔️'); }
 function getSigDataURL(id) { if (!sigState[id]) return null; const c = document.getElementById('sig_' + id); return c ? compressSig(c) : null; }
 
 /* ── Logo base64 cache ── */
@@ -1166,9 +1171,15 @@ function startCloudListeners() {
     if (document.getElementById('feriadoModalBg').classList.contains('open')) renderFeriadoModal();
   }, () => {}));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
+    const editorOpen = document.getElementById('view-editor').classList.contains('active');
+    const eid = (editorOpen && editingId) ? editingId : null;
     db.rdos = s.docs.map(d => d.data());
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
+    if (eid) {
+      const fresh = db.rdos.find(r => r.id === eid);
+      if (fresh && !formDirty) { cur = JSON.parse(JSON.stringify(fresh)); fillEditor(); }
+    }
     if (document.getElementById('view-list').classList.contains('active')) { renderList(); renderCalendar(); }
   }, err => {
     console.warn(err);
@@ -1218,7 +1229,10 @@ document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click'
 /* rascunho automático: salva enquanto preenche e ao sair/fechar */
 (function () {
   const ed = document.getElementById('view-editor');
-  if (ed) { ed.addEventListener('input', saveDraftDebounced, true); ed.addEventListener('change', saveDraftDebounced, true); }
+  if (ed) {
+    ed.addEventListener('input', function() { formDirty = true; saveDraftDebounced(); }, true);
+    ed.addEventListener('change', function() { formDirty = true; saveDraftDebounced(); }, true);
+  }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraftNow(); });
   window.addEventListener('pagehide', saveDraftNow);
 })();
