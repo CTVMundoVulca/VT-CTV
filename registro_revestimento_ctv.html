@@ -204,9 +204,54 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <button class="btn btn-ghost btn-sm" onclick="addMaterial()" style="margin-top:6px">+ Adicionar item</button>
   </div>
 
-  <!-- 4. FASE 2 — DURANTE (AMBIENTE) -->
+  <!-- 4. CONDIÇÕES DE ANÁLISE -->
   <div class="card">
-    <div class="section-title"><span>4</span> FASE 2 — DURANTE (CHECK LIST AMBIENTE)</div>
+    <div class="section-title"><span>4</span> CONDIÇÕES DO REVESTIMENTO E DO TAMBOR</div>
+    <label class="fld" style="margin-top:2px;font-size:12px;font-weight:700;color:var(--blue)">Revestimento a ser Aplicado</label>
+    <div class="row">
+      <div><label class="fld">Aspecto visual</label>
+        <select id="f_cond_aspecto"><option value="">Selecione</option><option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option></select>
+      </div>
+      <div><label class="fld">Condições de armazenamento</label>
+        <select id="f_cond_armazenamento"><option value="">Selecione</option><option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Espessura (mm)</label><input type="text" id="f_cond_espessura" placeholder="Ex: 12"></div>
+      <div><label class="fld">Dureza Shore A</label><input type="text" id="f_cond_dureza" placeholder="Ex: 60"></div>
+    </div>
+    <label class="fld" style="margin-top:14px;font-size:12px;font-weight:700;color:var(--blue)">Condições do Tambor</label>
+    <div class="row">
+      <div><label class="fld">Rugosidade superficial</label>
+        <select id="f_cond_rugosidade"><option value="">Selecione</option><option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option></select>
+      </div>
+      <div><label class="fld">Presença de corrosão</label>
+        <select id="f_cond_corrosao"><option value="">Selecione</option><option value="Não">Não</option><option value="Sim">Sim</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Amassamentos / deformações</label>
+        <select id="f_cond_amassamentos"><option value="">Selecione</option><option value="Não">Não</option><option value="Sim">Sim</option></select>
+      </div>
+      <div><label class="fld">Resíduos de revestimento anterior</label>
+        <select id="f_cond_residuos"><option value="">Selecione</option><option value="Não">Não</option><option value="Sim">Sim</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Trincas ou soldas irregulares</label>
+        <select id="f_cond_trincas"><option value="">Selecione</option><option value="Não">Não</option><option value="Sim">Sim</option></select>
+      </div>
+      <div><label class="fld">Limpeza da superfície</label>
+        <select id="f_cond_limpeza"><option value="">Selecione</option><option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option></select>
+      </div>
+    </div>
+    <label class="fld">Observações das condições</label>
+    <textarea id="f_cond_obs" rows="2" placeholder="Registre não conformidades ou detalhes encontrados"></textarea>
+  </div>
+
+  <!-- 5. FASE 2 — DURANTE (AMBIENTE) -->
+  <div class="card">
+    <div class="section-title"><span>5</span> FASE 2 — DURANTE (CHECK LIST AMBIENTE)</div>
     <div class="row">
       <div><label class="fld">Temp. Ambiente °C (do ar)</label><input type="number" step="0.1" id="f_temp_ambiente"></div>
       <div><label class="fld">Umidade Relativa do Ar %</label><input type="number" step="0.1" id="f_umidade"></div>
@@ -225,20 +270,20 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
   <!-- 5. EQUIPE DE TRABALHO -->
   <div class="card">
-    <div class="section-title"><span>5</span> EQUIPE DE TRABALHO</div>
+    <div class="section-title"><span>6</span> EQUIPE DE TRABALHO</div>
     <div id="equipeList"></div>
     <button class="btn btn-ghost btn-sm" onclick="addEquipe()" style="margin-top:6px">+ Adicionar pessoa</button>
   </div>
 
   <!-- 6. OBSERVAÇÕES -->
   <div class="card">
-    <div class="section-title"><span>6</span> OBSERVAÇÕES / NÃO CONFORMIDADES</div>
+    <div class="section-title"><span>7</span> OBSERVAÇÕES / NÃO CONFORMIDADES</div>
     <textarea id="f_observacoes" rows="4" placeholder="Observações importantes / Não conformidades ocorridas..."></textarea>
   </div>
 
   <!-- 7. LIBERAÇÃO TÉCNICO -->
   <div class="card">
-    <div class="section-title"><span>7</span> LIBERAÇÃO DO RESPONSÁVEL TÉCNICO</div>
+    <div class="section-title"><span>8</span> LIBERAÇÃO DO RESPONSÁVEL TÉCNICO</div>
     <div class="row">
       <div><label class="fld">Liberado por <a href="#" onclick="event.preventDefault();abrirModalEfetivo()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
         <select id="f_lib_tecnico" onchange="autoFillLib('tecnico')"><option value="">Selecione</option></select>
@@ -253,7 +298,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
   <!-- 8. LIBERAÇÃO SUPERVISOR -->
   <div class="card">
-    <div class="section-title"><span>8</span> LIBERAÇÃO DO SUPERVISOR</div>
+    <div class="section-title"><span>9</span> LIBERAÇÃO DO SUPERVISOR</div>
     <div class="row">
       <div><label class="fld">Liberado por <a href="#" onclick="event.preventDefault();abrirModalEfetivo()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
         <select id="f_lib_super" onchange="autoFillLib('super')"><option value="">Selecione</option></select>
@@ -268,7 +313,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
   <!-- 9. LIBERAÇÃO CLIENTE/FISCAL -->
   <div class="card">
-    <div class="section-title"><span>9</span> LIBERAÇÃO DO CLIENTE / FISCAL</div>
+    <div class="section-title"><span>10</span> LIBERAÇÃO DO CLIENTE / FISCAL</div>
     <div class="row">
       <div><label class="fld">Liberado por <a href="#" onclick="event.preventDefault();abrirModalFiscal()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
         <select id="f_lib_cliente" onchange="autoFillLib('cliente')"><option value="">Selecione</option></select>
@@ -567,9 +612,14 @@ function novoRegistro() {
       {item:'ADESIVO',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''},
       {item:'REMOVEDOR QUÍMICO',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''},
       {item:'CATALISADOR',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''},
-      {item:'PRIMER',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''},
-      {item:'CONDIÇÕES DO REVESTIMENTO',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''}
+      {item:'PRIMER',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''}
     ],
+    condicoes: {
+      aspecto: '', espessura: '', dureza: '', armazenamento: '',
+      rugosidade: '', corrosao: '', amassamentos: '', residuos: '',
+      trincas: '', limpeza: '',
+      obsCondicoes: ''
+    },
     tempAmbiente: '', umidade: '', tempSuperficie: '', tempOrvalho: '',
     tempoCura: '', testeToque: 'Sim',
     equipe: [],
@@ -601,7 +651,6 @@ function fiscalOptions(selected) {
 function matOptions(selected) {
   let html = '<option value="">Selecione</option>';
   MATERIAIS_REV.forEach(m => { html += `<option value="${m}"${m === selected ? ' selected' : ''}>${m}</option>`; });
-  html += '<option value="CONDIÇÕES DO REVESTIMENTO"' + ('CONDIÇÕES DO REVESTIMENTO' === selected ? ' selected' : '') + '>CONDIÇÕES DO REVESTIMENTO</option>';
   return html;
 }
 function fabOptions(selected) {
@@ -806,6 +855,19 @@ function openEditor() {
   document.getElementById('f_teste_toque').value = cur.testeToque || 'Sim';
   document.getElementById('f_observacoes').value = cur.observacoes || '';
 
+  if (!cur.condicoes) cur.condicoes = { aspecto:'',espessura:'',dureza:'',armazenamento:'',rugosidade:'',corrosao:'',amassamentos:'',residuos:'',trincas:'',limpeza:'',obsCondicoes:'' };
+  document.getElementById('f_cond_aspecto').value = cur.condicoes.aspecto || '';
+  document.getElementById('f_cond_armazenamento').value = cur.condicoes.armazenamento || '';
+  document.getElementById('f_cond_espessura').value = cur.condicoes.espessura || '';
+  document.getElementById('f_cond_dureza').value = cur.condicoes.dureza || '';
+  document.getElementById('f_cond_rugosidade').value = cur.condicoes.rugosidade || '';
+  document.getElementById('f_cond_corrosao').value = cur.condicoes.corrosao || '';
+  document.getElementById('f_cond_amassamentos').value = cur.condicoes.amassamentos || '';
+  document.getElementById('f_cond_residuos').value = cur.condicoes.residuos || '';
+  document.getElementById('f_cond_trincas').value = cur.condicoes.trincas || '';
+  document.getElementById('f_cond_limpeza').value = cur.condicoes.limpeza || '';
+  document.getElementById('f_cond_obs').value = cur.condicoes.obsCondicoes || '';
+
   renderEquip();
   renderMateriais();
   renderEquipe();
@@ -853,6 +915,18 @@ function collectEditor() {
   cur.tempoCura = document.getElementById('f_tempo_cura').value.trim();
   cur.testeToque = document.getElementById('f_teste_toque').value;
   cur.observacoes = document.getElementById('f_observacoes').value.trim();
+  if (!cur.condicoes) cur.condicoes = {};
+  cur.condicoes.aspecto = document.getElementById('f_cond_aspecto').value;
+  cur.condicoes.armazenamento = document.getElementById('f_cond_armazenamento').value;
+  cur.condicoes.espessura = document.getElementById('f_cond_espessura').value.trim();
+  cur.condicoes.dureza = document.getElementById('f_cond_dureza').value.trim();
+  cur.condicoes.rugosidade = document.getElementById('f_cond_rugosidade').value;
+  cur.condicoes.corrosao = document.getElementById('f_cond_corrosao').value;
+  cur.condicoes.amassamentos = document.getElementById('f_cond_amassamentos').value;
+  cur.condicoes.residuos = document.getElementById('f_cond_residuos').value;
+  cur.condicoes.trincas = document.getElementById('f_cond_trincas').value;
+  cur.condicoes.limpeza = document.getElementById('f_cond_limpeza').value;
+  cur.condicoes.obsCondicoes = document.getElementById('f_cond_obs').value.trim();
   cur.libTecnico = document.getElementById('f_lib_tecnico').value;
   cur.libTecnicoDoc = document.getElementById('f_lib_tecnico_doc').value;
   cur.libTecnicoData = document.getElementById('f_lib_tecnico_data').value;
@@ -886,6 +960,7 @@ function gerarPDF() {
 
   const equipRows = (r.equipamentos || []).map(e => `<tr><td>${esc(e.equip)}</td><td>${esc(e.marca)}</td><td>${esc(e.codigo)}</td><td>${esc(e.certificado)}</td><td>${fmtData(e.dataCal)}</td><td>${fmtData(e.validadeCal)}</td></tr>`).join('') || '<tr><td colspan="6">-</td></tr>';
   const matRows = (r.materiais || []).map(m => `<tr><td>${esc(m.item)}</td><td>${esc(m.quant)}</td><td>${esc(m.fabricante)}</td><td>${esc(m.lote)}</td><td>${fmtData(m.dataFab)}</td><td>${fmtData(m.dataVal)}</td><td>${esc(m.verificadoPor)}</td></tr>`).join('') || '<tr><td colspan="7">-</td></tr>';
+  const cd = r.condicoes || {};
   const equipeRows = (r.equipe || []).map((e, i) => `<tr><td>${i + 1}. ${esc(e.nome)}</td><td>${esc(e.doc)}</td></tr>`).join('') || '<tr><td colspan="2">-</td></tr>';
   const fotosHTML = (r.fotos || []).filter(f => f.data).map((f, i) => `<div style="text-align:center"><img src="${f.data}" style="width:100%;max-height:200px;object-fit:contain;border:1px solid #ccc;border-radius:4px"><div style="font-size:8px;color:#666;margin-top:2px">${i + 1}. ${esc(f.label)}</div></div>`).join('');
 
@@ -941,6 +1016,18 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 
 <div class="sec">FASE 1 — ANTES (ITENS DE VERIFICAÇÃO)</div>
 <table><tr><th>Item</th><th>Qtd</th><th>Fabricante</th><th>Nº Lote</th><th>Data Fab.</th><th>Data Val.</th><th>Verificado por</th></tr>${matRows}</table>
+
+<div class="sec">CONDIÇÕES DO REVESTIMENTO E DO TAMBOR</div>
+<table class="check-tbl">
+<tr><td colspan="4" style="background:#0D1B2A;color:#fff;font-weight:700;font-size:8px">Revestimento a ser Aplicado</td></tr>
+<tr><td>Aspecto visual</td><td>${esc(cd.aspecto)}</td><td>Condições de armazenamento</td><td>${esc(cd.armazenamento)}</td></tr>
+<tr><td>Espessura (mm)</td><td>${esc(cd.espessura)}</td><td>Dureza Shore A</td><td>${esc(cd.dureza)}</td></tr>
+<tr><td colspan="4" style="background:#0D1B2A;color:#fff;font-weight:700;font-size:8px">Condições do Tambor</td></tr>
+<tr><td>Rugosidade superficial</td><td>${esc(cd.rugosidade)}</td><td>Presença de corrosão</td><td>${esc(cd.corrosao)}</td></tr>
+<tr><td>Amassamentos / deformações</td><td>${esc(cd.amassamentos)}</td><td>Resíduos revest. anterior</td><td>${esc(cd.residuos)}</td></tr>
+<tr><td>Trincas ou soldas irregulares</td><td>${esc(cd.trincas)}</td><td>Limpeza da superfície</td><td>${esc(cd.limpeza)}</td></tr>
+${cd.obsCondicoes ? `<tr><td colspan="4"><b>Obs.:</b> ${esc(cd.obsCondicoes)}</td></tr>` : ''}
+</table>
 
 <div class="sec">FASE 2 — DURANTE (CHECK LIST AMBIENTE)</div>
 <table class="check-tbl">
