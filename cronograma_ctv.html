@@ -489,11 +489,43 @@ function renderTasks() {
   if (!tasks.length) { list.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
   const now = new Date();
-  list.innerHTML = tasks.map((t, i) => {
+
+  let totalHrs = 0, minStart = null, maxEnd = null, doneCount = 0;
+  tasks.forEach(t => {
+    if (t.inicioPrev && t.fimPrev) {
+      const s = new Date(t.inicioPrev), e = new Date(t.fimPrev);
+      totalHrs += (e - s) / 3600000;
+      if (!minStart || s < minStart) minStart = s;
+      if (!maxEnd || e > maxEnd) maxEnd = e;
+    }
+    if (t.done) doneCount++;
+  });
+
+  let summary = '';
+  if (totalHrs > 0) {
+    summary = '<div style="background:var(--navy);color:#fff;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;line-height:1.6">' +
+      '<div style="display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center">' +
+        '<span style="font-weight:800;font-size:13px">⏱ ' + totalHrs.toFixed(2).replace('.', ',') + ' hrs</span>' +
+        '<span>' + doneCount + '/' + tasks.length + ' concluídas</span>' +
+      '</div>' +
+      '<div style="opacity:.8;margin-top:2px">' +
+        (minStart ? formatDT(minStart.toISOString()) : '') +
+        (maxEnd ? ' → ' + formatDT(maxEnd.toISOString()) : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  const rows = tasks.map((t, i) => {
     let status = 'pending';
     if (t.done) status = 'done';
     else if (t.fimPrev && new Date(t.fimPrev) < now) status = 'late';
     else if (t.inicioPrev && new Date(t.inicioPrev) <= now) status = 'ontime';
+
+    let durLabel = '';
+    if (t.inicioPrev && t.fimPrev) {
+      const dh = (new Date(t.fimPrev) - new Date(t.inicioPrev)) / 3600000;
+      durLabel = ' · ' + dh.toFixed(1).replace('.', ',') + 'h';
+    }
 
     return '<div class="task-item ' + status + '">' +
       '<div class="task-header">' +
@@ -501,7 +533,7 @@ function renderTasks() {
         '<div class="task-name">' + (i + 1) + '. ' + esc(t.nome) + '</div>' +
       '</div>' +
       '<div class="task-dates">' +
-        'Previsto: ' + formatDT(t.inicioPrev) + ' → ' + formatDT(t.fimPrev) +
+        'Previsto: ' + formatDT(t.inicioPrev) + ' → ' + formatDT(t.fimPrev) + durLabel +
         (t.done && t.doneAt ? '<br>Concluído: ' + formatDT(t.doneAt) : '') +
         (t.peso && t.peso > 1 ? ' · Peso: ' + t.peso : '') +
       '</div>' +
@@ -513,6 +545,8 @@ function renderTasks() {
       '</div>' +
     '</div>';
   }).join('');
+
+  list.innerHTML = summary + rows;
 }
 
 function toggleTask(i) {
@@ -667,7 +701,7 @@ function renderCurvaS() {
   const maxDate = new Date(allDates[allDates.length - 1]);
   const span = Math.max(maxDate - minDate, 3600000);
 
-  const pad = { top: 28, right: 16, bottom: 46, left: 42 };
+  const pad = { top: 28, right: 16, bottom: 54, left: 42 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top - pad.bottom;
 
@@ -727,16 +761,13 @@ function renderCurvaS() {
   plannedPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, plannedColor, 3.5); });
   actualPoints.forEach((p, i) => { if (i > 0) drawDot(ctx, p.x, p.y, actualColor, 3.5); });
 
-  const spanH = span / 3600000;
-  ctx.fillStyle = lightColor; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'center';
-  const nLabels = Math.min(6, Math.max(3, Math.ceil(spanH / 6) + 1));
+  ctx.fillStyle = lightColor; ctx.font = '9px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  const nLabels = Math.min(5, Math.max(3, Math.ceil(span / (8 * 3600000)) + 1));
   for (let i = 0; i <= nLabels; i++) {
     const dt = new Date(minDate.getTime() + (span * i / nLabels));
     const x = pad.left + (cw * i / nLabels);
-    let lbl;
-    if (spanH <= 24) lbl = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2);
-    else lbl = formatDateShort(dt);
-    ctx.fillText(lbl, x, H - pad.bottom + 14);
+    ctx.fillText(('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2), x, H - pad.bottom + 13);
+    ctx.fillText(('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2), x, H - pad.bottom + 24);
   }
 
   ctx.fillStyle = textColor; ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'center';
@@ -923,22 +954,23 @@ function exportarCSV() {
 /* ══════════════ IMPORTAR / BAIXAR MODELO ══════════════ */
 function baixarModelo() {
   const bom = '﻿';
-  const header = '"Tarefa";"Descrição";"Data Início (DD/MM/AAAA)";"Hora Início (HH:MM)";"Data Fim (DD/MM/AAAA)";"Hora Fim (HH:MM)";"Peso (1-10)"\n';
+  const header = '"Tarefa";"Descrição";"Data (DD/MM/AAAA)";"Hora Início (HH:MM)";"Duração (horas)";"Peso (1-10)"\n';
   const exemplos =
-    '"Isolamento elétrico e bloqueio";"Desligar e bloquear equipamento";"01/10/2026";"07:00";"01/10/2026";"08:00";"2"\n' +
-    '"Remoção das proteções";"Retirar proteções mecânicas";"01/10/2026";"08:00";"01/10/2026";"10:00";"3"\n' +
-    '"Corte da correia velha";"";"01/10/2026";"10:00";"01/10/2026";"12:00";"3"\n' +
-    '"Posicionamento da correia nova";"";"01/10/2026";"13:00";"01/10/2026";"16:00";"5"\n' +
-    '"Emenda da correia";"";"02/10/2026";"07:00";"02/10/2026";"12:00";"5"\n' +
-    '"Vulcanização";"";"02/10/2026";"13:00";"02/10/2026";"18:00";"4"\n' +
-    '"Teste e liberação";"";"03/10/2026";"07:00";"03/10/2026";"09:00";"2"\n';
+    '"Isolamento elétrico e bloqueio";"Desligar e bloquear equipamento";"01/10/2026";"07:00";"1";"2"\n' +
+    '"Remoção das proteções";"Retirar proteções mecânicas";"";"";"1";"3"\n' +
+    '"Retirar tensão da correia";"";"";"";""1";"2"\n' +
+    '"Corte da correia velha";"";"";"";""2";"3"\n' +
+    '"Posicionamento da correia nova";"";"";"13:00";"3";"5"\n' +
+    '"Emenda da correia";"Preparar e colar";"02/10/2026";"07:00";"5";"5"\n' +
+    '"Vulcanização";"";"";"13:00";"5";"4"\n' +
+    '"Teste e liberação";"";""03/10/2026";"07:00";"2";"2"\n';
   const csv = bom + header + exemplos;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'modelo_cronograma.csv';
   a.click(); URL.revokeObjectURL(url);
-  showToast('Modelo baixado — abra no Excel, preencha e importe.');
+  showToast('Modelo baixado — preencha Hora Início + Duração; horários são calculados automaticamente.');
 }
 
 function importarPlanilha(event) {
@@ -964,9 +996,11 @@ function processarCSV(text) {
 
   const headerRaw = lines[0].toLowerCase();
   const isModeloHeader = headerRaw.includes('tarefa') || headerRaw.includes('task');
+  const isDurMode = headerRaw.includes('dura');
 
   const startIdx = isModeloHeader ? 1 : 0;
   let count = 0;
+  let lastEnd = null;
 
   for (let i = startIdx; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i], sep);
@@ -974,14 +1008,40 @@ function processarCSV(text) {
 
     const nome = cols[0].trim();
     const desc = (cols[1] || '').trim();
-    const dataIni = (cols[2] || '').trim();
-    const horaIni = (cols[3] || '').trim();
-    const dataFim = (cols[4] || '').trim();
-    const horaFim = (cols[5] || '').trim();
-    const peso = parseInt(cols[6]) || 1;
+    let inicioPrev, fimPrev, peso;
 
-    const inicioPrev = parseDateTimeBR(dataIni, horaIni);
-    const fimPrev = parseDateTimeBR(dataFim, horaFim);
+    if (isDurMode) {
+      const dataStr = (cols[2] || '').trim();
+      const horaStr = (cols[3] || '').trim();
+      const duracao = parseFloat((cols[4] || '0').replace(',', '.')) || 0;
+      peso = parseInt(cols[5]) || 1;
+
+      if (dataStr && horaStr) {
+        inicioPrev = parseDateTimeBR(dataStr, horaStr);
+      } else if (horaStr && lastEnd) {
+        const le = new Date(lastEnd);
+        const d = ('0'+le.getDate()).slice(-2)+'/'+('0'+(le.getMonth()+1)).slice(-2)+'/'+le.getFullYear();
+        inicioPrev = parseDateTimeBR(d, horaStr);
+      } else if (lastEnd) {
+        inicioPrev = lastEnd;
+      } else {
+        inicioPrev = '';
+      }
+
+      if (inicioPrev && duracao > 0) {
+        const e = new Date(new Date(inicioPrev).getTime() + duracao * 3600000);
+        fimPrev = e.toISOString();
+        lastEnd = fimPrev;
+      } else { fimPrev = ''; }
+    } else {
+      const dataIni = (cols[2] || '').trim();
+      const horaIni = (cols[3] || '').trim();
+      const dataFim = (cols[4] || '').trim();
+      const horaFim = (cols[5] || '').trim();
+      peso = parseInt(cols[6]) || 1;
+      inicioPrev = parseDateTimeBR(dataIni, horaIni);
+      fimPrev = parseDateTimeBR(dataFim, horaFim);
+    }
 
     cur.tarefas.push({
       id: 't_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1058,8 +1118,11 @@ function lerExcel(file) {
       if (rows.length < 2) { showToast('Planilha vazia.'); return; }
 
       const headerRaw = rows[0].map(c => String(c).toLowerCase());
-      const startIdx = headerRaw.some(h => h.includes('tarefa') || h.includes('task')) ? 1 : 0;
+      const isHeader = headerRaw.some(h => h.includes('tarefa') || h.includes('task'));
+      const isDurMode = headerRaw.some(h => h.includes('dura'));
+      const startIdx = isHeader ? 1 : 0;
       let count = 0;
+      let lastEnd = null;
 
       for (let i = startIdx; i < rows.length; i++) {
         const cols = rows[i];
@@ -1067,14 +1130,40 @@ function lerExcel(file) {
         if (!nome) continue;
 
         const desc = String(cols[1] || '').trim();
-        const dataIni = excelDateStr(cols[2]);
-        const horaIni = excelTimeStr(cols[3]);
-        const dataFim = excelDateStr(cols[4]);
-        const horaFim = excelTimeStr(cols[5]);
-        const peso = parseInt(cols[6]) || 1;
+        let inicioPrev, fimPrev, peso;
 
-        const inicioPrev = parseDateTimeBR(dataIni, horaIni);
-        const fimPrev = parseDateTimeBR(dataFim, horaFim);
+        if (isDurMode) {
+          const dataStr = excelDateStr(cols[2]);
+          const horaStr = excelTimeStr(cols[3]);
+          const duracao = parseFloat(String(cols[4] || '0').replace(',', '.')) || 0;
+          peso = parseInt(cols[5]) || 1;
+
+          if (dataStr && horaStr) {
+            inicioPrev = parseDateTimeBR(dataStr, horaStr);
+          } else if (horaStr && lastEnd) {
+            const le = new Date(lastEnd);
+            const d = ('0'+le.getDate()).slice(-2)+'/'+('0'+(le.getMonth()+1)).slice(-2)+'/'+le.getFullYear();
+            inicioPrev = parseDateTimeBR(d, horaStr);
+          } else if (lastEnd) {
+            inicioPrev = lastEnd;
+          } else {
+            inicioPrev = '';
+          }
+
+          if (inicioPrev && duracao > 0) {
+            const end = new Date(new Date(inicioPrev).getTime() + duracao * 3600000);
+            fimPrev = end.toISOString();
+            lastEnd = fimPrev;
+          } else { fimPrev = ''; }
+        } else {
+          const dataIni = excelDateStr(cols[2]);
+          const horaIni = excelTimeStr(cols[3]);
+          const dataFim = excelDateStr(cols[4]);
+          const horaFim = excelTimeStr(cols[5]);
+          peso = parseInt(cols[6]) || 1;
+          inicioPrev = parseDateTimeBR(dataIni, horaIni);
+          fimPrev = parseDateTimeBR(dataFim, horaFim);
+        }
 
         cur.tarefas.push({
           id: 't_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
