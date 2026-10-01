@@ -1098,7 +1098,8 @@ function baixarModelo() {
     '"3) Para pular horario (ex: almoco): preencha apenas a Hora (ex: 13:00)"\n' +
     '"4) Para mudar de dia: preencha a Data (ex: 02/10/2026)"\n' +
     '"5) Tarefas noturnas: a duracao pode ultrapassar meia-noite (ex: inicio 20:00 + 720 min = termino 08:00 dia seguinte)"\n' +
-    '"6) Apague estas instrucoes ou deixe como estao - o app ignora automaticamente"\n' +
+    '"6) As formulas de TOTAL calculam automaticamente - ajuste o intervalo se adicionar linhas"\n' +
+    '"7) Apague estas instrucoes ou deixe como estao - o app ignora automaticamente"\n' +
     '\n';
   const header = '"Tarefa";"Descricao";"Data (DD/MM/AAAA)";"Hora Inicio (HH:MM)";"Duracao (minutos)";"Peso (1-10)"\n';
   const exemplos =
@@ -1110,7 +1111,8 @@ function baixarModelo() {
     '"Emenda da correia";"Usar prensa de vulcanizacao";"02/10/2026";"07:00";"120";"5"\n' +
     '"Vulcanizacao";"Vulcanizar emenda";"";"13:00";"180";"4"\n' +
     '"Teste e liberacao";"Organizacao da area";"03/10/2026";"07:00";"60";"2"\n';
-  const total = '\n"";"";"";"TOTAL";"655 min = 10h 55min";""\n';
+  const total = '\n"";"";"";"TOTAL (min)";=SUM(E11:E100);""\n' +
+    '"";"";"";"TOTAL (hrs)";=INT(E20/60);=E20-INT(E20/60)*60\n';
   const csv = bom + instrucoes + header + exemplos + total;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
