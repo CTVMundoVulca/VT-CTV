@@ -155,6 +155,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   <div style="padding:0 12px 8px;display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalEfetivo()">👥 Efetivo</button>
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalFiscal()">📋 Fiscais</button>
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalFabricante()">🏭 Fabricantes</button>
   </div>
   <div style="padding:0 12px 8px">
     <button class="btn btn-ghost btn-sm btn-block" id="btnMigrar" style="display:none" onclick="migrarLocalParaNuvem()">☁️ Enviar registros locais para a nuvem</button>
@@ -341,6 +342,26 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   </div>
 </div>
 
+<!-- MODAL GERENCIAR FABRICANTES -->
+<div id="modalFabricante" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalFabricante()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Gerenciar Fabricantes</h2>
+      <button onclick="fecharModalFabricante()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="func-add-row">
+        <input type="text" id="novoFabNome" placeholder="Nome do fabricante" style="text-transform:uppercase">
+        <button class="btn btn-success btn-sm" onclick="adicionarFabricante()">+</button>
+      </div>
+      <div id="fabList"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-block" onclick="fecharModalFabricante()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -415,6 +436,15 @@ function loadMateriais() {
 }
 function saveMateriais() { try { localStorage.setItem(MAT_STORE_KEY, JSON.stringify(MATERIAIS_REV)); } catch(e){} }
 
+const FABRICANTES_DEFAULT = ['VIPAL'];
+const FAB_STORE_KEY = 'ctv_rev_fabricantes';
+let FABRICANTES = [];
+function loadFabricantes() {
+  try { const s = JSON.parse(localStorage.getItem(FAB_STORE_KEY)); if (Array.isArray(s) && s.length) { FABRICANTES = s; return; } } catch(e){}
+  FABRICANTES = [...FABRICANTES_DEFAULT];
+}
+function saveFabricantes() { try { localStorage.setItem(FAB_STORE_KEY, JSON.stringify(FABRICANTES)); } catch(e){} }
+
 /* ═══ FIREBASE CONFIG ═══ */
 const firebaseConfig = {
   apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
@@ -481,6 +511,10 @@ function persistFiscais() {
 function persistMateriais() {
   if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'rev_materiais'), { list: MATERIAIS_REV }).catch(err => onWriteError(err)); }
   saveMateriais();
+}
+function persistFabricantes() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'rev_fabricantes'), { list: FABRICANTES }).catch(err => onWriteError(err)); }
+  saveFabricantes();
 }
 
 /* ═══ TEMA ═══ */
@@ -570,6 +604,11 @@ function matOptions(selected) {
   html += '<option value="CONDIÇÕES DO REVESTIMENTO"' + ('CONDIÇÕES DO REVESTIMENTO' === selected ? ' selected' : '') + '>CONDIÇÕES DO REVESTIMENTO</option>';
   return html;
 }
+function fabOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  FABRICANTES.forEach(f => { html += `<option value="${f}"${f === selected ? ' selected' : ''}>${f}</option>`; });
+  return html;
+}
 
 /* ═══ EQUIPE DE TRABALHO ═══ */
 function renderEquipe() {
@@ -600,7 +639,7 @@ function addEquip() { cur.equipamentos.push({ equip: '', marca: '', codigo: '', 
 /* ═══ MATERIAIS (FASE 1 — ANTES) ═══ */
 function renderMateriais() {
   const c = document.getElementById('materiaisList');
-  c.innerHTML = (cur.materiais || []).map((m, i) => `<div class="ef-row" style="flex-wrap:wrap"><div><label class="fld">Item</label><select onchange="cur.materiais[${i}].item=this.value">${matOptions(m.item)}</select></div><div><label class="fld">Qtd</label><input type="text" value="${esc(m.quant)}" onchange="cur.materiais[${i}].quant=this.value" style="width:60px"></div><div><label class="fld">Fabricante</label><input type="text" value="${esc(m.fabricante)}" onchange="cur.materiais[${i}].fabricante=this.value"></div><div><label class="fld">Nº Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiais[${i}].lote=this.value"></div><div><label class="fld">Data Fabricação</label><input type="date" value="${esc(m.dataFab)}" onchange="cur.materiais[${i}].dataFab=this.value"></div><div><label class="fld">Data Validade</label><input type="date" value="${esc(m.dataVal)}" onchange="cur.materiais[${i}].dataVal=this.value"></div><div><label class="fld">Verificado por</label><select onchange="cur.materiais[${i}].verificadoPor=this.value">${funcOptions(m.verificadoPor)}</select></div><button class="ef-remove" onclick="cur.materiais.splice(${i},1);renderMateriais()">×</button></div>`).join('');
+  c.innerHTML = (cur.materiais || []).map((m, i) => `<div class="ef-row" style="flex-wrap:wrap"><div><label class="fld">Item</label><select onchange="cur.materiais[${i}].item=this.value">${matOptions(m.item)}</select></div><div><label class="fld">Qtd</label><input type="text" value="${esc(m.quant)}" onchange="cur.materiais[${i}].quant=this.value" style="width:60px"></div><div><label class="fld">Fabricante</label><select onchange="cur.materiais[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Nº Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiais[${i}].lote=this.value"></div><div><label class="fld">Data Fabricação</label><input type="date" value="${esc(m.dataFab)}" onchange="cur.materiais[${i}].dataFab=this.value"></div><div><label class="fld">Data Validade</label><input type="date" value="${esc(m.dataVal)}" onchange="cur.materiais[${i}].dataVal=this.value"></div><div><label class="fld">Verificado por</label><select onchange="cur.materiais[${i}].verificadoPor=this.value">${funcOptions(m.verificadoPor)}</select></div><button class="ef-remove" onclick="cur.materiais.splice(${i},1);renderMateriais()">×</button></div>`).join('');
 }
 function addMaterial() { cur.materiais.push({ item: '', quant: '', fabricante: '', lote: '', dataFab: '', dataVal: '', verificadoPor: '' }); renderMateriais(); }
 
@@ -651,6 +690,21 @@ function adicionarFiscal() {
   persistFiscais(); document.getElementById('novoFiscalNome').value = ''; document.getElementById('novoFiscalDoc').value = ''; renderFiscalList(); showToast('Fiscal adicionado');
 }
 function removerFiscal(i) { if (!confirm('Remover ' + FISCAIS[i].nome + '?')) return; FISCAIS.splice(i, 1); persistFiscais(); renderFiscalList(); showToast('Fiscal removido'); }
+
+/* ═══ GERENCIAR FABRICANTES ═══ */
+function abrirModalFabricante() { document.getElementById('modalFabricante').style.display = ''; document.getElementById('novoFabNome').value = ''; renderFabList(); }
+function fecharModalFabricante() { document.getElementById('modalFabricante').style.display = 'none'; if (cur) renderMateriais(); }
+function renderFabList() {
+  document.getElementById('fabList').innerHTML = FABRICANTES.map((f, i) => `<div class="func-item"><div class="func-name">${esc(f)}</div><button class="func-del" onclick="removerFabricante(${i})" title="Remover">×</button></div>`).join('');
+}
+function adicionarFabricante() {
+  const nome = document.getElementById('novoFabNome').value.trim().toUpperCase();
+  if (!nome) { showToast('Informe o nome do fabricante'); return; }
+  if (FABRICANTES.some(f => f === nome)) { showToast('Fabricante já existe'); return; }
+  FABRICANTES.push(nome); FABRICANTES.sort((a, b) => a.localeCompare(b));
+  persistFabricantes(); document.getElementById('novoFabNome').value = ''; renderFabList(); showToast('Fabricante adicionado');
+}
+function removerFabricante(i) { if (!confirm('Remover ' + FABRICANTES[i] + '?')) return; FABRICANTES.splice(i, 1); persistFabricantes(); renderFabList(); showToast('Fabricante removido'); }
 
 function refreshSelects() {
   if (!cur) return;
@@ -924,7 +978,7 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadFuncionarios(); loadMateriais(); loadFiscais(); loadLocal(); applyDark();
+  loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); loadLocal(); applyDark();
   updateModeUI(); renderList();
 }
 function bootCloud(api) {
@@ -932,7 +986,7 @@ function bootCloud(api) {
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_rev_local_backup')) localStorage.setItem('ctv_rev_local_backup', raw); } catch(e){}
   db = { registros: [], config: { dark: false } };
-  loadFuncionarios(); loadMateriais(); loadFiscais(); applyDark();
+  loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); applyDark();
   try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
   updateModeUI(); renderList();
   FB.onAuthStateChanged(FB.auth, user => {
@@ -1015,6 +1069,10 @@ function startCloudListeners() {
   const matRef = FB.doc(FB.fs, 'shared', 'rev_materiais');
   FB.getDoc(matRef).then(s => { if (!s.exists()) FB.setDoc(matRef, { list: [...MATERIAIS_DEFAULT] }); }).catch(() => {});
   cloudUnsub.push(FB.onSnapshot(matRef, s => { const d = s.data(); if (d && d.list) { MATERIAIS_REV = d.list; saveMateriais(); } }, () => {}));
+
+  const fabRef = FB.doc(FB.fs, 'shared', 'rev_fabricantes');
+  FB.getDoc(fabRef).then(s => { if (!s.exists()) FB.setDoc(fabRef, { list: [...FABRICANTES_DEFAULT] }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(fabRef, s => { const d = s.data(); if (d && d.list) { FABRICANTES = d.list; saveFabricantes(); } }, () => {}));
 
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'revestimentos'), s => {
     const editorOpen = document.getElementById('editorView').style.display !== 'none';
