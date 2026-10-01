@@ -3,7 +3,7 @@
    atualização quando há rede) com fallback para o cache (offline).
    Demais assets = cache-first. Troque CACHE_VERSION ao publicar
    mudanças para forçar atualização nos aparelhos. */
-const CACHE_VERSION = 'ctv-campo-v79';
+const CACHE_VERSION = 'ctv-campo-v80';
 
 /* Caminhos relativos ao escopo do SW (funciona sob /vt-ctv/ no GitHub Pages) */
 const APP_SHELL = [
@@ -22,7 +22,13 @@ const APP_SHELL = [
   './logo-benetech.png',
   './logo-suzano.png',
   './registro_emenda_ctv.html',
-  './registro_revestimento_ctv.html'
+  './registro_revestimento_ctv.html',
+  './icon-horarios.webp',
+  './icon-rdo.webp',
+  './icon-visita.webp',
+  './icon-transportadores.webp',
+  './icon-emenda.webp',
+  './icon-revestimento.webp'
 ];
 
 self.addEventListener('install', event => {

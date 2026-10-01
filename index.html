@@ -64,9 +64,9 @@
   .app-card:active { transform: scale(.98); }
   .app-ico {
     width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
-    display: grid; place-items: center; font-size: 28px; color: #fff; background: var(--orange);
+    overflow: hidden;
   }
-  .app-ico.blue { background: var(--navy-mid); }
+  .app-ico img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
   .app-info h2 { font-size: 17px; margin-bottom: 3px; }
   .app-info p { font-size: 13px; color: var(--text-light); line-height: 1.4; }
   .app-arrow { margin-left: auto; color: var(--orange); font-size: 22px; font-weight: 800; }
@@ -82,7 +82,7 @@
     <p class="intro">Ferramentas de campo. Funcionam offline no celular — toque em "Adicionar à tela inicial" no navegador para instalar como app.</p>
 
     <a class="app-card" href="registo_horarios_ctv.html">
-      <div class="app-ico">⏱️</div>
+      <div class="app-ico"><img src="icon-horarios.webp" alt="Horários"></div>
       <div class="app-info">
         <h2>Registo de Horários</h2>
         <p>Bater ponto, contratos (principal e externos), pausas, calendário e relatórios.</p>
@@ -91,7 +91,7 @@
     </a>
 
     <a class="app-card" href="rdo_ctv.html">
-      <div class="app-ico blue">📝</div>
+      <div class="app-ico"><img src="icon-rdo.webp" alt="RDO"></div>
       <div class="app-info">
         <h2>RDO — Relatório Diário de Obra</h2>
         <p>Efetivo, atividades, paradas, transporte e assinaturas. Calendário, PDF e CSV.</p>
@@ -100,7 +100,7 @@
     </a>
 
     <a class="app-card" href="visita_tecnica_suzano_offline.html">
-      <div class="app-ico blue">📋</div>
+      <div class="app-ico"><img src="icon-visita.webp" alt="Visita Técnica"></div>
       <div class="app-info">
         <h2>Visita Técnica</h2>
         <p>Registro de visita técnica com fotos, ferramentas e geração de relatório.</p>
@@ -109,7 +109,7 @@
     </a>
 
     <a class="app-card" href="transportadores_suzano.html">
-      <div class="app-ico blue">🏗️</div>
+      <div class="app-ico"><img src="icon-transportadores.webp" alt="Transportadores"></div>
       <div class="app-info">
         <h2>Transportadores — Suzano/Aracruz</h2>
         <p>Controle de transportadores (correias) da unidade Suzano Aracruz.</p>
@@ -118,7 +118,7 @@
     </a>
 
     <a class="app-card" href="registro_emenda_ctv.html" id="card-emenda">
-      <div class="app-ico">🔧</div>
+      <div class="app-ico"><img src="icon-emenda.webp" alt="Emenda"></div>
       <div class="app-info">
         <h2>Registro de Emenda</h2>
         <p>Registro de emenda de correia transportadora — FOR GTO 054. Fotos, assinaturas e PDF.</p>
@@ -127,7 +127,7 @@
     </a>
 
     <a class="app-card" href="registro_revestimento_ctv.html" id="card-revestimento">
-      <div class="app-ico">🛞</div>
+      <div class="app-ico"><img src="icon-revestimento.webp" alt="Revestimento"></div>
       <div class="app-info">
         <h2>Revestimento de Tambor</h2>
         <p>Check list para revestimento de tambores — FOR GTO 076. Materiais, fotos, assinaturas e PDF.</p>
