@@ -272,6 +272,7 @@
       <button class="btn btn-ghost" id="btnMigrar" style="display:none;margin-bottom:10px" onclick="migrarLocalParaNuvem()">☁️ Enviar RDOs locais para a nuvem</button>
       <button class="btn btn-ghost" id="btnSenha" style="display:none;margin-bottom:10px" onclick="alterarSenha()">🔑 Alterar minha senha</button>
       <button class="btn btn-ghost" onclick="openColabModal()" style="margin-bottom:10px">👥 Gerenciar colaboradores</button>
+      <button class="btn btn-ghost" onclick="openFuncModal()" style="margin-bottom:10px">🔧 Gerenciar funções</button>
       <button class="btn btn-ghost" onclick="exportAllCSV()" style="margin-bottom:10px">⬇️ Exportar todos (CSV)</button>
       <button class="btn btn-ghost" onclick="exportBackup()" style="margin-bottom:10px">💾 Backup (arquivo)</button>
       <button class="btn btn-ghost" onclick="document.getElementById('impFile').click()">📂 Restaurar backup</button>
@@ -375,6 +376,21 @@
   </div>
 </div>
 
+<!-- ═══════════ MODAL: FUNÇÕES ═══════════ -->
+<div class="modal-bg" id="funcModalBg">
+  <div class="modal">
+    <h3>Funções</h3>
+    <div class="hint" style="margin-bottom:10px">Estas funções aparecem na lista suspensa do campo "Função". Você pode adicionar ou remover.</div>
+    <div id="funcModalList" style="max-height:45vh;overflow-y:auto;margin-bottom:12px"></div>
+    <label class="fld">Adicionar nova</label>
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="funcNew" placeholder="Nome da função" style="flex:2">
+      <button class="btn btn-primary" style="flex:1" onclick="addFuncFromModal()">Adicionar</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeFuncModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="feriadoModalBg">
   <div class="modal">
     <h3>Feriados municipais</h3>
@@ -402,7 +418,7 @@ let cur = null;         // RDO em edição
 let editingId = null;
 let formDirty = false;
 
-const FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
+const DEFAULT_FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
 const SEC = {
   efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
@@ -454,6 +470,7 @@ function loadLocal() {
   if (!db.rdos) db.rdos = [];
   if (!db.config) db.config = {};
   if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
+  if (!('funcoes' in db.config)) db.config.funcoes = DEFAULT_FUNCOES.slice();
   if (!db.config.feriados) db.config.feriados = {};
 }
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
@@ -486,6 +503,10 @@ function onWriteError(err) {
 }
 function persistColab() {
   if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(err => onWriteError(err)); }
+  else { saveLocal(); }
+}
+function persistFuncoes() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'funcoes'), { list: db.config.funcoes || [] }).catch(err => onWriteError(err)); }
   else { saveLocal(); }
 }
 function persistFeriados() {
@@ -715,7 +736,7 @@ function inputFor(section, idx, fdef, val) {
   const v = val == null ? '' : val;
   let input;
   if (type === 'func') {
-    input = `<select data-f="${key}"><option value="">—</option>${FUNCOES.map(f => `<option ${f === v ? 'selected' : ''}>${f}</option>`).join('')}</select>`;
+    input = `<select data-f="${key}" onchange="funcSelectChanged(this,'${section}')">${funcOptions(v)}</select>`;
   } else if (type === 'nome') {
     input = `<select data-f="${key}" onchange="nameSelectChanged(this,'${section}')">${colabOptions(v)}</select>`;
   } else if (type === 'area') {
@@ -797,6 +818,56 @@ function addColabFromModal() {
 function removeColab(nome) {
   db.config.colaboradores = (db.config.colaboradores || []).filter(n => n.toLowerCase() !== String(nome).toLowerCase());
   persistColab(); renderColabModal();
+}
+
+/* ── funções (lista de cargos) ── */
+function funcList() { return (db.config.funcoes || []).slice().sort((a, b) => a.localeCompare(b, 'pt')); }
+function funcOptions(val) {
+  const list = funcList();
+  const cur = String(val || '');
+  const has = list.some(f => f.toLowerCase() === cur.toLowerCase());
+  let opts = '<option value="">—</option>';
+  if (cur && !has) opts += `<option value="${escapeAttr(cur)}" selected>${escapeHtml(cur)}</option>`;
+  opts += list.map(f => `<option ${f.toLowerCase() === cur.toLowerCase() ? 'selected' : ''}>${escapeHtml(f)}</option>`).join('');
+  opts += '<option value="__nova__">➕ Nova função…</option>';
+  return opts;
+}
+function addFuncao(nome) {
+  nome = (nome || '').trim(); if (!nome) return false;
+  db.config.funcoes = db.config.funcoes || [];
+  if (!db.config.funcoes.some(f => f.toLowerCase() === nome.toLowerCase())) { db.config.funcoes.push(nome); persistFuncoes(); }
+  return true;
+}
+function funcSelectChanged(sel, section) {
+  if (sel.value !== '__nova__') return;
+  const nome = (prompt('Nome da nova função:') || '').trim();
+  if (!nome) { sel.value = ''; return; }
+  addFuncao(nome);
+  const o = document.createElement('option'); o.value = nome; o.textContent = nome;
+  sel.insertBefore(o, sel.querySelector('option[value="__nova__"]'));
+  sel.value = nome;
+  syncSection(section);
+  renderSection(section);
+}
+
+/* ── gerenciar funções (modal) ── */
+function openFuncModal() { renderFuncModal(); document.getElementById('funcModalBg').classList.add('open'); }
+function closeFuncModal() { document.getElementById('funcModalBg').classList.remove('open'); }
+function renderFuncModal() {
+  const el = document.getElementById('funcModalList');
+  const list = funcList();
+  el.innerHTML = list.length ? list.map(f => `<div class="entry" style="cursor:default">
+      <div class="entry-main"><div class="top">${escapeHtml(f)}</div></div>
+      <button class="mini-del" onclick="removeFuncao('${escapeAttr(f).replace(/'/g, "\\'")}')">✕</button>
+    </div>`).join('') : `<div class="empty">Nenhuma função. Adicione abaixo.</div>`;
+}
+function addFuncFromModal() {
+  const inp = document.getElementById('funcNew');
+  if (addFuncao(inp.value)) { inp.value = ''; renderFuncModal(); showToast('Função adicionada ✔️'); }
+}
+function removeFuncao(nome) {
+  db.config.funcoes = (db.config.funcoes || []).filter(f => f.toLowerCase() !== String(nome).toLowerCase());
+  persistFuncoes(); renderFuncModal();
 }
 
 function collectEditor() {
@@ -1083,8 +1154,9 @@ function bootCloud(api) {
   db = { version: 1, rdos: [], config: {} };
   loadDark(); applyDark();
   // primeira pintura a partir do cache (offline), até o Firestore responder
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
   if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
+  if (!db.config.funcoes) db.config.funcoes = DEFAULT_FUNCOES.slice();
   if (!db.config.feriados) db.config.feriados = {};
   updateModeUI();
   renderList(); renderCalendar();
@@ -1162,6 +1234,12 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(colRef, s => {
     const d = s.data(); db.config.colaboradores = (d && d.list) || DEFAULT_COLAB.slice();
     if (document.getElementById('colabModalBg').classList.contains('open')) renderColabModal();
+  }, () => {}));
+  const funcRef = FB.doc(FB.fs, 'shared', 'funcoes');
+  FB.getDoc(funcRef).then(s => { if (!s.exists()) FB.setDoc(funcRef, { list: DEFAULT_FUNCOES.slice() }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(funcRef, s => {
+    const d = s.data(); db.config.funcoes = (d && d.list) || DEFAULT_FUNCOES.slice();
+    if (document.getElementById('funcModalBg').classList.contains('open')) renderFuncModal();
   }, () => {}));
   const ferRef = FB.doc(FB.fs, 'shared', 'feriados');
   cloudUnsub.push(FB.onSnapshot(ferRef, s => {
