@@ -1,0 +1,1048 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOFTWARE PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS              ║
+  ║  © 2024-2026 CTV Consultoria Técnica em Vulcanização               ║
+  ║  CNPJ: 65.601.481/0001-36                                         ║
+  ║  Autor: Glauber Dutra                                              ║
+  ║                                                                    ║
+  ║  Este software é protegido pela Lei nº 9.609/98 (Lei do Software)  ║
+  ║  e pela Lei nº 9.610/98 (Lei de Direitos Autorais).                ║
+  ║  É vedada a reprodução, distribuição, modificação ou utilização    ║
+  ║  deste código, total ou parcialmente, sem autorização expressa     ║
+  ║  por escrito do titular dos direitos.                              ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
+<title>Registro de Fabricação de Placa de Borracha — CTV</title>
+<style>
+:root {
+  --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
+  --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
+  --success: #10b981; --warn: #f59e0b; --danger: #ef4444;
+  --radius: 12px;
+}
+html[data-dark="1"] {
+  --bg: #0a0f1a; --card: #131a2b; --text: #e4e8f1; --text-light: #8892a4;
+  --border: #1e2a3f; --navy: #000d1a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; max-width: 100vw; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 80px; }
+.topbar { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 90; overflow: hidden; }
+.topbar h1 { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar button { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px 8px; }
+.menu-btn { background: var(--blue); color: #fff; border: none; padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.menu-btn:active { filter: brightness(.9); }
+.icon-btn { background: var(--navy); border: 1px solid rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; }
+.icon-btn:active { background: var(--blue); color: #fff; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--blue); margin-bottom: 10px; padding: 6px 10px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
+.section-title span { background: var(--blue); color: #fff; font-size: 11px; font-weight: 900; padding: 2px 7px; border-radius: 4px; }
+.fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 8px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
+input, select, textarea { width: 100%; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,166,234,.15); }
+textarea { resize: vertical; min-height: 60px; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%236b7280' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > div { flex: 1 1 calc(50% - 4px); min-width: 120px; }
+@media (max-width: 360px) { .row > div { flex: 1 1 100%; } }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; }
+
+.ef-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 6px; padding: 8px; background: var(--bg); border-radius: 8px; flex-wrap: wrap; position: relative; padding-right: 40px; }
+.ef-row > div { flex: 1 1 calc(50% - 6px); min-width: 120px; }
+.ef-row .ef-remove { position: absolute; right: 8px; top: 8px; flex: 0 0 32px; background: var(--danger); color: #fff; border: none; border-radius: 6px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
+@media (max-width: 420px) { .ef-row > div { flex: 1 1 100%; } }
+
+.foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 360px) { .foto-grid { grid-template-columns: repeat(2, 1fr); } }
+.foto-slot { border: 2px dashed var(--border); border-radius: 8px; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; }
+.foto-slot img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; }
+.foto-slot .foto-label { font-size: 9px; color: var(--text-light); text-align: center; padding: 2px 4px; }
+.foto-slot .foto-add { font-size: 24px; color: var(--text-light); }
+.foto-slot .foto-del { position: absolute; top: 2px; right: 2px; background: var(--danger); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: none; }
+.foto-slot:hover .foto-del { display: block; }
+
+.sig-box { border: 1px dashed var(--border); border-radius: 10px; background: var(--bg); position: relative; margin-bottom: 8px; }
+.sig-box canvas { width: 100%; height: 120px; display: block; touch-action: none; }
+.sig-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-light); font-size: 13px; pointer-events: none; }
+
+.list-view .reg-item { background: var(--card); margin: 8px 12px; border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); cursor: pointer; }
+.reg-item h3 { font-size: 14px; font-weight: 700; }
+.reg-item .meta { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: .3s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+@media print { .topbar, .btn, .no-print { display: none !important; } }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal-box { background: var(--card); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+.modal-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h2 { font-size: 15px; font-weight: 700; }
+.modal-header button { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-light); padding: 0 4px; }
+.modal-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+.func-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.func-item .func-name { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; word-break: break-word; }
+.func-item .func-doc { font-size: 11px; color: var(--text-light); min-width: 0; }
+.func-item .func-del { flex: 0 0 28px; height: 28px; background: var(--danger); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+.func-add-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.func-add-row input { flex: 1 1 auto; min-width: 0; font-size: 13px; padding: 8px 10px; }
+.func-add-row button { flex: 0 0 auto; }
+
+.tipo-rev-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.tipo-rev-group label { flex: 1; display: flex; align-items: center; gap: 6px; padding: 10px 12px; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; }
+.tipo-rev-group input[type=radio] { accent-color: var(--blue); width: 16px; height: 16px; }
+.tipo-rev-group label:has(input:checked) { border-color: var(--blue); background: rgba(67,166,234,.08); }
+
+#authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+#authOverlay.open { display: flex; }
+.auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN (modo nuvem) -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
+    <h3 style="margin-bottom:6px">Registro de Fabricação — Placa de Borracha</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px;font-size:12px;color:var(--text-light)">Entre com seu e-mail e senha. Se ainda não tem conta, toque em "Criar conta".</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary btn-block" onclick="loginEmail()" style="margin-bottom:8px">Entrar</button>
+    <button class="btn btn-ghost btn-block" onclick="registerEmail()" style="margin-bottom:10px">Criar conta</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp">
+
+<div class="topbar">
+  <a class="menu-btn" href="index.html" onclick="return goBack()" title="Voltar ao menu principal">🏠 Menu</a>
+  <h1 id="topTitle" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Fabricação — Placa de Borracha</h1>
+  <span id="userChip" style="display:none;align-items:center;gap:6px;color:#ccc;font-size:11px">
+    <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="icon-btn" onclick="logout()" title="Sair" style="width:32px;height:32px;font-size:14px">⏻</button>
+  </span>
+  <button class="icon-btn" id="darkBtn" onclick="toggleDark()" title="Tema">🌙</button>
+</div>
+
+<!-- VIEW: LISTA -->
+<div id="listView">
+  <div class="card" id="modeBanner" style="display:none">
+    <div style="margin:0;color:#8a5a00;font-size:12px">📴 Modo local (só neste aparelho).</div>
+  </div>
+  <div class="card" id="syncCard" style="display:none;padding:11px 14px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+      <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+      <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+    </div>
+  </div>
+  <div style="padding:12px;display:flex;gap:8px">
+    <button class="btn btn-primary btn-block" onclick="novoRegistro()">+ Nova Placa de Borracha</button>
+  </div>
+  <div style="padding:0 12px 8px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalEfetivo()">👥 Efetivo</button>
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="abrirModalFabricante()">🏭 Fabricantes</button>
+  </div>
+  <div style="padding:0 12px 8px">
+    <button class="btn btn-ghost btn-sm btn-block" id="btnMigrar" style="display:none" onclick="migrarLocalParaNuvem()">☁️ Enviar registros locais para a nuvem</button>
+    <button class="btn btn-ghost btn-sm" id="btnSenha" style="display:none;margin-top:6px" onclick="alterarSenha()">🔑 Alterar minha senha</button>
+  </div>
+  <div id="listContainer" class="list-view"></div>
+</div>
+
+<!-- VIEW: EDITOR -->
+<div id="editorView" style="display:none">
+
+  <!-- 1. IDENTIFICAÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>1</span> IDENTIFICAÇÃO</div>
+    <div class="row">
+      <div><label class="fld">Ordem de Produção</label><input type="text" id="f_ordem_producao" placeholder="Ex: OP 5680"></div>
+      <div><label class="fld">Quantidade</label><input type="number" id="f_quantidade" placeholder="Ex: 5"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Lote do Material Produzido</label><input type="text" id="f_lote_material" placeholder="Ex: PLB-2026-001"></div>
+      <div><label class="fld">Data Produção</label><input type="date" id="f_data"></div>
+    </div>
+    <label class="fld">Tamanho da Placa</label>
+    <div class="tipo-rev-group">
+      <label><input type="radio" name="tamanhoPlaca" value="1250 mm"> 1250 mm</label>
+      <label><input type="radio" name="tamanhoPlaca" value="1540 mm"> 1540 mm</label>
+      <label><input type="radio" name="tamanhoPlaca" value="1640 mm"> 1640 mm</label>
+      <label><input type="radio" name="tamanhoPlaca" value="2000 mm"> 2000 mm</label>
+      <label><input type="radio" name="tamanhoPlaca" value="2060 mm"> 2060 mm</label>
+    </div>
+  </div>
+
+  <!-- 2. MATERIAL UTILIZADO -->
+  <div class="card">
+    <div class="section-title"><span>2</span> MATERIAL UTILIZADO</div>
+    <div id="materiaisList"></div>
+  </div>
+
+  <!-- 3. DADOS FABRICAÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>3</span> DADOS FABRICAÇÃO</div>
+    <div class="row">
+      <div><label class="fld">Total Produzido (Quantidade)</label><input type="number" id="f_total_produzido" step="1" placeholder="Ex: 5"></div>
+      <div><label class="fld">Tempo de Prensagem (min)</label><input type="text" id="f_tempo_prensagem" placeholder="Ex: 30 MINUTOS"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">Perda de Material (KG)</label><input type="text" id="f_perda_material" placeholder="Ex: 7.20"></div>
+      <div><label class="fld">Dureza (Shore A)</label><input type="text" id="f_dureza" placeholder="Ex: 51.3"></div>
+    </div>
+  </div>
+
+  <!-- 4. EQUIPAMENTO DE MEDIÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>4</span> EQUIPAMENTO DE MEDIÇÃO</div>
+    <div id="equipList"></div>
+  </div>
+
+  <!-- 5. OBSERVAÇÕES -->
+  <div class="card">
+    <div class="section-title"><span>5</span> OBSERVAÇÕES IMPORTANTES / NÃO CONFORMIDADES OCORRIDAS</div>
+    <textarea id="f_observacoes" rows="4" placeholder="Observações importantes / Não conformidades ocorridas..."></textarea>
+  </div>
+
+  <!-- 6. RESPONSÁVEL PRODUÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>6</span> RESPONSÁVEL — PRODUÇÃO</div>
+    <div class="row">
+      <div><label class="fld">Nome Legível <a href="#" onclick="event.preventDefault();abrirModalEfetivo()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
+        <select id="f_resp_producao" onchange="autoFillResp('producao')"><option value="">Selecione</option></select>
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_resp_producao_doc" readonly></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_resp_producao_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_producao"></canvas><div class="sig-ph" id="ph_producao">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('producao')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('producao')">Confirmar</button></div>
+  </div>
+
+  <!-- 7. RESPONSÁVEL INSPEÇÃO -->
+  <div class="card">
+    <div class="section-title"><span>7</span> RESPONSÁVEL — INSPEÇÃO</div>
+    <div class="row">
+      <div><label class="fld">Nome Legível <a href="#" onclick="event.preventDefault();abrirModalEfetivo()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
+        <select id="f_resp_inspecao" onchange="autoFillResp('inspecao')"><option value="">Selecione</option></select>
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_resp_inspecao_doc" readonly></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_resp_inspecao_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_inspecao"></canvas><div class="sig-ph" id="ph_inspecao">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('inspecao')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('inspecao')">Confirmar</button></div>
+  </div>
+
+  <!-- 8. RESPONSÁVEL RECEBIMENTO ALMOXARIFADO -->
+  <div class="card">
+    <div class="section-title"><span>8</span> RESPONSÁVEL — RECEBIMENTO ALMOXARIFADO</div>
+    <div class="row">
+      <div><label class="fld">Nome Legível <a href="#" onclick="event.preventDefault();abrirModalEfetivo()" style="font-size:11px;color:var(--blue);margin-left:6px">⚙ Gerenciar</a></label>
+        <select id="f_resp_almox" onchange="autoFillResp('almox')"><option value="">Selecione</option></select>
+      </div>
+      <div><label class="fld">Matrícula / CPF</label><input type="text" id="f_resp_almox_doc" readonly></div>
+    </div>
+    <div><label class="fld">Data</label><input type="date" id="f_resp_almox_data"></div>
+    <label class="fld">Assinatura</label>
+    <div class="sig-box"><canvas id="sig_almox"></canvas><div class="sig-ph" id="ph_almox">Assine aqui</div></div>
+    <div class="row" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="limparAssinatura('almox')">Limpar</button><button class="btn btn-success btn-sm" onclick="confirmarAssinatura('almox')">Confirmar</button></div>
+  </div>
+
+  <!-- FOTOS -->
+  <div class="card">
+    <div class="section-title">📷 ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div>
+    <div class="foto-grid" id="fotoGrid"></div>
+    <button class="btn btn-ghost btn-sm btn-block" onclick="addFotoSlot()" style="margin-top:8px">+ Adicionar foto</button>
+  </div>
+
+  <!-- AÇÕES -->
+  <div class="card no-print">
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-primary btn-block" onclick="salvarRegistro()">💾 Salvar</button>
+      <button class="btn btn-success btn-block" onclick="gerarPDF()">📄 Gerar PDF</button>
+      <button class="btn btn-danger btn-block" onclick="excluirRegistro()">🗑 Excluir</button>
+    </div>
+  </div>
+
+</div><!-- editorView -->
+</div><!-- mainApp -->
+
+<!-- MODAL GERENCIAR EFETIVO -->
+<div id="modalEfetivo" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalEfetivo()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Gerenciar Efetivo</h2>
+      <button onclick="fecharModalEfetivo()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="func-add-row">
+        <input type="text" id="novoFuncNome" placeholder="Nome completo" style="text-transform:uppercase">
+        <input type="text" id="novoFuncDoc" placeholder="Matrícula/CPF" style="flex:0 0 130px">
+        <button class="btn btn-success btn-sm" onclick="adicionarFuncionario()">+</button>
+      </div>
+      <div id="funcList"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-block" onclick="fecharModalEfetivo()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR FABRICANTES -->
+<div id="modalFabricante" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalFabricante()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Gerenciar Fabricantes</h2>
+      <button onclick="fecharModalFabricante()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="func-add-row">
+        <input type="text" id="novoFabNome" placeholder="Nome do fabricante" style="text-transform:uppercase">
+        <button class="btn btn-success btn-sm" onclick="adicionarFabricante()">+</button>
+      </div>
+      <div id="fabList"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-block" onclick="fecharModalFabricante()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ LISTAS GERENCIADAS ═══ */
+const FUNCIONARIOS_DEFAULT = [
+  {nome:'ADILSON ANDRADE DOS SANTOS',doc:'096.749.787-63'},
+  {nome:'ALCEMAR JOSÉ DA CONCEIÇÃO',doc:'70001258'},
+  {nome:'ALEX RODRIGUES DAS NEVES',doc:'4826263562'},
+  {nome:'ALLAN ALMEIDA OLIVEIRA',doc:'19346602724'},
+  {nome:'BRUNO CLAUDIO PAULO PORTO',doc:'195.023.607-29'},
+  {nome:'BRUNO SOUZA NERES',doc:'70001272'},
+  {nome:'CLAUDIO HENRIQUE RODRIGUES SOARES',doc:'133.184.636-63'},
+  {nome:'CLEITON DO NASCIMENTO SILVA',doc:'17504037737'},
+  {nome:'DOMINGOS',doc:''},
+  {nome:'DOUGLAS DA SILVA DOS SANTOS',doc:'70162129'},
+  {nome:'ELBSON MONTEIRO',doc:''},
+  {nome:'ERICK VINICIUS COSTA COSTA',doc:'619.594.593-38'},
+  {nome:'EVERSON SOUZA RIBEIRO',doc:'093.524.567-77'},
+  {nome:'GABRIEL VIEIRA COSTA',doc:'70136280'},
+  {nome:'GLAUBER DUTRA DA SILVA',doc:'146.380.647-79'},
+  {nome:'IZAIAS BATISTA MARTINS',doc:'140.616.877-78'},
+  {nome:'JEFFERSON FERREIRA DE SOUZA',doc:'122.518.037-69'},
+  {nome:'JEFFERSON SILVA SANTOS',doc:'20617331740'},
+  {nome:'JEREMIAS DOS SANTOS BRITO',doc:'70156736'},
+  {nome:'JHENIFESON DUARTE',doc:'20790601710'},
+  {nome:'JOÃO HENRIQUE CORREIA',doc:'18553634701'},
+  {nome:'JOÃO PEDRO PEREIRA CHAYIDY SILVA',doc:'094.119.451-55'},
+  {nome:'JORGE LUIZ PINTO',doc:'70022177'},
+  {nome:'JORGE SANTOS',doc:''},
+  {nome:'JOÃO PEDRO TRINDADE PEREIRA',doc:'14280661790'},
+  {nome:'KLEBSON DOS SANTOS JANEIRO',doc:'7917186709'},
+  {nome:'LUCAS GONÇALVEZ',doc:'16897143212'},
+  {nome:'LUCAS JORDÃO CETTO',doc:'70115063'},
+  {nome:'MANOEL ANSELMO SOUZA PEREIRA',doc:'70023629'},
+  {nome:'MAURICIO DA COSTA LAMANA',doc:'027.586.668-80'},
+  {nome:'MURILO S. CUNHA',doc:'13576117734'},
+  {nome:'PAULO ERQUES ALMEIDA SOUZA',doc:'70007628'},
+  {nome:'PAULO HENRIQUE DE SOUZA PINHEIRO',doc:'097.926.065-56'},
+  {nome:'PAULO HENRIQUE SOARES ALVES',doc:'15549441730'},
+  {nome:'RAFAEL BELEM BRANDÃO',doc:'161.358.777.55'},
+  {nome:'RAMON RICARDO DE AVILA GOMES',doc:'175.522.877-56'},
+  {nome:'ROBERT DO ESPÍRITO SANTO CAMILO',doc:'16459848777'},
+  {nome:'ROBERTO FONTES BISPO',doc:'715.474.605-04'},
+  {nome:'SAMUEL DOS SANTOS',doc:'3725896852'},
+  {nome:'SANDRO VIANA',doc:'70061341'},
+  {nome:'SERGIO CARDOZO',doc:'1730485790'},
+  {nome:'THIAGO FERREIRA BARBOSA',doc:'12319871705'},
+  {nome:'VICENTE EDIVINO DOS SANTOS',doc:'70001250'},
+  {nome:'VINICIUS FONSECA DE OLIVEIRA',doc:'70652713'},
+  {nome:'WELLINGTON ALEXANDRE MARQUES',doc:'70120338'}
+];
+const FUNC_STORE_KEY = 'ctv_placa_funcionarios';
+let FUNCIONARIOS = [];
+function loadFuncionarios() {
+  try { const s = JSON.parse(localStorage.getItem(FUNC_STORE_KEY)); if (Array.isArray(s) && s.length) { FUNCIONARIOS = s; return; } } catch(e){}
+  FUNCIONARIOS = JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT));
+}
+function saveFuncionarios() { try { localStorage.setItem(FUNC_STORE_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){} }
+
+const FABRICANTES_DEFAULT = ['TECERA','AMAZÔNAS'];
+const FAB_STORE_KEY = 'ctv_placa_fabricantes';
+let FABRICANTES = [];
+function loadFabricantes() {
+  try { const s = JSON.parse(localStorage.getItem(FAB_STORE_KEY)); if (Array.isArray(s) && s.length) { FABRICANTES = s; return; } } catch(e){}
+  FABRICANTES = [...FABRICANTES_DEFAULT];
+}
+function saveFabricantes() { try { localStorage.setItem(FAB_STORE_KEY, JSON.stringify(FABRICANTES)); } catch(e){} }
+
+/* ═══ FIREBASE CONFIG ═══ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
+  authDomain: "rdo-benetech.firebaseapp.com",
+  projectId: "rdo-benetech",
+  storageBucket: "rdo-benetech.firebasestorage.app",
+  messagingSenderId: "784889553730",
+  appId: "1:784889553730:web:d0dcaad912a793a80f1edb"
+};
+function isConfigured() { const k = firebaseConfig.apiKey, p = firebaseConfig.projectId; return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p)); }
+
+const STORE_KEY = 'ctv_placas_v1';
+let db = { registros: [], config: { dark: false } };
+let cur = null;
+let curIdx = -1;
+let LOGO_B64 = '';
+
+let MODE = 'local';
+let FB = null;
+let currentUser = null;
+let cloudUnsub = [];
+let booted = false;
+let formDirty = false;
+
+/* ═══ PERSISTÊNCIA ═══ */
+function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && d.registros) db = d; } catch(e){} if (!db.config) db.config = { dark: false }; }
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
+
+function persistRegistro(reg) {
+  const clean = JSON.parse(JSON.stringify(reg));
+  const i = db.registros.findIndex(r => r.id === clean.id);
+  if (i >= 0) db.registros[i] = clean; else db.registros.push(clean);
+  if (MODE === 'cloud' && FB) {
+    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'placas', clean.id), clean)
+      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .catch(err => onWriteError(err));
+    cacheSnapshot();
+    if (!navigator.onLine) setSync('offline');
+  } else { saveLocal(); }
+}
+function removeRegistroStore(id) {
+  db.registros = db.registros.filter(r => r.id !== id);
+  if (MODE === 'cloud' && FB) {
+    FB.deleteDoc(FB.doc(FB.fs, 'placas', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    cacheSnapshot();
+  } else { saveLocal(); }
+}
+function onWriteError(err) {
+  const code = (err && err.code) || '';
+  if (code.includes('permission-denied')) setSync('denied');
+  else if (!navigator.onLine || code.includes('unavailable')) setSync('offline');
+  else setSync('error', code);
+}
+function persistFuncionarios() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'placa_funcionarios'), { list: FUNCIONARIOS }).catch(err => onWriteError(err)); }
+  saveFuncionarios();
+}
+function persistFabricantes() {
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'placa_fabricantes'), { list: FABRICANTES }).catch(err => onWriteError(err)); }
+  saveFabricantes();
+}
+
+/* ═══ TEMA ═══ */
+function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; }
+function toggleDark() { db.config.dark = !db.config.dark; saveLocal(); applyDark(); }
+
+/* ═══ TOAST ═══ */
+let toastTimer = null;
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+
+/* ═══ NAVEGAÇÃO ═══ */
+function goBack() {
+  if (document.getElementById('editorView').style.display !== 'none') {
+    if (formDirty) salvarRegistro(true);
+    showList();
+    return false;
+  }
+  return true;
+}
+function showList() {
+  document.getElementById('listView').style.display = '';
+  document.getElementById('editorView').style.display = 'none';
+  document.getElementById('topTitle').textContent = 'Fabricação — Placa de Borracha';
+  renderList();
+}
+function showEditor() {
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('editorView').style.display = '';
+  document.getElementById('topTitle').textContent = 'Placa — OP ' + (cur.ordemProducao || '?');
+}
+
+/* ═══ LISTA ═══ */
+function renderList() {
+  const c = document.getElementById('listContainer');
+  if (!db.registros.length) { c.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light)">Nenhum registro de fabricação de placa.</div>'; return; }
+  c.innerHTML = db.registros.map((r, i) => `<div class="reg-item" onclick="abrirRegistro(${i})"><h3>OP ${esc(r.ordemProducao || '?')} — ${esc(r.tamanhoPlaca || '?')}</h3><div class="meta">${fmtData(r.data) || 'Sem data'} · Qtd: ${esc(r.quantidade || '?')} · Lote: ${esc(r.loteMaterial || 'N/A')}</div></div>`).join('');
+}
+
+/* ═══ CRIAR / ABRIR ═══ */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function novoRegistro() {
+  const today = new Date().toISOString().split('T')[0];
+  cur = {
+    id: uid(), data: today,
+    ordemProducao: '', quantidade: '', loteMaterial: '',
+    tamanhoPlaca: '1250 mm',
+    materiais: [
+      {item:'Pastilha (unidade)',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''},
+      {item:'Composto (KG)',quant:'',fabricante:'',lote:'',dataFab:'',dataVal:'',verificadoPor:''}
+    ],
+    totalProduzido: '', tempoPrensagem: '', perdaMaterial: '', dureza: '',
+    equipamentos: [
+      {equip:'Paquímetro',codigo:'',modelo:'',fabricante:'',dataCal:'',validadeCal:''},
+      {equip:'Durômetro',codigo:'',modelo:'',fabricante:'',dataCal:'',validadeCal:''}
+    ],
+    observacoes: '',
+    respProducao: '', respProducaoDoc: '', respProducaoData: today, assProducao: null,
+    respInspecao: '', respInspecaoDoc: '', respInspecaoData: today, assInspecao: null,
+    respAlmox: '', respAlmoxDoc: '', respAlmoxData: today, assAlmox: null,
+    fotos: [],
+    criadoEm: Date.now()
+  };
+  db.registros.unshift(cur);
+  curIdx = 0;
+  persistRegistro(cur);
+  openEditor();
+}
+function abrirRegistro(i) { cur = db.registros[i]; curIdx = i; openEditor(); }
+
+/* ═══ SELECT HELPERS ═══ */
+function funcOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  FUNCIONARIOS.forEach(f => { html += `<option value="${f.nome}"${f.nome === selected ? ' selected' : ''}>${f.nome}</option>`; });
+  return html;
+}
+function fabOptions(selected) {
+  let html = '<option value="">Selecione</option>';
+  FABRICANTES.forEach(f => { html += `<option value="${f}"${f === selected ? ' selected' : ''}>${f}</option>`; });
+  return html;
+}
+
+/* ═══ MATERIAIS (FIXOS: PASTILHA E COMPOSTO) ═══ */
+function renderMateriais() {
+  const c = document.getElementById('materiaisList');
+  c.innerHTML = (cur.materiais || []).map((m, i) => `<div class="ef-row" style="flex-wrap:wrap;padding-right:8px"><div style="flex:1 1 100%;min-width:0"><label class="fld" style="font-size:12px;font-weight:700;color:var(--blue);margin:0">${esc(m.item)}</label></div><div><label class="fld">Quantidade</label><input type="text" value="${esc(m.quant)}" onchange="cur.materiais[${i}].quant=this.value"></div><div><label class="fld">Fabricante</label><select onchange="cur.materiais[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Nº Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiais[${i}].lote=this.value"></div><div><label class="fld">Data Fabricação</label><input type="date" value="${esc(m.dataFab)}" onchange="cur.materiais[${i}].dataFab=this.value"></div><div><label class="fld">Data Validade</label><input type="date" value="${esc(m.dataVal)}" onchange="cur.materiais[${i}].dataVal=this.value"></div><div><label class="fld">Verificado por</label><select onchange="cur.materiais[${i}].verificadoPor=this.value">${funcOptions(m.verificadoPor)}</select></div></div>`).join('');
+}
+
+/* ═══ EQUIPAMENTOS DE MEDIÇÃO (FIXOS: PAQUÍMETRO E DURÔMETRO) ═══ */
+function renderEquip() {
+  const c = document.getElementById('equipList');
+  c.innerHTML = (cur.equipamentos || []).map((e, i) => `<div class="ef-row" style="flex-wrap:wrap;padding-right:8px"><div style="flex:1 1 100%;min-width:0"><label class="fld" style="font-size:12px;font-weight:700;color:var(--blue);margin:0">${esc(e.equip)}</label></div><div><label class="fld">Código</label><input type="text" value="${esc(e.codigo)}" onchange="cur.equipamentos[${i}].codigo=this.value"></div><div><label class="fld">Modelo</label><input type="text" value="${esc(e.modelo)}" onchange="cur.equipamentos[${i}].modelo=this.value"></div><div><label class="fld">Fabricante</label><input type="text" value="${esc(e.fabricante)}" onchange="cur.equipamentos[${i}].fabricante=this.value"></div><div><label class="fld">Data Calibração</label><input type="date" value="${esc(e.dataCal)}" onchange="cur.equipamentos[${i}].dataCal=this.value;autoValidadeCal(${i})"></div><div><label class="fld">Validade</label><input type="date" value="${esc(e.validadeCal)}" onchange="cur.equipamentos[${i}].validadeCal=this.value" id="eqvVal${i}"></div></div>`).join('');
+}
+function autoValidadeCal(i) {
+  const dc = cur.equipamentos[i].dataCal; if (!dc) return;
+  const d = new Date(dc); d.setFullYear(d.getFullYear() + 1);
+  const v = d.toISOString().split('T')[0];
+  cur.equipamentos[i].validadeCal = v;
+  const el = document.getElementById('eqvVal' + i); if (el) el.value = v;
+}
+
+/* ═══ RESPONSÁVEIS ═══ */
+function autoFillResp(tipo) {
+  if (tipo === 'producao') {
+    const f = FUNCIONARIOS.find(x => x.nome === document.getElementById('f_resp_producao').value);
+    document.getElementById('f_resp_producao_doc').value = f ? f.doc : '';
+  } else if (tipo === 'inspecao') {
+    const f = FUNCIONARIOS.find(x => x.nome === document.getElementById('f_resp_inspecao').value);
+    document.getElementById('f_resp_inspecao_doc').value = f ? f.doc : '';
+  } else if (tipo === 'almox') {
+    const f = FUNCIONARIOS.find(x => x.nome === document.getElementById('f_resp_almox').value);
+    document.getElementById('f_resp_almox_doc').value = f ? f.doc : '';
+  }
+}
+
+/* ═══ GERENCIAR EFETIVO ═══ */
+function abrirModalEfetivo() { document.getElementById('modalEfetivo').style.display = ''; document.getElementById('novoFuncNome').value = ''; document.getElementById('novoFuncDoc').value = ''; renderFuncList(); }
+function fecharModalEfetivo() { document.getElementById('modalEfetivo').style.display = 'none'; refreshSelects(); }
+function renderFuncList() {
+  document.getElementById('funcList').innerHTML = FUNCIONARIOS.map((f, i) => `<div class="func-item"><div class="func-name">${esc(f.nome)}</div><div class="func-doc">${esc(f.doc)}</div><button class="func-del" onclick="removerFuncionario(${i})" title="Remover">×</button></div>`).join('');
+}
+function adicionarFuncionario() {
+  const nome = document.getElementById('novoFuncNome').value.trim().toUpperCase();
+  const doc = document.getElementById('novoFuncDoc').value.trim();
+  if (!nome) { showToast('Informe o nome'); return; }
+  if (!doc) { showToast('Informe a matrícula/CPF'); return; }
+  if (FUNCIONARIOS.some(f => f.nome === nome)) { showToast('Funcionário já existe'); return; }
+  FUNCIONARIOS.push({ nome, doc }); FUNCIONARIOS.sort((a, b) => a.nome.localeCompare(b.nome));
+  persistFuncionarios(); document.getElementById('novoFuncNome').value = ''; document.getElementById('novoFuncDoc').value = ''; renderFuncList(); showToast('Funcionário adicionado');
+}
+function removerFuncionario(i) { if (!confirm('Remover ' + FUNCIONARIOS[i].nome + '?')) return; FUNCIONARIOS.splice(i, 1); persistFuncionarios(); renderFuncList(); showToast('Funcionário removido'); }
+
+/* ═══ GERENCIAR FABRICANTES ═══ */
+function abrirModalFabricante() { document.getElementById('modalFabricante').style.display = ''; document.getElementById('novoFabNome').value = ''; renderFabList(); }
+function fecharModalFabricante() { document.getElementById('modalFabricante').style.display = 'none'; if (cur) renderMateriais(); }
+function renderFabList() {
+  document.getElementById('fabList').innerHTML = FABRICANTES.map((f, i) => `<div class="func-item"><div class="func-name">${esc(f)}</div><button class="func-del" onclick="removerFabricante(${i})" title="Remover">×</button></div>`).join('');
+}
+function adicionarFabricante() {
+  const nome = document.getElementById('novoFabNome').value.trim().toUpperCase();
+  if (!nome) { showToast('Informe o nome do fabricante'); return; }
+  if (FABRICANTES.some(f => f === nome)) { showToast('Fabricante já existe'); return; }
+  FABRICANTES.push(nome); FABRICANTES.sort((a, b) => a.localeCompare(b));
+  persistFabricantes(); document.getElementById('novoFabNome').value = ''; renderFabList(); showToast('Fabricante adicionado');
+}
+function removerFabricante(i) { if (!confirm('Remover ' + FABRICANTES[i] + '?')) return; FABRICANTES.splice(i, 1); persistFabricantes(); renderFabList(); showToast('Fabricante removido'); }
+
+function refreshSelects() {
+  if (!cur) return;
+  const sp = document.getElementById('f_resp_producao'); if (sp) sp.innerHTML = funcOptions(cur.respProducao || '');
+  const si = document.getElementById('f_resp_inspecao'); if (si) si.innerHTML = funcOptions(cur.respInspecao || '');
+  const sa = document.getElementById('f_resp_almox'); if (sa) sa.innerHTML = funcOptions(cur.respAlmox || '');
+}
+
+/* ═══ FOTOS ═══ */
+const FOTO_LABELS = ['Placa Produzida','Medição Dureza','Medição Espessura - ponto 01','Medição Espessura - ponto 02','Medição Espessura - ponto 03','Medição Espessura - ponto 04','Medição Espessura - ponto 05','Medição Espessura - ponto 06','Perda do Material','Outros','Outros','Outros','Outros','Outros','Outros'];
+function renderFotos() {
+  const grid = document.getElementById('fotoGrid');
+  const fotos = cur.fotos || [];
+  grid.innerHTML = fotos.map((f, i) => `<div class="foto-slot">${f.data ? `<img src="${f.data}"><button class="foto-del" onclick="event.stopPropagation();removerFoto(${i})">×</button>` : `<div class="foto-add" onclick="capturarFoto(${i})">📷</div>`}<div class="foto-label">${i + 1}. ${esc(f.label)}</div></div>`).join('');
+}
+function addFotoSlot() { const idx = cur.fotos.length; cur.fotos.push({ label: FOTO_LABELS[idx] || 'Outros', data: null }); renderFotos(); }
+function capturarFoto(idx) {
+  const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+  input.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => { const canvas = document.createElement('canvas'); const MAX = 800; let w = img.width, h = img.height; if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7); persistRegistro(cur); renderFotos(); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function removerFoto(idx) { cur.fotos[idx].data = null; renderFotos(); persistRegistro(cur); }
+
+/* ═══ ASSINATURA ═══ */
+const sigState = {};
+function initSignature(id) {
+  const canvas = document.getElementById('sig_' + id); if (!canvas) return;
+  canvas.width = 800; canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  const getPos = e => { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [(t.clientX - r.left) * (canvas.width / r.width), (t.clientY - r.top) * (canvas.height / r.height)]; };
+  const start = e => { e.preventDefault(); drawing = true; ctx.beginPath(); const [x, y] = getPos(e); ctx.moveTo(x, y); };
+  const move = e => { if (!drawing) return; e.preventDefault(); const [x, y] = getPos(e); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a1a2e'; ctx.lineTo(x, y); ctx.stroke(); };
+  const end = () => { drawing = false; };
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false }); canvas.addEventListener('touchmove', move, { passive: false }); canvas.addEventListener('touchend', end);
+  sigState[id] = false;
+}
+function limparAssinatura(id) {
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  sigState[id] = false;
+  if (id === 'producao') cur.assProducao = null;
+  else if (id === 'inspecao') cur.assInspecao = null;
+  else if (id === 'almox') cur.assAlmox = null;
+  const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = '';
+}
+function compressSig(canvas) {
+  const tmp = document.createElement('canvas'); tmp.width = 400; tmp.height = 100;
+  const ctx = tmp.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 400, 100);
+  ctx.drawImage(canvas, 0, 0, 400, 100);
+  return tmp.toDataURL('image/jpeg', 0.6);
+}
+function confirmarAssinatura(id) {
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  if (!d.some(v => v !== 0)) { showToast('Desenhe a assinatura antes.'); return; }
+  sigState[id] = true;
+  const compressed = compressSig(c);
+  if (id === 'producao') cur.assProducao = compressed;
+  else if (id === 'inspecao') cur.assInspecao = compressed;
+  else if (id === 'almox') cur.assAlmox = compressed;
+  const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none';
+  showToast('Assinatura confirmada');
+}
+function restoreSignature(id, src) {
+  if (!src) return;
+  const c = document.getElementById('sig_' + id); if (!c) return;
+  const img = new Image();
+  img.onload = () => { c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); sigState[id] = true; const ph = document.getElementById('ph_' + id); if (ph) ph.style.display = 'none'; };
+  img.src = src;
+}
+
+/* ═══ OPEN EDITOR ═══ */
+function openEditor() {
+  formDirty = false;
+  document.getElementById('f_ordem_producao').value = cur.ordemProducao || '';
+  document.getElementById('f_quantidade').value = cur.quantidade || '';
+  document.getElementById('f_lote_material').value = cur.loteMaterial || '';
+  document.getElementById('f_data').value = cur.data || '';
+
+  const radios = document.querySelectorAll('input[name="tamanhoPlaca"]');
+  radios.forEach(r => { r.checked = r.value === (cur.tamanhoPlaca || '1250 mm'); });
+
+  document.getElementById('f_total_produzido').value = cur.totalProduzido || '';
+  document.getElementById('f_tempo_prensagem').value = cur.tempoPrensagem || '';
+  document.getElementById('f_perda_material').value = cur.perdaMaterial || '';
+  document.getElementById('f_dureza').value = cur.dureza || '';
+  document.getElementById('f_observacoes').value = cur.observacoes || '';
+
+  renderMateriais();
+  renderEquip();
+
+  const selProd = document.getElementById('f_resp_producao');
+  selProd.innerHTML = funcOptions(cur.respProducao || '');
+  document.getElementById('f_resp_producao_doc').value = cur.respProducaoDoc || '';
+  document.getElementById('f_resp_producao_data').value = cur.respProducaoData || '';
+
+  const selInsp = document.getElementById('f_resp_inspecao');
+  selInsp.innerHTML = funcOptions(cur.respInspecao || '');
+  document.getElementById('f_resp_inspecao_doc').value = cur.respInspecaoDoc || '';
+  document.getElementById('f_resp_inspecao_data').value = cur.respInspecaoData || '';
+
+  const selAlmox = document.getElementById('f_resp_almox');
+  selAlmox.innerHTML = funcOptions(cur.respAlmox || '');
+  document.getElementById('f_resp_almox_doc').value = cur.respAlmoxDoc || '';
+  document.getElementById('f_resp_almox_data').value = cur.respAlmoxData || '';
+
+  ['producao', 'inspecao', 'almox'].forEach(id => {
+    initSignature(id);
+    const src = id === 'producao' ? cur.assProducao : id === 'inspecao' ? cur.assInspecao : cur.assAlmox;
+    restoreSignature(id, src);
+  });
+
+  if (!cur.fotos || !cur.fotos.length) {
+    cur.fotos = FOTO_LABELS.slice(0, 9).map(l => ({ label: l, data: null }));
+  }
+  renderFotos();
+  showEditor();
+}
+
+/* ═══ COLETAR EDITOR ═══ */
+function collectEditor() {
+  cur.ordemProducao = document.getElementById('f_ordem_producao').value.trim();
+  cur.quantidade = document.getElementById('f_quantidade').value.trim();
+  cur.loteMaterial = document.getElementById('f_lote_material').value.trim();
+  cur.data = document.getElementById('f_data').value;
+  const checked = document.querySelector('input[name="tamanhoPlaca"]:checked');
+  cur.tamanhoPlaca = checked ? checked.value : '1250 mm';
+  cur.totalProduzido = document.getElementById('f_total_produzido').value.trim();
+  cur.tempoPrensagem = document.getElementById('f_tempo_prensagem').value.trim();
+  cur.perdaMaterial = document.getElementById('f_perda_material').value.trim();
+  cur.dureza = document.getElementById('f_dureza').value.trim();
+  cur.observacoes = document.getElementById('f_observacoes').value.trim();
+  cur.respProducao = document.getElementById('f_resp_producao').value;
+  cur.respProducaoDoc = document.getElementById('f_resp_producao_doc').value;
+  cur.respProducaoData = document.getElementById('f_resp_producao_data').value;
+  cur.respInspecao = document.getElementById('f_resp_inspecao').value;
+  cur.respInspecaoDoc = document.getElementById('f_resp_inspecao_doc').value;
+  cur.respInspecaoData = document.getElementById('f_resp_inspecao_data').value;
+  cur.respAlmox = document.getElementById('f_resp_almox').value;
+  cur.respAlmoxDoc = document.getElementById('f_resp_almox_doc').value;
+  cur.respAlmoxData = document.getElementById('f_resp_almox_data').value;
+}
+
+function salvarRegistro(silent) {
+  collectEditor(); persistRegistro(cur);
+  curIdx = db.registros.findIndex(r => r.id === cur.id);
+  formDirty = false;
+  if (!silent) showToast('Registro salvo');
+}
+function excluirRegistro() {
+  if (!confirm('Excluir este registro de fabricação de placa?')) return;
+  removeRegistroStore(cur.id); showList(); showToast('Registro excluído.');
+}
+
+/* ═══ GERAR PDF ═══ */
+function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtData(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
+
+function gerarPDF() {
+  collectEditor(); persistRegistro(cur); formDirty = false;
+  const r = cur;
+  const ts = new Date().toISOString();
+
+  const matRows = (r.materiais || []).map(m => `<tr><td>${esc(m.item)}</td><td>${esc(m.quant)}</td><td>${esc(m.fabricante)}</td><td>${esc(m.lote)}</td><td>${fmtData(m.dataFab)}</td><td>${fmtData(m.dataVal)}</td><td>${esc(m.verificadoPor)}</td></tr>`).join('') || '<tr><td colspan="7">-</td></tr>';
+  const equipRows = (r.equipamentos || []).map(e => `<tr><td>${esc(e.equip)}</td><td>${esc(e.codigo)}</td><td>${esc(e.modelo)}</td><td>${esc(e.fabricante)}</td><td>${fmtData(e.dataCal)}</td><td>${fmtData(e.validadeCal)}</td></tr>`).join('') || '<tr><td colspan="6">-</td></tr>';
+  const fotosHTML = (r.fotos || []).filter(f => f.data).map((f, i) => `<div style="text-align:center"><img src="${f.data}" style="width:100%;max-height:200px;object-fit:contain;border:1px solid #ccc;border-radius:4px"><div style="font-size:8px;color:#666;margin-top:2px">${i + 1}. ${esc(f.label)}</div></div>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="created" content="${ts}">
+<title>Placa de Borracha — OP ${esc(r.ordemProducao)}</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;font-size:9px;color:#1a1a2e}
+.toolbar{background:#f5f5f5;padding:8px 14px;display:flex;gap:8px;border-bottom:1px solid #ddd}
+.toolbar button{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.toolbar .btn-back{background:#001a33;color:#fff}
+.toolbar .btn-print{background:#43a6ea;color:#fff}
+.hdr{background:#001a33;color:#fff;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #43a6ea}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-logo{height:26px;background:#fff;padding:2px 5px;border-radius:4px}
+.hdr h1{font-size:12px;margin:0} .hdr .ref{font-size:8px;color:#aaa}
+.sec{background:#001a33;color:#fff;font-size:9px;font-weight:700;padding:3px 8px;margin:6px 14px 2px;border-left:3px solid #43a6ea}
+table{width:calc(100% - 28px);margin:0 14px;border-collapse:collapse;font-size:8px}
+th,td{border:1px solid #ccc;padding:2px 4px;text-align:left;vertical-align:top}
+th{background:#0D1B2A;color:#fff;font-weight:600}
+.meta-row{display:flex;flex-wrap:wrap;gap:2px 14px;padding:4px 14px;font-size:9px}
+.meta-row b{color:#555}
+.dados-fab td:first-child{width:50%;font-weight:600}
+.assin-area{display:flex;justify-content:space-around;gap:20px;padding:10px 14px}
+.assin-area div{flex:1;text-align:center}
+.assin-area img{max-width:100%;height:50px;object-fit:contain}
+.assin-area .ln{border-top:1px solid #333;margin-top:3px;padding-top:2px;font-size:8px;color:#333}
+.assin-area .doc{font-size:7px;color:#555}
+.foto-section{page-break-before:always}
+.foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px}
+.footer{text-align:center;padding:8px 14px 6px;font-size:7px;color:#999;border-top:1px solid #e0e0e0;margin-top:10px}
+.footer .legal{font-size:6px;color:#bbb;margin-top:2px}
+.wm{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1}
+@media print{.toolbar{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:6mm;size:A4}}
+</style></head><body>
+<div class="toolbar"><button class="btn-back" onclick="window.close()">← Voltar</button><button class="btn-print" onclick="window.print()">🖨 Imprimir / Salvar PDF</button></div>
+<div class="hdr"><div class="hdr-left">${LOGO_B64 ? `<img src="${LOGO_B64}" class="hdr-logo" alt="Benetech">` : ''}<div><h1>REGISTRO E CONTROLE DE FABRICAÇÃO — PLACA DE BORRACHA</h1><div style="font-size:9px;color:#aaa;margin-top:2px">FOR GTO 077</div></div></div><div class="ref">OP: ${esc(r.ordemProducao)}</div></div>
+
+<div class="meta-row">
+<div><b>Ordem de Produção:</b> ${esc(r.ordemProducao)}</div>
+<div><b>Quantidade:</b> ${esc(r.quantidade)}</div>
+<div><b>Lote do Material Produzido:</b> ${esc(r.loteMaterial)}</div>
+<div><b>Data Produção:</b> ${fmtData(r.data)}</div>
+<div><b>Tamanho da Placa:</b> ${esc(r.tamanhoPlaca)}</div>
+</div>
+
+<div class="sec">MATERIAL UTILIZADO</div>
+<table><tr><th>Material</th><th>Quant.</th><th>Fabricante</th><th>Nº Lote</th><th>Data Fab.</th><th>Data Val.</th><th>Verificado por</th></tr>${matRows}</table>
+
+<div class="sec">DADOS FABRICAÇÃO</div>
+<table class="dados-fab">
+<tr><td>Total Produzido (Quantidade)</td><td>${esc(r.totalProduzido)}</td><td>Tempo de Prensagem (min)</td><td>${esc(r.tempoPrensagem)}</td></tr>
+<tr><td>Perda de Material (KG)</td><td>${esc(r.perdaMaterial)}</td><td>Dureza (Shore A)</td><td>${esc(r.dureza)}</td></tr>
+</table>
+
+<div class="sec">EQUIPAMENTO DE MEDIÇÃO</div>
+<table><tr><th>Equipamento</th><th>Código</th><th>Modelo</th><th>Fabricante</th><th>Data Calib.</th><th>Validade</th></tr>${equipRows}</table>
+
+${r.observacoes ? `<div class="sec">OBSERVAÇÕES IMPORTANTES / NÃO CONFORMIDADES OCORRIDAS</div><div style="padding:4px 14px;font-size:9px;white-space:pre-wrap">${esc(r.observacoes)}</div>` : ''}
+
+<div class="sec">RESPONSÁVEIS</div>
+<div class="assin-area">
+<div>${r.assProducao ? `<img src="${r.assProducao}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.respProducao) || 'Produção'}</div><div class="doc">${esc(r.respProducaoDoc)} · ${fmtData(r.respProducaoData)}</div><div style="font-size:7px;color:#888;margin-top:1px">Produção</div></div>
+<div>${r.assInspecao ? `<img src="${r.assInspecao}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.respInspecao) || 'Inspeção'}</div><div class="doc">${esc(r.respInspecaoDoc)} · ${fmtData(r.respInspecaoData)}</div><div style="font-size:7px;color:#888;margin-top:1px">Inspeção</div></div>
+<div>${r.assAlmox ? `<img src="${r.assAlmox}">` : '<div style="height:50px"></div>'}<div class="ln">${esc(r.respAlmox) || 'Recebimento Almoxarifado'}</div><div class="doc">${esc(r.respAlmoxDoc)} · ${fmtData(r.respAlmoxData)}</div><div style="font-size:7px;color:#888;margin-top:1px">Recebimento Almoxarifado</div></div>
+</div>
+
+${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (REGISTRO FOTOGRÁFICO)</div><div class="foto-grid">${fotosHTML}</div></div>` : ''}
+
+<div class="footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div>
+<div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div>
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (w) { setTimeout(() => URL.revokeObjectURL(url), 60000); }
+  else { URL.revokeObjectURL(url); showToast('Permita pop-ups para gerar o PDF.'); }
+}
+
+/* ═══ NUVEM ═══ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  MODE = 'local';
+  loadFuncionarios(); loadFabricantes(); loadLocal(); applyDark();
+  updateModeUI(); renderList();
+}
+function bootCloud(api) {
+  if (booted) return; booted = true;
+  MODE = 'cloud'; FB = api;
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_placa_local_backup')) localStorage.setItem('ctv_placa_local_backup', raw); } catch(e){}
+  db = { registros: [], config: { dark: false } };
+  loadFuncionarios(); loadFabricantes(); applyDark();
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
+  updateModeUI(); renderList();
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+    else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
+  });
+  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard'); if (!card) return;
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const dot = document.getElementById('syncDot'), txt = document.getElementById('syncText');
+  const email = currentUser ? (currentUser.email || '') : '';
+  let color = '#2E7D32', msg = '';
+  if (state === 'ok') { color = '#2E7D32'; msg = 'Sincronizado na nuvem' + (email ? (' · ' + email) : ''); }
+  else if (state === 'connecting') { color = '#999'; msg = 'Conectando…' + (email ? (' · ' + email) : ''); }
+  else if (state === 'offline') { color = '#F9A825'; msg = 'Offline — salvo neste aparelho; sincroniza ao voltar a internet.'; }
+  else if (state === 'denied') { color = '#E53935'; msg = 'SEM PERMISSÃO de acesso. Verifique a regra do Firestore' + (email ? (' — você: ' + email) : '') + '.'; }
+  else if (state === 'error') { color = '#E53935'; msg = 'Falha ao salvar na nuvem' + (extra ? (' (' + extra + ')') : '') + '.'; }
+  dot.style.background = color; txt.textContent = msg;
+}
+function authError(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--danger)'; } }
+function authInfo(m) { const el = document.getElementById('authMsg'); if (el) { el.textContent = m; el.style.color = 'var(--success)'; } }
+function traduzAuth(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('invalid-email')) return 'E-mail inválido.';
+  if (c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Use "Entrar".';
+  if (c.includes('weak-password')) return 'Senha fraca (mín. 6 caracteres).';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('invalid-login')) return 'E-mail ou senha incorretos.';
+  if (c.includes('user-not-found')) return 'Conta não encontrada. Toque em "Criar conta".';
+  if (c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde e tente de novo.';
+  if (c.includes('network')) return 'Sem conexão. Verifique a internet.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+function loginEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || !pass) { authError('Preencha e-mail e senha.'); return; }
+  FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function registerEmail() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if (!email || pass.length < 6) { authError('Informe e-mail e senha de ao menos 6 caracteres.'); return; }
+  FB.createUserWithEmailAndPassword(FB.auth, email, pass).catch(err => authError(traduzAuth(err)));
+}
+function resetSenha() {
+  if (!FB) return;
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { authError('Digite seu e-mail no campo acima para enviar o link.'); return; }
+  FB.sendPasswordResetEmail(FB.auth, email).then(() => authInfo('Enviamos um link para redefinir a senha no seu e-mail.')).catch(err => authError(traduzAuth(err)));
+}
+function alterarSenha() {
+  if (!FB || !currentUser) return;
+  const nova = prompt('Nova senha (mín. 6 caracteres):');
+  if (!nova) return;
+  if (nova.length < 6) { showToast('Senha muito curta (mín. 6).'); return; }
+  FB.updatePassword(currentUser, nova).then(() => showToast('Senha alterada')).catch(err => {
+    if (err && err.code && err.code.includes('recent-login')) {
+      FB.sendPasswordResetEmail(FB.auth, currentUser.email).then(() => showToast('Por segurança, enviamos um link de troca ao seu e-mail.')).catch(() => showToast('Entre novamente para trocar a senha.'));
+    } else showToast('Não foi possível alterar a senha.');
+  });
+}
+function logout() { if (FB) FB.signOut(FB.auth); }
+function startCloudListeners() {
+  clearCloudListeners();
+  const funcRef = FB.doc(FB.fs, 'shared', 'placa_funcionarios');
+  FB.getDoc(funcRef).then(s => { if (!s.exists()) FB.setDoc(funcRef, { list: JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT)) }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(funcRef, s => { const d = s.data(); if (d && d.list) { FUNCIONARIOS = d.list; saveFuncionarios(); } }, () => {}));
+
+  const fabRef = FB.doc(FB.fs, 'shared', 'placa_fabricantes');
+  FB.getDoc(fabRef).then(s => { if (!s.exists()) FB.setDoc(fabRef, { list: [...FABRICANTES_DEFAULT] }); }).catch(() => {});
+  cloudUnsub.push(FB.onSnapshot(fabRef, s => { const d = s.data(); if (d && d.list) { FABRICANTES = d.list; saveFabricantes(); } }, () => {}));
+
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'placas'), s => {
+    const editorOpen = document.getElementById('editorView').style.display !== 'none';
+    const editingId = (editorOpen && cur) ? cur.id : null;
+    db.registros = s.docs.map(d => d.data());
+    cacheSnapshot();
+    setSync(navigator.onLine ? 'ok' : 'offline');
+    if (editingId) {
+      const freshIdx = db.registros.findIndex(r => r.id === editingId);
+      if (freshIdx >= 0) { curIdx = freshIdx; if (!formDirty) { cur = db.registros[freshIdx]; openEditor(); } }
+    }
+    if (document.getElementById('listView').style.display !== 'none') renderList();
+  }, err => {
+    const code = (err && err.code) || '';
+    if (code.includes('permission-denied')) setSync('denied'); else setSync('error', code);
+  }));
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch(e){} }); cloudUnsub = []; }
+function migrarLocalParaNuvem() {
+  if (MODE !== 'cloud' || !FB) { showToast('Disponível no modo nuvem.'); return; }
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem('ctv_placa_local_backup') || localStorage.getItem(STORE_KEY) || 'null'); } catch(e){}
+  const arr = (local && local.registros) || [];
+  if (!arr.length) { showToast('Nenhum registro local para enviar.'); return; }
+  if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a nuvem?')) return;
+  Promise.all(arr.map(r => FB.setDoc(FB.doc(FB.fs, 'placas', r.id), JSON.parse(JSON.stringify(r)))))
+    .then(() => showToast('Registros enviados')).catch(() => showToast('Falha ao enviar alguns registros.'));
+}
+function updateModeUI() {
+  const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
+  const mig = document.getElementById('btnMigrar'); if (mig) mig.style.display = (MODE === 'cloud') ? '' : 'none';
+}
+function showUserChip(user) {
+  const c = document.getElementById('userChip'); if (c) { c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || 'Conectado'; }
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = '';
+}
+function showAuth() {
+  const c = document.getElementById('userChip'); if (c) c.style.display = 'none';
+  const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none';
+  document.getElementById('authOverlay').classList.add('open');
+}
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+
+/* ═══ BOOT ═══ */
+(function loadLogo(){
+  fetch('logo-benetech.png').then(r=>r.blob()).then(b=>{
+    const rd=new FileReader(); rd.onload=function(){LOGO_B64=rd.result}; rd.readAsDataURL(b);
+  }).catch(()=>{});
+})();
+document.getElementById('editorView').addEventListener('input', function() { formDirty = true; });
+document.getElementById('editorView').addEventListener('change', function() { formDirty = true; });
+
+window.__PLACA = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+if (!window.__PLACA.wantCloud) bootLocal();
+
+(function(){
+  console.log('%c⚠ SOFTWARE PROPRIETÁRIO','font-size:18px;font-weight:900;color:#c00');
+  console.log('%c© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36\nAutor: Glauber Dutra\nProtegido pela Lei nº 9.609/98 e Lei nº 9.610/98.','font-size:11px;color:#333');
+})();
+</script>
+<script type="module">
+  const R = window.__PLACA;
+  if (R && R.wantCloud) {
+    try {
+      const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
+      ]);
+      const app = appMod.initializeApp(R.firebaseConfig);
+      const auth = authMod.getAuth(app);
+      const fs = fsMod.getFirestore(app);
+      try { await fsMod.enableIndexedDbPersistence(fs); } catch(e){}
+      R.bootCloud({
+        app, auth, fs,
+        signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+        createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
+        sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+        updatePassword: authMod.updatePassword,
+        onAuthStateChanged: authMod.onAuthStateChanged,
+        signOut: authMod.signOut,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
+        serverTimestamp: fsMod.serverTimestamp
+      });
+    } catch(e) {
+      console.warn('Firebase indisponível — modo local.', e);
+      R.bootLocal();
+    }
+  }
+</script>
+<div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script src="app-update.js"></script>
+</body>
+</html>
