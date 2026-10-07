@@ -1002,7 +1002,7 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
 document.getElementById('editorView').addEventListener('input', function() { formDirty = true; });
 document.getElementById('editorView').addEventListener('change', function() { formDirty = true; });
 
-window.__PLACA = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
+window.__PLACA = { wantCloud: false, bootLocal, bootCloud, firebaseConfig };
 if (!window.__PLACA.wantCloud) bootLocal();
 
 (function(){
