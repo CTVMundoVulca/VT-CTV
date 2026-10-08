@@ -500,26 +500,68 @@ function loadLocal() {
   if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
   if (!('funcoes' in db.config)) db.config.funcoes = DEFAULT_FUNCOES.slice();
   if (!db.config.feriados) db.config.feriados = {};
+  db.rdos.forEach(r => {
+    if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+    const f = loadFotos(r.id);
+    if (f.length) r.inspecao.fotos = f;
+  });
 }
-function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); } }
-function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
+function saveLocal() {
+  const snap = JSON.parse(JSON.stringify(db));
+  snap.rdos = (snap.rdos || []).map(r => {
+    if (r.inspecao && r.inspecao.fotos && r.inspecao.fotos.length) { saveFotos(r.id, r.inspecao.fotos); }
+    return stripFotosForCache(r);
+  });
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(snap)); } catch (e) { showToast('Erro ao salvar (memória cheia?)'); }
+}
+function cacheSnapshot() {
+  const snap = JSON.parse(JSON.stringify(db));
+  snap.rdos = (snap.rdos || []).map(stripFotosForCache);
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(snap)); } catch (e) {}
+}
+
+/* ── fotos da inspeção: storage separado por RDO ── */
+function fotosKey(rdoId) { return 'ctv_rdo_fotos_' + rdoId; }
+function saveFotos(rdoId, fotos) {
+  if (!rdoId) return;
+  try {
+    if (!fotos || !fotos.length) { localStorage.removeItem(fotosKey(rdoId)); return; }
+    localStorage.setItem(fotosKey(rdoId), JSON.stringify(fotos));
+  } catch (e) { showToast('Erro ao salvar fotos (memória cheia?). Reduza o número de fotos.'); }
+}
+function loadFotos(rdoId) {
+  if (!rdoId) return [];
+  try { return JSON.parse(localStorage.getItem(fotosKey(rdoId)) || '[]'); } catch (e) { return []; }
+}
+function removeFotos(rdoId) { if (rdoId) try { localStorage.removeItem(fotosKey(rdoId)); } catch (e) {} }
+function stripFotosForCache(rdo) {
+  if (!rdo || !rdo.inspecao || !rdo.inspecao.fotos || !rdo.inspecao.fotos.length) return rdo;
+  const c = JSON.parse(JSON.stringify(rdo));
+  c.inspecao.fotos = [];
+  return c;
+}
 
 /* ── persistência unificada (a UI chama estas) ── */
 function persistRDO(rdo) {
   const clean = JSON.parse(JSON.stringify(rdo));
+  const fotos = (clean.inspecao && clean.inspecao.fotos) || [];
+  saveFotos(clean.id, fotos);
   const i = db.rdos.findIndex(r => r.id === clean.id);
   if (i >= 0) db.rdos[i] = clean; else db.rdos.push(clean);
   if (MODE === 'cloud' && FB) {
-    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
-    FB.setDoc(FB.doc(FB.fs, 'rdos', clean.id), clean)
+    const forCloud = JSON.parse(JSON.stringify(clean));
+    if (forCloud.inspecao) forCloud.inspecao.fotos = [];
+    forCloud.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud)
       .then(() => { if (navigator.onLine) setSync('ok'); })
-      .catch(err => onWriteError(err));
+      .catch(err => { showToast('Erro ao salvar na nuvem. Dados mantidos neste aparelho.'); onWriteError(err); });
     cacheSnapshot();
     if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); }
 }
 function removeRDOStore(id) {
   db.rdos = db.rdos.filter(r => r.id !== id);
+  removeFotos(id);
   if (MODE === 'cloud' && FB) { FB.deleteDoc(FB.doc(FB.fs, 'rdos', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err)); cacheSnapshot(); }
   else { saveLocal(); }
 }
@@ -740,6 +782,9 @@ function openRDO(id) {
   const d = loadDraft();
   if (d && d.rdo && d.editingId === id) { cur = d.rdo; formDirty = true; }
   else { cur = JSON.parse(JSON.stringify(r)); formDirty = false; }
+  if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+  const savedFotos = loadFotos(cur.id);
+  if (savedFotos.length) cur.inspecao.fotos = savedFotos;
   editingId = id; fillEditor(); document.getElementById('hdrTitle').textContent = 'RDO ' + (r.numero || ''); goEditor();
 }
 
@@ -1009,7 +1054,9 @@ function saveDraftNow() {
   const ed = document.getElementById('view-editor');
   if (!ed || !ed.classList.contains('active') || !cur) return;
   collectEditor();
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingId: editingId, rdo: cur, ts: Date.now() })); } catch (e) {}
+  if (cur.id && cur.inspecao && cur.inspecao.fotos && cur.inspecao.fotos.length) saveFotos(cur.id, cur.inspecao.fotos);
+  const draftRdo = stripFotosForCache(cur);
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingId: editingId, rdo: draftRdo, ts: Date.now() })); } catch (e) {}
 }
 function saveDraftDebounced() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraftNow, 500); }
 function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} atualizarBannerRascunho(); }
@@ -1017,6 +1064,9 @@ function atualizarBannerRascunho() { const b = document.getElementById('rdoDraft
 function retomarRascunho() {
   const d = loadDraft(); if (!d || !d.rdo) return;
   cur = d.rdo; editingId = d.editingId || null;
+  if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+  const savedFotos = loadFotos(cur.id);
+  if (savedFotos.length && (!cur.inspecao.fotos || !cur.inspecao.fotos.length)) cur.inspecao.fotos = savedFotos;
   formDirty = true;
   fillEditor();
   document.getElementById('hdrTitle').textContent = editingId ? ('RDO ' + (cur.numero || '')) : 'Novo RDO';
@@ -1299,6 +1349,11 @@ function bootCloud(api) {
   loadDark(); applyDark();
   // primeira pintura a partir do cache (offline), até o Firestore responder
   try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
+  db.rdos.forEach(r => {
+    if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+    const f = loadFotos(r.id);
+    if (f.length) r.inspecao.fotos = f;
+  });
   if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
   if (!db.config.funcoes) db.config.funcoes = DEFAULT_FUNCOES.slice();
   if (!db.config.feriados) db.config.feriados = {};
@@ -1394,7 +1449,13 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
     const editorOpen = document.getElementById('view-editor').classList.contains('active');
     const eid = (editorOpen && editingId) ? editingId : null;
-    db.rdos = s.docs.map(d => d.data());
+    db.rdos = s.docs.map(d => {
+      const r = d.data();
+      if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+      const f = loadFotos(r.id);
+      if (f.length) r.inspecao.fotos = f;
+      return r;
+    });
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (eid) {
@@ -1416,7 +1477,7 @@ function migrarLocalParaNuvem() {
   const arr = (local && local.rdos) || [];
   if (!arr.length) { showToast('Nenhum RDO local para enviar.'); return; }
   if (!confirm('Enviar ' + arr.length + ' RDO(s) deste aparelho para a nuvem?')) return;
-  Promise.all(arr.map(r => FB.setDoc(FB.doc(FB.fs, 'rdos', r.id), JSON.parse(JSON.stringify(r)))))
+  Promise.all(arr.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); return FB.setDoc(FB.doc(FB.fs, 'rdos', c.id), c); }))
     .then(() => showToast('RDOs enviados ✔️')).catch(() => showToast('Falha ao enviar alguns RDOs.'));
 }
 function updateModeUI() {
