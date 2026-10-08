@@ -773,8 +773,13 @@ function blankRDO(dateKey) {
 }
 function newRDO(dateKey) {
   const d = loadDraft();
-  if (d && d.rdo && d.editingId == null) { cur = d.rdo; formDirty = true; }
-  else { cur = blankRDO(dateKey); formDirty = false; }
+  if (d && d.rdo && d.editingId == null) {
+    cur = d.rdo;
+    if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+    const savedFotos = loadFotos(cur.id);
+    if (savedFotos.length && (!cur.inspecao.fotos || !cur.inspecao.fotos.length)) cur.inspecao.fotos = savedFotos;
+    formDirty = true;
+  } else { cur = blankRDO(dateKey); formDirty = false; }
   editingId = null; fillEditor(); document.getElementById('hdrTitle').textContent = 'Novo RDO'; goEditor();
 }
 function openRDO(id) {
@@ -1074,14 +1079,25 @@ function retomarRascunho() {
 }
 function descartarRascunho() {
   if (!confirm('Descartar o RDO em preenchimento? As informações não salvas serão perdidas.')) return;
+  const d = loadDraft();
+  if (d && d.rdo && d.rdo.id && !d.editingId) removeFotos(d.rdo.id);
   clearDraft(); showToast('Rascunho descartado'); renderList();
 }
 function limparRDO() {
   if (!confirm('Limpar os campos deste RDO? As informações não salvas serão descartadas.')) return;
+  const oldId = cur ? cur.id : null;
   formDirty = false;
   clearDraft();
-  if (editingId) { const r = db.rdos.find(x => x.id === editingId); cur = r ? JSON.parse(JSON.stringify(r)) : blankRDO(); }
-  else { cur = blankRDO(); editingId = null; }
+  if (editingId) {
+    const r = db.rdos.find(x => x.id === editingId);
+    cur = r ? JSON.parse(JSON.stringify(r)) : blankRDO();
+    if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+    const f = loadFotos(cur.id);
+    if (f.length) cur.inspecao.fotos = f;
+  } else {
+    if (oldId) removeFotos(oldId);
+    cur = blankRDO(); editingId = null;
+  }
   fillEditor();
   document.getElementById('hdrTitle').textContent = editingId ? ('RDO ' + (cur.numero || '')) : 'Novo RDO';
   showToast('Campos limpos');
@@ -1099,7 +1115,7 @@ function saveRDO() {
   showToast('RDO salvo ✔️');
 }
 function deleteRDO() {
-  if (!editingId) { formDirty = false; clearDraft(); goList(); return; }
+  if (!editingId) { if (cur && cur.id) removeFotos(cur.id); formDirty = false; clearDraft(); goList(); return; }
   if (!confirm('Excluir este RDO?')) return;
   removeRDOStore(editingId);
   formDirty = false;
@@ -1220,6 +1236,7 @@ function gerarPDF() {
   html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.liberado]));
   html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
   html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.obs]));
+  html += tbl('Gestão de horários — Transporte', ['Nome','Hora Busca','Hora Deixa em Casa','Obs.'], (r.transporte||[]).map(x => [x.nome,x.busca,x.deixa,x.obs]));
   if (r.ocorrencias) html += `<h3>Ocorrências / observações gerais</h3><div class="obs">${escapeHtml(r.ocorrencias)}</div>`;
   html += `<div class="assin">
     <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div>${r.sigNomeBenetech ? `<div class="sig-id">${escapeHtml(r.sigNomeBenetech)}${r.sigDocBenetech ? ' · ' + escapeHtml(r.sigDocBenetech) : ''}</div>` : ''}</div>
@@ -1314,9 +1331,12 @@ function importBackup(input) {
   const f = input.files[0]; if (!f) return;
   const rd = new FileReader();
   rd.onload = e => { try { const data = JSON.parse(e.target.result); if (!data.rdos) throw 0;
+    data.rdos.forEach(r => {
+      if (r.inspecao && r.inspecao.fotos && r.inspecao.fotos.length) saveFotos(r.id, r.inspecao.fotos);
+    });
     if (MODE === 'cloud' && FB) {
       if (!confirm('Enviar ' + data.rdos.length + ' RDO(s) do backup para a nuvem?')) { input.value=''; return; }
-      Promise.all(data.rdos.map(r => FB.setDoc(FB.doc(FB.fs,'rdos',r.id), JSON.parse(JSON.stringify(r))))).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
+      Promise.all(data.rdos.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); return FB.setDoc(FB.doc(FB.fs,'rdos',c.id), c); })).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
     } else {
       if (!confirm('Substituir TODOS os RDOs deste aparelho?')) { input.value=''; return; }
       db = data; if (!db.config) db.config = {}; saveLocal(); loadDark(); applyDark(); goList(); showToast('Backup restaurado ✔️');
