@@ -320,8 +320,12 @@
       <div style="margin-top:12px">
         <label class="fld">Fotos da inspeção</label>
         <div id="insp-fotos" class="insp-fotos-grid"></div>
-        <button class="btn btn-ghost btn-sm" onclick="addInspFoto()" style="margin-top:8px">📷 Adicionar foto</button>
-        <input type="file" id="inspFotoInput" accept="image/*" capture="environment" style="display:none" onchange="handleInspFoto(this)" multiple>
+        <div class="row" style="margin-top:8px">
+          <button class="btn btn-ghost btn-sm" onclick="addInspFoto('camera')">📷 Câmera</button>
+          <button class="btn btn-ghost btn-sm" onclick="addInspFoto('galeria')">🖼️ Galeria</button>
+        </div>
+        <input type="file" id="inspFotoCam" accept="image/*" capture="environment" style="display:none" onchange="handleInspFoto(this)">
+        <input type="file" id="inspFotoGal" accept="image/*" style="display:none" onchange="handleInspFoto(this)" multiple>
       </div>
     </div>
 
@@ -932,7 +936,7 @@ function renderInspFotos() {
     <button class="insp-foto-del" onclick="removeInspFoto(${i})">✕</button>
   </div>`).join('');
 }
-function addInspFoto() { document.getElementById('inspFotoInput').click(); }
+function addInspFoto(src) { document.getElementById(src === 'camera' ? 'inspFotoCam' : 'inspFotoGal').click(); }
 function handleInspFoto(input) {
   const files = input.files; if (!files || !files.length) return;
   if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
