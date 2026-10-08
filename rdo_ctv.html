@@ -141,6 +141,11 @@
   .hint { font-size: 12px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
   .divider { height: 1px; background: var(--border); margin: 14px 0; }
 
+  .insp-fotos-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .insp-foto-item { position: relative; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
+  .insp-foto-item img { width: 100%; height: 100%; object-fit: cover; }
+  .insp-foto-item .insp-foto-del { position: absolute; top: 2px; right: 2px; background: var(--danger); color: #fff; border: none; width: 22px; height: 22px; border-radius: 50%; font-size: 13px; cursor: pointer; display: grid; place-items: center; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; }
   .modal-bg.open { display: flex; }
   .modal { background: var(--card); width: 100%; max-width: 720px; margin: 0 auto; border-radius: 18px 18px 0 0; padding: 18px; max-height: 92vh; overflow-y: auto; animation: slideup .22s ease; }
@@ -299,6 +304,22 @@
     <div class="card">
       <div class="section-title">Efetivo de mão de obra <button class="btn btn-sm btn-primary" onclick="addRow('efetivo')">+ Pessoa</button></div>
       <div id="sec-efetivo"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Inspeção do transportador</div>
+      <div class="grid2">
+        <div><label class="fld">Hora Início</label><input type="time" id="f_insp_inicio"></div>
+        <div><label class="fld">Hora Término</label><input type="time" id="f_insp_termino"></div>
+        <div class="full"><label class="fld">Responsável pela inspeção</label><select id="f_insp_responsavel" onchange="inspNameChanged(this)"></select></div>
+        <div class="full"><label class="fld">Anormalidades identificadas</label><textarea id="f_insp_anormalidades" placeholder="Descreva as anormalidades encontradas na inspeção..." rows="3"></textarea></div>
+      </div>
+      <div style="margin-top:12px">
+        <label class="fld">Fotos da inspeção</label>
+        <div id="insp-fotos" class="insp-fotos-grid"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addInspFoto()" style="margin-top:8px">📷 Adicionar foto</button>
+        <input type="file" id="inspFotoInput" accept="image/*" capture="environment" style="display:none" onchange="handleInspFoto(this)" multiple>
+      </div>
     </div>
 
     <div class="card">
@@ -697,7 +718,9 @@ function blankRDO(dateKey) {
   const today = dateKey || (new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1) + '-' + pad(new Date().getDate()));
   const nextNum = db.rdos.reduce((mx, r) => Math.max(mx, parseInt(r.numero, 10) || 0), 0) + 1;
   return { id: uid(), numero: nextNum, data: today, cliente: '', local: '', responsavel: '', om: '', titulo: '',
-    efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, sigNomeBenetech: '', sigDocBenetech: '', sigNomeFiscal: '', sigDocFiscal: '', transporte: [], criadoEm: Date.now() };
+    efetivo: [], alimentacao: [], paradas: [], atividades: [], ocorrencias: '', assBenetech: null, assFiscal: null, sigNomeBenetech: '', sigDocBenetech: '', sigNomeFiscal: '', sigDocFiscal: '', transporte: [],
+    inspecao: { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] },
+    criadoEm: Date.now() };
 }
 function newRDO(dateKey) {
   const d = loadDraft();
@@ -722,6 +745,12 @@ function fillEditor() {
   document.getElementById('f_om').value = cur.om || '';
   document.getElementById('f_titulo').value = cur.titulo || '';
   document.getElementById('f_ocorrencias').value = cur.ocorrencias || '';
+  if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+  document.getElementById('f_insp_inicio').value = cur.inspecao.inicio || '';
+  document.getElementById('f_insp_termino').value = cur.inspecao.termino || '';
+  fillInspSelect(cur.inspecao.responsavel || '');
+  document.getElementById('f_insp_anormalidades').value = cur.inspecao.anormalidades || '';
+  renderInspFotos();
   Object.keys(SEC).forEach(renderSection);
   ['benetech','fiscal'].forEach(id => { initSignature(id); const src = id === 'benetech' ? cur.assBenetech : cur.assFiscal; restoreSignature(id, src); });
   setSigSelect('benetech', cur.sigNomeBenetech || '');
@@ -870,6 +899,73 @@ function removeFuncao(nome) {
   persistFuncoes(); renderFuncModal();
 }
 
+/* ── inspeção: select de responsável ── */
+function fillInspSelect(val) {
+  const sel = document.getElementById('f_insp_responsavel');
+  const list = colabList();
+  const cur = String(val || '');
+  const has = list.some(n => n.toLowerCase() === cur.toLowerCase());
+  let opts = '<option value="">—</option>';
+  if (cur && !has) opts += `<option value="${escapeAttr(cur)}" selected>${escapeHtml(cur)}</option>`;
+  opts += list.map(n => `<option ${n.toLowerCase() === cur.toLowerCase() ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+  opts += '<option value="__novo__">➕ Novo nome…</option>';
+  sel.innerHTML = opts;
+}
+function inspNameChanged(sel) {
+  if (sel.value !== '__novo__') return;
+  const nome = (prompt('Nome do novo colaborador:') || '').trim();
+  if (!nome) { sel.value = ''; return; }
+  addColaborador(nome);
+  fillInspSelect(nome);
+}
+
+/* ── inspeção: fotos ── */
+function renderInspFotos() {
+  const el = document.getElementById('insp-fotos');
+  const fotos = (cur.inspecao && cur.inspecao.fotos) || [];
+  el.innerHTML = fotos.map((f, i) => `<div class="insp-foto-item">
+    <img src="${f.data}" alt="Foto ${i+1}">
+    <button class="insp-foto-del" onclick="removeInspFoto(${i})">✕</button>
+  </div>`).join('');
+}
+function addInspFoto() { document.getElementById('inspFotoInput').click(); }
+function handleInspFoto(input) {
+  const files = input.files; if (!files || !files.length) return;
+  if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+  if (!cur.inspecao.fotos) cur.inspecao.fotos = [];
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      compressInspFoto(e.target.result, compressed => {
+        cur.inspecao.fotos.push({ id: uid(), data: compressed });
+        renderInspFotos();
+        formDirty = true; saveDraftDebounced();
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+function compressInspFoto(dataURL, cb) {
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 1200;
+    let w = img.width, h = img.height;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+    cb(c.toDataURL('image/jpeg', 0.6));
+  };
+  img.src = dataURL;
+}
+function removeInspFoto(idx) {
+  if (!cur.inspecao || !cur.inspecao.fotos) return;
+  cur.inspecao.fotos.splice(idx, 1);
+  renderInspFotos();
+  formDirty = true; saveDraftDebounced();
+}
+
 function collectEditor() {
   cur.numero = document.getElementById('f_numero').value.trim();
   cur.data = document.getElementById('f_data').value;
@@ -879,6 +975,11 @@ function collectEditor() {
   cur.om = document.getElementById('f_om').value.trim();
   cur.titulo = document.getElementById('f_titulo').value.trim();
   cur.ocorrencias = document.getElementById('f_ocorrencias').value.trim();
+  if (!cur.inspecao) cur.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+  cur.inspecao.inicio = document.getElementById('f_insp_inicio').value;
+  cur.inspecao.termino = document.getElementById('f_insp_termino').value;
+  cur.inspecao.responsavel = document.getElementById('f_insp_responsavel').value;
+  cur.inspecao.anormalidades = document.getElementById('f_insp_anormalidades').value.trim();
   Object.keys(SEC).forEach(syncSection);
   cur.assBenetech = getSigDataURL('benetech') || cur.assBenetech || null;
   cur.assFiscal = getSigDataURL('fiscal') || cur.assFiscal || null;
@@ -1029,6 +1130,19 @@ function gerarPDF() {
       <div><b>Resp. Técnico:</b> ${escapeHtml(r.responsavel)}</div><div><b>Ordem Manut.:</b> ${escapeHtml(r.om)}</div>
     </div>`;
   html += tbl('Efetivo de mão de obra', ['Nome','Função','Entrada','Saída','Obs.'], (r.efetivo||[]).map(x => [x.nome,x.funcao,x.entrada,x.saida,x.obs]));
+  const insp = r.inspecao || {};
+  if (insp.inicio || insp.termino || insp.responsavel || insp.anormalidades || (insp.fotos && insp.fotos.length)) {
+    html += `<h3>Inspeção do Transportador</h3><table><tbody>`;
+    html += `<tr><th style="width:25%">Início</th><td style="width:25%">${escapeHtml(insp.inicio||'')}</td><th style="width:25%">Término</th><td style="width:25%">${escapeHtml(insp.termino||'')}</td></tr>`;
+    html += `<tr><th>Responsável</th><td colspan="3">${escapeHtml(insp.responsavel||'')}</td></tr>`;
+    if (insp.anormalidades) html += `<tr><th>Anormalidades</th><td colspan="3" style="white-space:pre-wrap">${escapeHtml(insp.anormalidades)}</td></tr>`;
+    html += `</tbody></table>`;
+    if (insp.fotos && insp.fotos.length) {
+      html += `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px">`;
+      insp.fotos.forEach(f => { html += `<img src="${f.data}" style="max-width:200px;max-height:150px;border:1px solid #ccc;border-radius:6px">`; });
+      html += `</div>`;
+    }
+  }
   html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.liberado]));
   html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
   html += tbl('Atividades executadas', ['Início','Fim','Descrição','Local/Equip.','Obs.'], (r.atividades||[]).map(x => [x.inicio,x.fim,x.descricao,x.local,x.obs]));
@@ -1104,6 +1218,12 @@ function rdoToCSVBlock(r) {
   L.push(['RDO', r.numero, 'Data', dt, 'Cliente', r.cliente, 'Local', r.local].map(csvCell).join(';'));
   const sec = (title, headers, rows) => { if (!rows.length) return; L.push(''); L.push(csvCell(title)); L.push(headers.map(csvCell).join(';')); rows.forEach(row => L.push(row.map(csvCell).join(';'))); };
   sec('Efetivo', ['Nome','Funcao','Entrada','Saida','Obs'], (r.efetivo||[]).map(x=>[x.nome,x.funcao,x.entrada,x.saida,x.obs]));
+  const ci = r.inspecao || {};
+  if (ci.inicio || ci.termino || ci.responsavel || ci.anormalidades) {
+    L.push(''); L.push('Inspecao do Transportador');
+    L.push(['Inicio','Termino','Responsavel','Anormalidades'].map(csvCell).join(';'));
+    L.push([ci.inicio,ci.termino,ci.responsavel,ci.anormalidades].map(csvCell).join(';'));
+  }
   sec('Alimentacao', ['Inicio','Fim','Motivo','Liberado por'], (r.alimentacao||[]).map(x=>[x.inicio,x.fim,x.motivo,x.liberado]));
   sec('Tempos parados', ['Inicio','Fim','Motivo','Area/Equip','Liberado por'], (r.paradas||[]).map(x=>[x.inicio,x.fim,x.motivo,x.area,x.liberado]));
   sec('Atividades', ['Inicio','Fim','Descricao','Local/Equip','Obs'], (r.atividades||[]).map(x=>[x.inicio,x.fim,x.descricao,x.local,x.obs]));
