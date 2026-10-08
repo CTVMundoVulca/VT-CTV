@@ -1133,6 +1133,13 @@ function tbl(title, headers, rows) {
 }
 function gerarPDF() {
   collectEditor();
+  if (!cur.data) { showToast('Informe a data antes de gerar o PDF.'); return; }
+  cur.atualizadoEm = Date.now();
+  persistRDO(cur);
+  editingId = cur.id;
+  formDirty = false;
+  clearDraft();
+  showToast('RDO salvo ✔️');
   const r = cur;
   const dt = r.data ? r.data.split('-').reverse().join('/') : '';
   const logoSrc = _logoB64 || document.querySelector('header .logo-img')?.src || '';
