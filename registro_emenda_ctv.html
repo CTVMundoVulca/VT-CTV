@@ -1616,7 +1616,7 @@ function startCloudListeners() {
       const freshIdx = db.registros.findIndex(r => r.id === editingId);
       if (freshIdx >= 0) {
         curIdx = freshIdx;
-        if (!formDirty) { cur = db.registros[freshIdx]; openEditor(); }
+        if (!formDirty) { cur = JSON.parse(JSON.stringify(db.registros[freshIdx])); openEditor(); }
       }
     }
     if (document.getElementById('listView').style.display !== 'none') renderList();

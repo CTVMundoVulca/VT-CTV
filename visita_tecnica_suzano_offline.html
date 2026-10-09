@@ -2064,6 +2064,61 @@ function coletarDados() {
   document.querySelectorAll('.option-btn.selected').forEach(el => {
     data.opcoes_selecionadas.push(el.textContent.trim());
   });
+
+  // Persist selectOpt group selections (group -> selected text)
+  data.selectOpts = {};
+  document.querySelectorAll('.option-btn.selected').forEach(el => {
+    const onclick = el.getAttribute('onclick') || '';
+    const match = onclick.match(/selectOpt\(this,'(\w+)'\)/);
+    if (match) data.selectOpts[match[1]] = el.textContent.trim();
+  });
+
+  // Persist toggleOpt selections (text list)
+  data.toggleOpts = [];
+  document.querySelectorAll('.option-btn.selected').forEach(el => {
+    const onclick = el.getAttribute('onclick') || '';
+    if (onclick.includes('toggleOpt')) data.toggleOpts.push(el.textContent.trim());
+  });
+
+  // Persist photos (base64)
+  data.fotos = [];
+  document.querySelectorAll('.foto-slot').forEach((slot, i) => {
+    const img = slot.querySelector('img');
+    if (img) data.fotos.push({ index: i, src: img.src, label: img.dataset.label || '' });
+  });
+
+  // Persist confirmed signatures
+  data.assinaturas = {};
+  ['ctv', 'cliente'].forEach(id => {
+    const canvas = document.getElementById('sig_' + id);
+    if (canvas && sigState[id]) data.assinaturas[id] = canvas.toDataURL('image/png');
+  });
+
+  // Persist emenda cards
+  data.emendaCards = [];
+  document.querySelectorAll('#emendaList .emenda-card').forEach(card => {
+    const tipo = card.querySelector('select')?.value || '';
+    const obs = card.querySelector('input[type="text"]')?.value || '';
+    const activeBtn = card.querySelector('.rating-btn.active');
+    const cond = activeBtn ? activeBtn.dataset.val : '';
+    data.emendaCards.push({ tipo, obs, cond });
+  });
+
+  // Persist checked tool rows
+  data.toolRows = [];
+  document.querySelectorAll('.tool-row.checked').forEach(row => {
+    data.toolRows.push({ group: row.dataset.group, name: row.dataset.name, qty: row.querySelector('.tool-qty')?.value || '' });
+  });
+
+  // Persist manual tool items
+  data.manualTools = [];
+  document.querySelectorAll('.tool-manual-row').forEach(row => {
+    const nome = row.querySelector('input[type="text"]')?.value || '';
+    const qty = row.querySelector('input[type="number"]')?.value || '';
+    const grupo = row.dataset.group || '';
+    if (nome) data.manualTools.push({ grupo, nome, qty });
+  });
+
   return data;
 }
 
@@ -2079,17 +2134,180 @@ function salvarFormulario() {
   }
 }
 
+function restaurarEstado(dados) {
+  // Restore basic field values
+  Object.keys(dados).forEach(key => {
+    const el = document.getElementById(key);
+    if (el && ['INPUT','SELECT','TEXTAREA'].includes(el.tagName)) el.value = dados[key];
+  });
+
+  // Restore largura_outro_field visibility
+  if (dados.largura_correia === 'outro') {
+    document.getElementById('largura_outro_field').style.display = 'block';
+  }
+
+  // Restore ratings
+  if (dados.ratings) {
+    state.ratings = Object.assign({}, dados.ratings);
+    Object.keys(dados.ratings).forEach(function(campo) {
+      var val = dados.ratings[campo];
+      document.querySelectorAll('.rating-btn').forEach(function(btn) {
+        var onclick = btn.getAttribute('onclick') || '';
+        if (onclick.includes("'" + campo + "'") && btn.dataset.val === val) {
+          btn.classList.add('active');
+        }
+      });
+    });
+  }
+
+  // Restore counters
+  if (dados.counters) {
+    state.counters = Object.assign({}, dados.counters);
+    Object.keys(dados.counters).forEach(function(campo) {
+      var el = document.getElementById(campo + '_val');
+      if (el) el.textContent = dados.counters[campo];
+    });
+  }
+
+  // Restore selectOpt selections
+  if (dados.selectOpts) {
+    Object.keys(dados.selectOpts).forEach(function(grupo) {
+      var text = dados.selectOpts[grupo];
+      document.querySelectorAll('[onclick*="selectOpt(this,\'' + grupo + '\')"]').forEach(function(btn) {
+        if (btn.textContent.trim() === text) {
+          btn.classList.add('selected');
+          if (grupo === 'disposicao') {
+            document.getElementById('inclinacao_field').style.display =
+              ['Inclinado','Descendente'].includes(text) ? 'block' : 'none';
+          }
+          if (grupo === 'tipo_emenda') {
+            document.getElementById('alerta_quente').style.display =
+              text.includes('quente') ? 'flex' : 'none';
+          }
+        }
+      });
+    });
+  }
+
+  // Restore toggleOpt selections
+  if (dados.toggleOpts && dados.toggleOpts.length > 0) {
+    document.querySelectorAll('.option-btn').forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      if (onclick.includes('toggleOpt') && dados.toggleOpts.includes(btn.textContent.trim())) {
+        btn.classList.add('selected');
+      }
+    });
+  }
+
+  // Restore emenda cards
+  if (dados.emendaCards && dados.emendaCards.length > 0) {
+    document.getElementById('emendaList').innerHTML = '';
+    dados.emendaCards.forEach(function(ec) {
+      addEmenda();
+      var cards = document.querySelectorAll('#emendaList .emenda-card');
+      var card = cards[cards.length - 1];
+      if (card) {
+        var sel = card.querySelector('select');
+        if (sel) sel.value = ec.tipo;
+        var inp = card.querySelector('input[type="text"]');
+        if (inp) inp.value = ec.obs;
+        if (ec.cond) {
+          card.querySelectorAll('.rating-btn').forEach(function(btn) {
+            if (btn.dataset.val === ec.cond) {
+              btn.classList.add('active');
+              var onclickAttr = btn.getAttribute('onclick') || '';
+              var m = onclickAttr.match(/setRating\(this,'([^']+)'\)/);
+              if (m) state.ratings[m[1]] = ec.cond;
+            }
+          });
+        }
+      }
+    });
+  }
+
+  // Restore photos
+  if (dados.fotos && dados.fotos.length > 0) {
+    dados.fotos.forEach(function(foto) {
+      var slot = document.getElementById('fslot_' + foto.index);
+      if (!slot) return;
+      if (slot.querySelector('img')) return;
+      var img = document.createElement('img');
+      img.src = foto.src;
+      img.dataset.label = foto.label;
+      slot.insertBefore(img, slot.querySelector('input'));
+      var btnRm = document.createElement('button');
+      btnRm.className = 'foto-remove';
+      btnRm.textContent = '×';
+      var dlBtn = document.createElement('button');
+      dlBtn.className = 'foto-download';
+      dlBtn.textContent = '⬇';
+      dlBtn.title = 'Baixar esta foto';
+      btnRm.onclick = function(ev) { ev.stopPropagation(); img.remove(); btnRm.remove(); dlBtn.remove(); updateDownloadAllBtn(); };
+      dlBtn.onclick = function(ev) { ev.stopPropagation(); baixarFotoUnica(img); };
+      slot.appendChild(btnRm);
+      slot.appendChild(dlBtn);
+    });
+    updateDownloadAllBtn();
+  }
+
+  // Restore signatures (delayed to ensure canvas is initialized)
+  if (dados.assinaturas) {
+    setTimeout(function() {
+      ['ctv', 'cliente'].forEach(function(id) {
+        if (!dados.assinaturas[id]) return;
+        var canvas = document.getElementById('sig_' + id);
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var sigImg = new Image();
+        sigImg.onload = function() {
+          ctx.drawImage(sigImg, 0, 0);
+          sigState[id] = true;
+          var ph = document.getElementById('ph_' + id);
+          if (ph) ph.style.display = 'none';
+        };
+        sigImg.src = dados.assinaturas[id];
+      });
+    }, 400);
+  }
+
+  // Restore checked tool rows
+  if (dados.toolRows && dados.toolRows.length > 0) {
+    dados.toolRows.forEach(function(t) {
+      document.querySelectorAll('.tool-row').forEach(function(row) {
+        if (row.dataset.group === t.group && row.dataset.name === t.name) {
+          row.classList.add('checked');
+          row.querySelector('.tool-check').textContent = '☑';
+          if (t.qty) row.querySelector('.tool-qty').value = t.qty;
+        }
+      });
+    });
+  }
+
+  // Restore manual tool items
+  if (dados.manualTools && dados.manualTools.length > 0) {
+    dados.manualTools.forEach(function(mt) {
+      addManualTool(mt.grupo);
+      var containers = document.querySelectorAll('#manual_' + mt.grupo + ' .tool-manual-row');
+      var lastRow = containers[containers.length - 1];
+      if (lastRow) {
+        var nameInput = lastRow.querySelector('input[type="text"]');
+        if (nameInput) nameInput.value = mt.nome;
+        var qtyInput = lastRow.querySelector('input[type="number"]');
+        if (qtyInput) qtyInput.value = mt.qty;
+      }
+    });
+  }
+
+  updateProgress();
+}
+
 function carregarDados() {
   try {
     const raw = localStorage.getItem('vt_suzano_ep');
     if (!raw) return;
     const dados = JSON.parse(raw);
-    Object.keys(dados).forEach(key => {
-      const el = document.getElementById(key);
-      if (el && ['INPUT','SELECT','TEXTAREA'].includes(el.tagName)) el.value = dados[key];
-    });
+    restaurarEstado(dados);
     if (dados._salvo_em) showToast('📂 Rascunho carregado: ' + dados._salvo_em);
-    updateProgress();
   } catch(e) { /* sem dados salvos */ }
 }
 
@@ -2314,12 +2532,24 @@ function carregarRascunho(id) {
   const d = drafts[id];
   if (!d) return;
   if (!confirm('Carregar "' + d.nome + '"?\nOs dados atuais não salvos serão perdidos.')) return;
-  Object.keys(d.dados).forEach(key => {
-    const el = document.getElementById(key);
-    if (el && ['INPUT','SELECT','TEXTAREA'].includes(el.tagName)) el.value = d.dados[key];
+  // Clear current state before loading
+  document.querySelectorAll('.option-btn.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.rating-btn.active').forEach(el => el.classList.remove('active'));
+  state.ratings = {};
+  state.counters = { emendas: 0, novas_emendas: 1 };
+  document.getElementById('emendas_val').textContent = '0';
+  document.getElementById('novas_emendas_val').textContent = '1';
+  document.getElementById('emendaList').innerHTML = '';
+  document.querySelectorAll('.foto-slot img,.foto-remove,.foto-download').forEach(el => el.remove());
+  document.querySelectorAll('.tool-row.checked').forEach(row => {
+    row.classList.remove('checked');
+    row.querySelector('.tool-check').textContent = '☐';
+    row.querySelector('.tool-qty').value = '';
   });
+  document.querySelectorAll('.tool-manual-row').forEach(el => el.remove());
+  limparAssinatura('ctv'); limparAssinatura('cliente');
+  restaurarEstado(d.dados);
   showToast('📂 ' + d.nome);
-  updateProgress();
 }
 
 function deletarRascunho(id) {
