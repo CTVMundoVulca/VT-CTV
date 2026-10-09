@@ -540,6 +540,45 @@ function stripFotosForCache(rdo) {
   c.inspecao.fotos = [];
   return c;
 }
+function syncFotosToCloud(rdoId, fotos) {
+  if (!rdoId || MODE !== 'cloud' || !FB) return;
+  var colRef = FB.collection(FB.fs, 'rdos', rdoId, 'fotos');
+  FB.getDocs(colRef).then(function(snap) {
+    var existing = {};
+    snap.forEach(function(d) { existing[d.id] = true; });
+    var currentIds = {};
+    (fotos || []).forEach(function(f) {
+      if (!f.data) return;
+      var fid = f.id || ('f_' + Math.random().toString(36).slice(2, 10));
+      if (!f.id) f.id = fid;
+      currentIds[fid] = true;
+      FB.setDoc(FB.doc(FB.fs, 'rdos', rdoId, 'fotos', fid), {
+        data: f.data, descricao: f.descricao || '', index: fotos.indexOf(f)
+      }).catch(function(){});
+    });
+    Object.keys(existing).forEach(function(id) {
+      if (!currentIds[id]) FB.deleteDoc(FB.doc(FB.fs, 'rdos', rdoId, 'fotos', id)).catch(function(){});
+    });
+  }).catch(function(){});
+}
+function loadFotosFromCloud(rdoId, callback) {
+  if (!rdoId || MODE !== 'cloud' || !FB) return;
+  FB.getDocs(FB.collection(FB.fs, 'rdos', rdoId, 'fotos')).then(function(snap) {
+    var fotos = [];
+    snap.forEach(function(d) {
+      var data = d.data();
+      fotos.push({ id: d.id, data: data.data, descricao: data.descricao || '', index: data.index || 0 });
+    });
+    fotos.sort(function(a, b) { return a.index - b.index; });
+    callback(fotos);
+  }).catch(function(){});
+}
+function deleteFotosFromCloud(rdoId) {
+  if (!rdoId || MODE !== 'cloud' || !FB) return;
+  FB.getDocs(FB.collection(FB.fs, 'rdos', rdoId, 'fotos')).then(function(snap) {
+    snap.forEach(function(d) { FB.deleteDoc(d.ref).catch(function(){}); });
+  }).catch(function(){});
+}
 
 /* ── persistência unificada (a UI chama estas) ── */
 function persistRDO(rdo) {
@@ -555,6 +594,7 @@ function persistRDO(rdo) {
     FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud)
       .then(() => { if (navigator.onLine) setSync('ok'); })
       .catch(err => { showToast('Erro ao salvar na nuvem. Dados mantidos neste aparelho.'); onWriteError(err); });
+    syncFotosToCloud(clean.id, fotos);
     cacheSnapshot();
     if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); }
@@ -562,6 +602,7 @@ function persistRDO(rdo) {
 function removeRDOStore(id) {
   db.rdos = db.rdos.filter(r => r.id !== id);
   removeFotos(id);
+  deleteFotosFromCloud(id);
   if (MODE === 'cloud' && FB) { FB.deleteDoc(FB.doc(FB.fs, 'rdos', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err)); cacheSnapshot(); }
   else { saveLocal(); }
 }
@@ -1336,7 +1377,7 @@ function importBackup(input) {
     });
     if (MODE === 'cloud' && FB) {
       if (!confirm('Enviar ' + data.rdos.length + ' RDO(s) do backup para a nuvem?')) { input.value=''; return; }
-      Promise.all(data.rdos.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); return FB.setDoc(FB.doc(FB.fs,'rdos',c.id), c); })).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
+      Promise.all(data.rdos.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); syncFotosToCloud(r.id, (r.inspecao && r.inspecao.fotos) || []); return FB.setDoc(FB.doc(FB.fs,'rdos',c.id), c); })).then(() => showToast('Backup enviado à nuvem ✔️')).catch(() => showToast('Falha ao enviar.'));
     } else {
       if (!confirm('Substituir TODOS os RDOs deste aparelho?')) { input.value=''; return; }
       db = data; if (!db.config) db.config = {}; saveLocal(); loadDark(); applyDark(); goList(); showToast('Backup restaurado ✔️');
@@ -1474,6 +1515,12 @@ function startCloudListeners() {
       if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
       const f = loadFotos(r.id);
       if (f.length) r.inspecao.fotos = f;
+      else loadFotosFromCloud(r.id, function(cf) {
+        if (!cf.length) return;
+        r.inspecao.fotos = cf;
+        saveFotos(r.id, cf);
+        if (eid && r.id === eid && !formDirty) { cur = JSON.parse(JSON.stringify(r)); fillEditor(); }
+      });
       return r;
     });
     cacheSnapshot();
@@ -1497,7 +1544,7 @@ function migrarLocalParaNuvem() {
   const arr = (local && local.rdos) || [];
   if (!arr.length) { showToast('Nenhum RDO local para enviar.'); return; }
   if (!confirm('Enviar ' + arr.length + ' RDO(s) deste aparelho para a nuvem?')) return;
-  Promise.all(arr.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); return FB.setDoc(FB.doc(FB.fs, 'rdos', c.id), c); }))
+  Promise.all(arr.map(r => { const c = stripFotosForCache(JSON.parse(JSON.stringify(r))); syncFotosToCloud(r.id, (r.inspecao && r.inspecao.fotos) || loadFotos(r.id)); return FB.setDoc(FB.doc(FB.fs, 'rdos', c.id), c); }))
     .then(() => showToast('RDOs enviados ✔️')).catch(() => showToast('Falha ao enviar alguns RDOs.'));
 }
 function updateModeUI() {
@@ -1563,7 +1610,7 @@ if (!window.__RDO.wantCloud) bootLocal();   // sem config → modo local imediat
         updatePassword: authMod.updatePassword,
         onAuthStateChanged: authMod.onAuthStateChanged,
         signOut: authMod.signOut,
-        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc, getDocs: fsMod.getDocs,
         setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
         serverTimestamp: fsMod.serverTimestamp
       });

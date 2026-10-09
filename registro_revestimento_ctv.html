@@ -523,23 +523,83 @@ function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 
+function fotosKey(regId) { return 'ctv_rev_fotos_' + regId; }
+function saveFotosLocal(regId, fotos) {
+  if (!regId) return;
+  try {
+    var filled = (fotos || []).filter(function(f) { return f && f.data; });
+    if (!filled.length) { localStorage.removeItem(fotosKey(regId)); return; }
+    localStorage.setItem(fotosKey(regId), JSON.stringify(fotos));
+  } catch (e) { showToast('Erro ao salvar fotos (memória cheia?).'); }
+}
+function loadFotosLocal(regId) {
+  if (!regId) return [];
+  try { return JSON.parse(localStorage.getItem(fotosKey(regId)) || '[]'); } catch (e) { return []; }
+}
+function removeFotosLocal(regId) { if (regId) try { localStorage.removeItem(fotosKey(regId)); } catch (e) {} }
+function syncFotosToCloud(regId, fotos) {
+  if (!regId || MODE !== 'cloud' || !FB) return;
+  var colRef = FB.collection(FB.fs, 'revestimentos', regId, 'fotos');
+  FB.getDocs(colRef).then(function(snap) {
+    var existing = {};
+    snap.forEach(function(d) { existing[d.id] = true; });
+    var currentIds = {};
+    (fotos || []).forEach(function(f, i) {
+      if (!f.data) return;
+      var fid = 'foto_' + i;
+      currentIds[fid] = true;
+      FB.setDoc(FB.doc(FB.fs, 'revestimentos', regId, 'fotos', fid), {
+        data: f.data, label: f.label || '', index: i
+      }).catch(function(){});
+    });
+    Object.keys(existing).forEach(function(id) {
+      if (!currentIds[id]) FB.deleteDoc(FB.doc(FB.fs, 'revestimentos', regId, 'fotos', id)).catch(function(){});
+    });
+  }).catch(function(){});
+}
+function loadFotosFromCloud(regId, callback) {
+  if (!regId || MODE !== 'cloud' || !FB) return;
+  FB.getDocs(FB.collection(FB.fs, 'revestimentos', regId, 'fotos')).then(function(snap) {
+    var fotos = [];
+    snap.forEach(function(d) {
+      var data = d.data();
+      fotos.push({ label: data.label || '', data: data.data, index: data.index || 0 });
+    });
+    fotos.sort(function(a, b) { return a.index - b.index; });
+    callback(fotos);
+  }).catch(function(){});
+}
+function deleteFotosFromCloud(regId) {
+  if (!regId || MODE !== 'cloud' || !FB) return;
+  FB.getDocs(FB.collection(FB.fs, 'revestimentos', regId, 'fotos')).then(function(snap) {
+    snap.forEach(function(d) { FB.deleteDoc(d.ref).catch(function(){}); });
+  }).catch(function(){});
+}
+
 function persistRegistro(reg) {
   const clean = JSON.parse(JSON.stringify(reg));
+  const fotos = clean.fotos || [];
+  saveFotosLocal(clean.id, fotos);
   const i = db.registros.findIndex(r => r.id === clean.id);
   if (i >= 0) db.registros[i] = clean; else db.registros.push(clean);
   if (MODE === 'cloud' && FB) {
-    clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
-    FB.setDoc(FB.doc(FB.fs, 'revestimentos', clean.id), clean)
+    const forCloud = JSON.parse(JSON.stringify(clean));
+    forCloud.fotos = (forCloud.fotos || []).map(function(f) { return { label: f.label || '', data: null }; });
+    forCloud.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
+    FB.setDoc(FB.doc(FB.fs, 'revestimentos', forCloud.id), forCloud)
       .then(() => { if (navigator.onLine) setSync('ok'); })
       .catch(err => onWriteError(err));
+    syncFotosToCloud(clean.id, fotos);
     cacheSnapshot();
     if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); }
 }
 function removeRegistroStore(id) {
   db.registros = db.registros.filter(r => r.id !== id);
+  removeFotosLocal(id);
   if (MODE === 'cloud' && FB) {
     FB.deleteDoc(FB.doc(FB.fs, 'revestimentos', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+    deleteFotosFromCloud(id);
     cacheSnapshot();
   } else { saveLocal(); }
 }
@@ -1170,7 +1230,18 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'revestimentos'), s => {
     const editorOpen = document.getElementById('editorView').style.display !== 'none';
     const editingId = (editorOpen && cur) ? cur.id : null;
-    db.registros = s.docs.map(d => d.data());
+    db.registros = s.docs.map(d => {
+      const r = d.data();
+      const localF = loadFotosLocal(r.id);
+      if (localF.length) r.fotos = localF;
+      else loadFotosFromCloud(r.id, function(cf) {
+        if (!cf.length) return;
+        r.fotos = cf;
+        saveFotosLocal(r.id, cf);
+        if (editingId && r.id === editingId && !formDirty) { cur = JSON.parse(JSON.stringify(r)); openEditor(); }
+      });
+      return r;
+    });
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (editingId) {
@@ -1191,7 +1262,7 @@ function migrarLocalParaNuvem() {
   const arr = (local && local.registros) || [];
   if (!arr.length) { showToast('Nenhum registro local para enviar.'); return; }
   if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a nuvem?')) return;
-  Promise.all(arr.map(r => FB.setDoc(FB.doc(FB.fs, 'revestimentos', r.id), JSON.parse(JSON.stringify(r)))))
+  Promise.all(arr.map(r => { var c = JSON.parse(JSON.stringify(r)); syncFotosToCloud(r.id, r.fotos || []); c.fotos = (c.fotos || []).map(function(f){ return {label:f.label||'',data:null}; }); return FB.setDoc(FB.doc(FB.fs, 'revestimentos', c.id), c); }))
     .then(() => showToast('Registros enviados')).catch(() => showToast('Falha ao enviar alguns registros.'));
 }
 function updateModeUI() {
@@ -1248,7 +1319,7 @@ if (!window.__REV.wantCloud) bootLocal();
         updatePassword: authMod.updatePassword,
         onAuthStateChanged: authMod.onAuthStateChanged,
         signOut: authMod.signOut,
-        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+        collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc, getDocs: fsMod.getDocs,
         setDoc: fsMod.setDoc, deleteDoc: fsMod.deleteDoc, onSnapshot: fsMod.onSnapshot,
         serverTimestamp: fsMod.serverTimestamp
       });
