@@ -74,6 +74,13 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .foto-slot .foto-add { font-size: 24px; color: var(--text-light); }
 .foto-slot .foto-del { position: absolute; top: 2px; right: 2px; background: var(--danger); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: none; }
 .foto-slot:hover .foto-del { display: block; }
+.foto-viewer-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.92); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; }
+.foto-viewer-overlay.open { display:flex; }
+.foto-viewer-overlay img { max-width:92%; max-height:72vh; object-fit:contain; border-radius:8px; }
+.foto-viewer-overlay .fv-close { position:absolute; top:12px; right:16px; background:none; border:none; color:#fff; font-size:32px; cursor:pointer; z-index:10000; }
+.foto-viewer-overlay .fv-label { color:#fff; font-size:14px; margin-top:10px; text-align:center; max-width:90%; }
+.foto-viewer-overlay .fv-download { margin-top:14px; padding:10px 28px; background:#43a6ea; color:#fff; border:none; border-radius:8px; font-size:15px; cursor:pointer; font-family:inherit; }
+.foto-viewer-overlay .fv-download:active { background:#2e8fd0; }
 
 .sig-box { border: 1px dashed var(--border); border-radius: 10px; background: var(--bg); position: relative; margin-bottom: 8px; }
 .sig-box canvas { width: 100%; height: 120px; display: block; touch-action: none; }
@@ -114,6 +121,14 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 </style>
 </head>
 <body>
+
+<!-- VISUALIZADOR DE FOTOS -->
+<div class="foto-viewer-overlay" id="fotoViewerOverlay" onclick="closeFotoViewer(event)">
+  <button class="fv-close" onclick="closeFotoViewer(event)">×</button>
+  <img id="fotoViewerImg" src="" alt="Foto">
+  <div class="fv-label" id="fotoViewerLabel"></div>
+  <button class="fv-download" onclick="downloadFotoViewer()">⬇ Baixar foto</button>
+</div>
 
 <!-- LOGIN (modo nuvem) -->
 <div id="authOverlay">
@@ -523,20 +538,66 @@ function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 
+/* ── fotos: IndexedDB (cota ~50-500MB vs 5MB do localStorage) ── */
+var fotosIDB = null;
+var fotosCache = {};
 function fotosKey(regId) { return 'ctv_rev_fotos_' + regId; }
+function initFotosDB() {
+  return new Promise(function(resolve) {
+    try {
+      var req = indexedDB.open('ctv_rev_fotos_db', 1);
+      req.onupgradeneeded = function(e) { e.target.result.createObjectStore('fotos'); };
+      req.onsuccess = function(e) {
+        fotosIDB = e.target.result;
+        var migKeys = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('ctv_rev_fotos_') === 0) migKeys.push(k);
+        }
+        migKeys.forEach(function(k) {
+          var id = k.replace('ctv_rev_fotos_', '');
+          try {
+            var d = JSON.parse(localStorage.getItem(k));
+            if (d && d.length) {
+              fotosCache[id] = d;
+              fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(d, id);
+            }
+            localStorage.removeItem(k);
+          } catch (ex) {}
+        });
+        var tx = fotosIDB.transaction('fotos','readonly');
+        var cur = tx.objectStore('fotos').openCursor();
+        cur.onsuccess = function(ev) {
+          var c = ev.target.result;
+          if (c) { if (!fotosCache[c.key]) fotosCache[c.key] = c.value; c.continue(); }
+          else resolve();
+        };
+        cur.onerror = function() { resolve(); };
+      };
+      req.onerror = function() { resolve(); };
+    } catch (ex) { resolve(); }
+  });
+}
 function saveFotosLocal(regId, fotos) {
   if (!regId) return;
-  try {
-    var filled = (fotos || []).filter(function(f) { return f && f.data; });
-    if (!filled.length) { localStorage.removeItem(fotosKey(regId)); return; }
-    localStorage.setItem(fotosKey(regId), JSON.stringify(fotos));
-  } catch (e) { showToast('Erro ao salvar fotos (memória cheia?).'); }
+  var filled = (fotos || []).filter(function(f) { return f && f.data; });
+  if (!filled.length) {
+    delete fotosCache[regId];
+    if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(regId); } catch(e){}
+    return;
+  }
+  fotosCache[regId] = fotos;
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(fotos, regId); } catch(e){}
 }
 function loadFotosLocal(regId) {
   if (!regId) return [];
-  try { return JSON.parse(localStorage.getItem(fotosKey(regId)) || '[]'); } catch (e) { return []; }
+  return fotosCache[regId] || [];
 }
-function removeFotosLocal(regId) { if (regId) try { localStorage.removeItem(fotosKey(regId)); } catch (e) {} }
+function removeFotosLocal(regId) {
+  if (!regId) return;
+  delete fotosCache[regId];
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(regId); } catch(e){}
+}
 function syncFotosToCloud(regId, fotos) {
   if (!regId || MODE !== 'cloud' || !FB) return;
   var colRef = FB.collection(FB.fs, 'revestimentos', regId, 'fotos');
@@ -833,7 +894,7 @@ const FOTO_LABELS = ['Recebimento do tambor','Lixamento de Tambor','Aplicação 
 function renderFotos() {
   const grid = document.getElementById('fotoGrid');
   const fotos = cur.fotos || [];
-  grid.innerHTML = fotos.map((f, i) => `<div class="foto-slot">${f.data ? `<img src="${f.data}"><button class="foto-del" onclick="event.stopPropagation();removerFoto(${i})">×</button>` : `<div class="foto-add" onclick="capturarFoto(${i})">📷</div>`}<div class="foto-label">${i + 1}. ${esc(f.label)}</div></div>`).join('');
+  grid.innerHTML = fotos.map((f, i) => `<div class="foto-slot">${f.data ? `<img src="${f.data}" style="cursor:pointer" onclick="event.stopPropagation();openFotoViewer(this.src,'${esc(f.label).replace(/'/g,"\\'")}')" ><button class="foto-del" onclick="event.stopPropagation();removerFoto(${i})">×</button>` : `<div class="foto-add" onclick="capturarFoto(${i})">📷</div>`}<div class="foto-label">${i + 1}. ${esc(f.label)}</div></div>`).join('');
 }
 function addFotoSlot() { const idx = cur.fotos.length; cur.fotos.push({ label: FOTO_LABELS[idx] || 'Outros', data: null }); renderFotos(); }
 function capturarFoto(idx) {
@@ -851,6 +912,23 @@ function capturarFoto(idx) {
   input.click();
 }
 function removerFoto(idx) { cur.fotos[idx].data = null; renderFotos(); persistRegistro(cur); }
+function openFotoViewer(src, label) {
+  document.getElementById('fotoViewerImg').src = src;
+  document.getElementById('fotoViewerLabel').textContent = label || '';
+  document.getElementById('fotoViewerOverlay').classList.add('open');
+}
+function closeFotoViewer(e) {
+  if (e && e.target !== document.getElementById('fotoViewerOverlay') && !e.target.classList.contains('fv-close')) return;
+  document.getElementById('fotoViewerOverlay').classList.remove('open');
+}
+function downloadFotoViewer() {
+  var src = document.getElementById('fotoViewerImg').src;
+  if (!src) return;
+  var a = document.createElement('a');
+  a.href = src;
+  a.download = 'foto_revestimento_' + Date.now() + '.jpg';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 
 /* ═══ ASSINATURA ═══ */
 const sigState = {};
@@ -1131,24 +1209,28 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); loadLocal(); applyDark();
-  updateModeUI(); renderList();
+  initFotosDB().then(function() {
+    loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); loadLocal(); applyDark();
+    updateModeUI(); renderList();
+  });
 }
 function bootCloud(api) {
   if (booted) return; booted = true;
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_rev_local_backup')) localStorage.setItem('ctv_rev_local_backup', raw); } catch(e){}
-  db = { registros: [], config: { dark: false } };
-  loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); applyDark();
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
-  updateModeUI(); renderList();
-  FB.onAuthStateChanged(FB.auth, user => {
-    currentUser = user;
-    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
-    else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
+  initFotosDB().then(function() {
+    db = { registros: [], config: { dark: false } };
+    loadFuncionarios(); loadMateriais(); loadFiscais(); loadFabricantes(); applyDark();
+    try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
+    updateModeUI(); renderList();
+    FB.onAuthStateChanged(FB.auth, user => {
+      currentUser = user;
+      if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+      else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
+    });
+    window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+    window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
   });
-  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
-  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
 }
 function setSync(state, extra) {
   const card = document.getElementById('syncCard'); if (!card) return;
