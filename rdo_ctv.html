@@ -536,20 +536,65 @@ function cacheSnapshot() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(snap)); } catch (e) {}
 }
 
-/* ── fotos da inspeção: storage separado por RDO ── */
+/* ── fotos da inspeção: IndexedDB (cota ~50-500MB vs 5MB do localStorage) ── */
+var fotosIDB = null;
+var fotosCache = {};
 function fotosKey(rdoId) { return 'ctv_rdo_fotos_' + rdoId; }
+function initFotosDB() {
+  return new Promise(function(resolve) {
+    try {
+      var req = indexedDB.open('ctv_rdo_fotos_db', 1);
+      req.onupgradeneeded = function(e) { e.target.result.createObjectStore('fotos'); };
+      req.onsuccess = function(e) {
+        fotosIDB = e.target.result;
+        var migKeys = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('ctv_rdo_fotos_') === 0) migKeys.push(k);
+        }
+        migKeys.forEach(function(k) {
+          var id = k.replace('ctv_rdo_fotos_', '');
+          try {
+            var d = JSON.parse(localStorage.getItem(k));
+            if (d && d.length) {
+              fotosCache[id] = d;
+              fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(d, id);
+            }
+            localStorage.removeItem(k);
+          } catch (ex) {}
+        });
+        var tx = fotosIDB.transaction('fotos','readonly');
+        var cur = tx.objectStore('fotos').openCursor();
+        cur.onsuccess = function(ev) {
+          var c = ev.target.result;
+          if (c) { if (!fotosCache[c.key]) fotosCache[c.key] = c.value; c.continue(); }
+          else resolve();
+        };
+        cur.onerror = function() { resolve(); };
+      };
+      req.onerror = function() { resolve(); };
+    } catch (ex) { resolve(); }
+  });
+}
 function saveFotos(rdoId, fotos) {
   if (!rdoId) return;
-  try {
-    if (!fotos || !fotos.length) { localStorage.removeItem(fotosKey(rdoId)); return; }
-    localStorage.setItem(fotosKey(rdoId), JSON.stringify(fotos));
-  } catch (e) { showToast('Erro ao salvar fotos (memória cheia?). Reduza o número de fotos.'); }
+  if (!fotos || !fotos.length) {
+    delete fotosCache[rdoId];
+    if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(rdoId); } catch(e){}
+    return;
+  }
+  fotosCache[rdoId] = fotos;
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(fotos, rdoId); } catch(e){}
 }
 function loadFotos(rdoId) {
   if (!rdoId) return [];
-  try { return JSON.parse(localStorage.getItem(fotosKey(rdoId)) || '[]'); } catch (e) { return []; }
+  return fotosCache[rdoId] || [];
 }
-function removeFotos(rdoId) { if (rdoId) try { localStorage.removeItem(fotosKey(rdoId)); } catch (e) {} }
+function removeFotos(rdoId) {
+  if (!rdoId) return;
+  delete fotosCache[rdoId];
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(rdoId); } catch(e){}
+}
 function stripFotosForCache(rdo) {
   if (!rdo || !rdo.inspecao || !rdo.inspecao.fotos || !rdo.inspecao.fotos.length) return rdo;
   const c = JSON.parse(JSON.stringify(rdo));
@@ -1430,36 +1475,38 @@ function showToast(msg) { const t = document.getElementById('toast'); t.textCont
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadLocal(); loadDark(); applyDark();
-  updateModeUI();
-  renderList(); renderCalendar();
+  initFotosDB().then(function() {
+    loadLocal(); loadDark(); applyDark();
+    updateModeUI();
+    renderList(); renderCalendar();
+  });
 }
 function bootCloud(api) {
   if (booted) return; booted = true;
   MODE = 'cloud'; FB = api;
-  // preserva os RDOs locais atuais para migração antes de sobrescrever o cache
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_rdo_local_backup')) localStorage.setItem('ctv_rdo_local_backup', raw); } catch (e) {}
-  db = { version: 1, rdos: [], config: {} };
-  loadDark(); applyDark();
-  // primeira pintura a partir do cache (offline), até o Firestore responder
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
-  db.rdos.forEach(r => {
-    if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
-    const f = loadFotos(r.id);
-    if (f.length) r.inspecao.fotos = f;
+  initFotosDB().then(function() {
+    db = { version: 1, rdos: [], config: {} };
+    loadDark(); applyDark();
+    try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
+    db.rdos.forEach(r => {
+      if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
+      const f = loadFotos(r.id);
+      if (f.length) r.inspecao.fotos = f;
+    });
+    if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
+    if (!db.config.funcoes) db.config.funcoes = DEFAULT_FUNCOES.slice();
+    if (!db.config.feriados) db.config.feriados = {};
+    updateModeUI();
+    renderList(); renderCalendar();
+    FB.onAuthStateChanged(FB.auth, user => {
+      currentUser = user;
+      if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+      else { clearCloudListeners(); showAuth(); }
+    });
+    window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+    window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
   });
-  if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
-  if (!db.config.funcoes) db.config.funcoes = DEFAULT_FUNCOES.slice();
-  if (!db.config.feriados) db.config.feriados = {};
-  updateModeUI();
-  renderList(); renderCalendar();
-  FB.onAuthStateChanged(FB.auth, user => {
-    currentUser = user;
-    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
-    else { clearCloudListeners(); showAuth(); }
-  });
-  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
-  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
 }
 function setSync(state, extra) {
   const card = document.getElementById('syncCard'); if (!card) return;

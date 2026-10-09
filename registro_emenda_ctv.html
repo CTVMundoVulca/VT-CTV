@@ -688,20 +688,66 @@ function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 
+/* ── fotos: IndexedDB (cota ~50-500MB vs 5MB do localStorage) ── */
+var fotosIDB = null;
+var fotosCache = {};
 function fotosKey(regId) { return 'ctv_emenda_fotos_' + regId; }
+function initFotosDB() {
+  return new Promise(function(resolve) {
+    try {
+      var req = indexedDB.open('ctv_emenda_fotos_db', 1);
+      req.onupgradeneeded = function(e) { e.target.result.createObjectStore('fotos'); };
+      req.onsuccess = function(e) {
+        fotosIDB = e.target.result;
+        var migKeys = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('ctv_emenda_fotos_') === 0) migKeys.push(k);
+        }
+        migKeys.forEach(function(k) {
+          var id = k.replace('ctv_emenda_fotos_', '');
+          try {
+            var d = JSON.parse(localStorage.getItem(k));
+            if (d && d.length) {
+              fotosCache[id] = d;
+              fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(d, id);
+            }
+            localStorage.removeItem(k);
+          } catch (ex) {}
+        });
+        var tx = fotosIDB.transaction('fotos','readonly');
+        var cur = tx.objectStore('fotos').openCursor();
+        cur.onsuccess = function(ev) {
+          var c = ev.target.result;
+          if (c) { if (!fotosCache[c.key]) fotosCache[c.key] = c.value; c.continue(); }
+          else resolve();
+        };
+        cur.onerror = function() { resolve(); };
+      };
+      req.onerror = function() { resolve(); };
+    } catch (ex) { resolve(); }
+  });
+}
 function saveFotosLocal(regId, fotos) {
   if (!regId) return;
-  try {
-    var filled = (fotos || []).filter(function(f) { return f && f.data; });
-    if (!filled.length) { localStorage.removeItem(fotosKey(regId)); return; }
-    localStorage.setItem(fotosKey(regId), JSON.stringify(fotos));
-  } catch (e) { showToast('Erro ao salvar fotos (memória cheia?).'); }
+  var filled = (fotos || []).filter(function(f) { return f && f.data; });
+  if (!filled.length) {
+    delete fotosCache[regId];
+    if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(regId); } catch(e){}
+    return;
+  }
+  fotosCache[regId] = fotos;
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put(fotos, regId); } catch(e){}
 }
 function loadFotosLocal(regId) {
   if (!regId) return [];
-  try { return JSON.parse(localStorage.getItem(fotosKey(regId)) || '[]'); } catch (e) { return []; }
+  return fotosCache[regId] || [];
 }
-function removeFotosLocal(regId) { if (regId) try { localStorage.removeItem(fotosKey(regId)); } catch (e) {} }
+function removeFotosLocal(regId) {
+  if (!regId) return;
+  delete fotosCache[regId];
+  if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(regId); } catch(e){}
+}
 function syncFotosToCloud(regId, fotos) {
   if (!regId || MODE !== 'cloud' || !FB) return;
   var colRef = FB.collection(FB.fs, 'emendas', regId, 'fotos');
@@ -1600,24 +1646,28 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadFuncionarios(); loadMateriais(); loadFiscais(); loadLocal(); applyDark();
-  checkAccess(); updateModeUI(); renderList();
+  initFotosDB().then(function() {
+    loadFuncionarios(); loadMateriais(); loadFiscais(); loadLocal(); applyDark();
+    checkAccess(); updateModeUI(); renderList();
+  });
 }
 function bootCloud(api) {
   if (booted) return; booted = true;
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_emenda_local_backup')) localStorage.setItem('ctv_emenda_local_backup', raw); } catch(e){}
-  db = { registros: [], config: { dark: false } };
-  loadFuncionarios(); loadMateriais(); loadFiscais(); applyDark();
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
-  checkAccess(); updateModeUI(); renderList();
-  FB.onAuthStateChanged(FB.auth, user => {
-    currentUser = user;
-    if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} checkAccess(); hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
-    else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); checkAccess(); showAuth(); }
+  initFotosDB().then(function() {
+    db = { registros: [], config: { dark: false } };
+    loadFuncionarios(); loadMateriais(); loadFiscais(); applyDark();
+    try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.registros) { db.registros = c.registros; } } catch(e){}
+    checkAccess(); updateModeUI(); renderList();
+    FB.onAuthStateChanged(FB.auth, user => {
+      currentUser = user;
+      if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} checkAccess(); hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
+      else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); checkAccess(); showAuth(); }
+    });
+    window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+    window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
   });
-  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
-  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
 }
 function setSync(state, extra) {
   const card = document.getElementById('syncCard'); if (!card) return;
