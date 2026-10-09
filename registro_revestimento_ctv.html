@@ -1175,7 +1175,7 @@ function startCloudListeners() {
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (editingId) {
       const freshIdx = db.registros.findIndex(r => r.id === editingId);
-      if (freshIdx >= 0) { curIdx = freshIdx; if (!formDirty) { cur = db.registros[freshIdx]; openEditor(); } }
+      if (freshIdx >= 0) { curIdx = freshIdx; if (!formDirty) { cur = JSON.parse(JSON.stringify(db.registros[freshIdx])); openEditor(); } }
     }
     if (document.getElementById('listView').style.display !== 'none') renderList();
   }, err => {

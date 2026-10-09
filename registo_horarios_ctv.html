@@ -1961,11 +1961,6 @@ function showUserChip(user) { const c = document.getElementById('userChip'); if 
 function showAuth() { const c = document.getElementById('userChip'); if (c) c.style.display = 'none'; const bs = document.getElementById('btnSenha'); if (bs) bs.style.display = 'none'; document.getElementById('authOverlay').classList.add('open'); }
 function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
 
-/* fecha modal ao tocar no fundo */
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
-});
-
 /* ═══════════════════ INIT ═══════════════════ */
 window.__PONTO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
 if (!window.__PONTO.wantCloud) bootLocal();

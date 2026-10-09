@@ -307,8 +307,9 @@ const LS_PW  = "ctv_suzano_pw_v1";
 const PARTES = ["Acionamento (cabeça)","Retorno (cauda)","Esticamento / Tensionamento","Tambor de desvio","Trecho do tapete (carry)","Trecho de retorno","Área de emenda","Chute de alimentação","Chute de descarga","Raspador","Guia lateral","Estrutura / passadiço","Outro"];
 
 let memStore = {};
+let _lsWarnShown = false;
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return memStore[k]||null}}
-function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){memStore[k]=v}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){memStore[k]=v;if(!_lsWarnShown){_lsWarnShown=true;setTimeout(()=>toast("Erro ao salvar dados (memória cheia). Dados podem ser perdidos ao fechar."),100)}}}
 
 let edits = JSON.parse(lsGet(LS_KEY)||"{}");
 let editMode=false, matSel="", fichaAtual=null;
