@@ -452,6 +452,14 @@
   </div>
 </div>
 
+<div class="modal-bg" id="dayRdoModalBg">
+  <div class="modal">
+    <h3 id="dayRdoModalTitle">RDOs do dia</h3>
+    <div id="dayRdoModalList" style="max-height:55vh;overflow-y:auto;margin-bottom:12px"></div>
+    <button class="btn btn-ghost" onclick="closeDayRdoModal()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -808,14 +816,30 @@ function renderCalendar() {
   document.getElementById('calTitle').textContent = MOFULL[calMonth] + ' ' + calYear;
 }
 function openDay(k) {
-  if (calLongFired) { calLongFired = false; return; } // veio de um "segurar", não abre RDO
+  if (calLongFired) { calLongFired = false; return; }
   const list = db.rdos.filter(r => r.data === k);
   if (list.length === 1) { openRDO(list[0].id); return; }
   if (list.length === 0) { newRDO(k); return; }
-  // vários: abre o primeiro (lista já mostra os demais)
-  openRDO(list[0].id);
-  showToast(list.length + ' RDOs neste dia — veja a lista abaixo.');
+  showDayRdoModal(k, list);
 }
+function showDayRdoModal(k, list) {
+  const dt = k.split('-').reverse().join('/');
+  document.getElementById('dayRdoModalTitle').textContent = list.length + ' RDOs em ' + dt;
+  document.getElementById('dayRdoModalList').innerHTML = list.map(function(r) {
+    const info = [r.cliente, r.local, r.titulo].filter(Boolean).join(' · ') || '—';
+    const pes = (r.efetivo || []).length;
+    const atv = (r.atividades || []).length;
+    return '<div class="entry" onclick="closeDayRdoModal();openRDO(\'' + r.id + '\')">' +
+      '<div class="entry-main">' +
+        '<div class="top"><span>RDO ' + escapeHtml(r.numero || '—') + '</span></div>' +
+        '<div class="sub">' + escapeHtml(info) + ' · ' + pes + ' pessoa(s), ' + atv + ' atividade(s)</div>' +
+      '</div>' +
+      '<div style="color:var(--orange);font-size:20px;font-weight:800">›</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('dayRdoModalBg').classList.add('open');
+}
+function closeDayRdoModal() { document.getElementById('dayRdoModalBg').classList.remove('open'); }
 
 /* ── feriados municipais (marcação manual, compartilhada) ── */
 function fmtBR(k) { const p = String(k).split('-'); return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : k; }
