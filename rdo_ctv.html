@@ -579,8 +579,8 @@ function initFotosDB() {
 function saveFotos(rdoId, fotos) {
   if (!rdoId) return;
   if (!fotos || !fotos.length) {
-    delete fotosCache[rdoId];
-    if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').delete(rdoId); } catch(e){}
+    fotosCache[rdoId] = [];
+    if (fotosIDB) try { fotosIDB.transaction('fotos','readwrite').objectStore('fotos').put([], rdoId); } catch(e){}
     return;
   }
   fotosCache[rdoId] = fotos;
@@ -1593,8 +1593,9 @@ function startCloudListeners() {
       const r = d.data();
       if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
       const f = loadFotos(r.id);
-      if (f.length) r.inspecao.fotos = f;
+      if (f.length || (r.id in fotosCache)) r.inspecao.fotos = f;
       else loadFotosFromCloud(r.id, function(cf) {
+        if (r.id in fotosCache) return;
         if (!cf.length) return;
         r.inspecao.fotos = cf;
         saveFotos(r.id, cf);
