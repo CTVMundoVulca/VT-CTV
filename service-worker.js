@@ -3,7 +3,7 @@
    atualização quando há rede) com fallback para o cache (offline).
    Demais assets = cache-first. Troque CACHE_VERSION ao publicar
    mudanças para forçar atualização nos aparelhos. */
-const CACHE_VERSION = 'ctv-campo-v106';
+const CACHE_VERSION = 'ctv-campo-v107';
 
 /* Caminhos relativos ao escopo do SW (funciona sob /vt-ctv/ no GitHub Pages) */
 const APP_SHELL = [
@@ -60,15 +60,18 @@ self.addEventListener('fetch', event => {
     (req.headers.get('accept') || '').includes('text/html');
 
   if (isNavigation) {
-    // network-first para HTML, cai no cache quando offline
+    // network-first com timeout de 3s — sinal fraco serve do cache rápido
+    const fromNetwork = fetch(req).then(resp => {
+      const copy = resp.clone();
+      caches.open(CACHE_VERSION).then(c => c.put(req, copy)).catch(() => {});
+      return resp;
+    });
+    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 3000));
+    const fromCache = () => caches.match(req).then(r => r || caches.match('./index.html'));
     event.respondWith(
-      fetch(req)
-        .then(resp => {
-          const copy = resp.clone();
-          caches.open(CACHE_VERSION).then(c => c.put(req, copy)).catch(() => {});
-          return resp;
-        })
-        .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+      Promise.race([fromNetwork, timeout])
+        .then(resp => resp || fromCache())
+        .catch(() => fromCache())
     );
     return;
   }

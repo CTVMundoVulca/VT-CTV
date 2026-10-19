@@ -1829,10 +1829,14 @@ if (!window.__EMENDA.wantCloud) bootLocal();
   if (R && R.wantCloud) {
     try {
       const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
-      const [appMod, authMod, fsMod] = await Promise.all([
-        import(V + 'firebase-app.js'),
-        import(V + 'firebase-auth.js'),
-        import(V + 'firebase-firestore.js')
+      const fbTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
+      const [appMod, authMod, fsMod] = await Promise.race([
+        Promise.all([
+          import(V + 'firebase-app.js'),
+          import(V + 'firebase-auth.js'),
+          import(V + 'firebase-firestore.js')
+        ]),
+        fbTimeout
       ]);
       const app = appMod.initializeApp(R.firebaseConfig);
       const auth = authMod.getAuth(app);
