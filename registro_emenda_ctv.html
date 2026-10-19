@@ -218,7 +218,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <div><label class="fld">Data</label><input type="date" id="f_data"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Número da Emenda</label><input type="number" id="f_num_emenda" placeholder="1"></div>
+      <div><label class="fld">Número da Emenda</label><input type="number" id="f_num_emenda" placeholder="1" inputmode="numeric"></div>
       <div><label class="fld">OM</label><input type="text" id="f_om" placeholder="N/A"></div>
     </div>
   </div>
@@ -263,20 +263,20 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
       <div><label class="fld">Especificação Correia (Fab/Modelo)</label><input type="text" id="f_espec_correia" placeholder="Fabricante / Modelo"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Largura Correia [mm]</label><input type="number" id="f_largura" onchange="recalcular()"></div>
-      <div><label class="fld">Tamanho / Trecho [m]</label><input type="number" id="f_tamanho_trecho"></div>
+      <div><label class="fld">Largura Correia [mm]</label><input type="number" id="f_largura" inputmode="numeric" onchange="recalcular()"></div>
+      <div><label class="fld">Tamanho / Trecho [m]</label><input type="number" id="f_tamanho_trecho" inputmode="numeric"></div>
     </div>
 
     <!-- Cabo Aço -->
     <div id="caboAcoFields" style="display:none;margin-top:10px">
       <label class="fld" style="font-weight:700;color:var(--blue)">CABO AÇO</label>
       <div class="row">
-        <div><label class="fld">1 Estágio [mm]</label><input type="text" id="f_estagio1" value="N/A"></div>
-        <div><label class="fld">2 Estágio [mm]</label><input type="text" id="f_estagio2" value="N/A"></div>
-        <div><label class="fld">3 Estágio [mm]</label><input type="text" id="f_estagio3" value="N/A"></div>
+        <div><label class="fld">1 Estágio [mm]</label><input type="text" id="f_estagio1" value="N/A" inputmode="numeric"></div>
+        <div><label class="fld">2 Estágio [mm]</label><input type="text" id="f_estagio2" value="N/A" inputmode="numeric"></div>
+        <div><label class="fld">3 Estágio [mm]</label><input type="text" id="f_estagio3" value="N/A" inputmode="numeric"></div>
       </div>
       <div class="row">
-        <div><label class="fld">Chanfro [mm]</label><input type="text" id="f_chanfro" value="N/A"></div>
+        <div><label class="fld">Chanfro [mm]</label><input type="text" id="f_chanfro" value="N/A" inputmode="numeric"></div>
       </div>
     </div>
 
@@ -284,24 +284,24 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <div id="lonaFields" style="margin-top:10px">
       <label class="fld" style="font-weight:700;color:var(--blue)">LONA</label>
       <div class="row">
-        <div><label class="fld">Quant. Lona</label><input type="number" id="f_qt_lona" onchange="recalcular()"></div>
-        <div><label class="fld">Quant. Passes</label><input type="number" id="f_qt_passes"></div>
+        <div><label class="fld">Quant. Lona</label><input type="number" id="f_qt_lona" inputmode="numeric" onchange="recalcular()"></div>
+        <div><label class="fld">Quant. Passes</label><input type="number" id="f_qt_passes" inputmode="numeric"></div>
       </div>
       <div class="row">
-        <div><label class="fld">Compr. Passe [mm]</label><input type="number" id="f_compr_passe"></div>
-        <div><label class="fld">Fechamento [mm]</label><input type="text" id="f_fechamento" value="N/A"></div>
+        <div><label class="fld">Compr. Passe [mm]</label><input type="number" id="f_compr_passe" inputmode="numeric"></div>
+        <div><label class="fld">Fechamento [mm]</label><input type="text" id="f_fechamento" value="N/A" inputmode="numeric"></div>
       </div>
     </div>
 
     <!-- Dimensões Emenda -->
     <label class="fld" style="font-weight:700;color:var(--blue);margin-top:10px">DIMENSÕES EMENDA</label>
     <div class="row">
-      <div><label class="fld">Viés [mm]</label><input type="number" id="f_vies"></div>
-      <div><label class="fld">Compr. Total Emenda [mm]</label><input type="number" id="f_compr_total_emenda" onchange="recalcular()"></div>
+      <div><label class="fld">Viés [mm]</label><input type="number" id="f_vies" inputmode="numeric"></div>
+      <div><label class="fld">Compr. Total Emenda [mm]</label><input type="number" id="f_compr_total_emenda" inputmode="numeric" onchange="recalcular()"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Manta Inferior [mm]</label><input type="text" id="f_manta_inf" value="N/A"></div>
-      <div><label class="fld">Manta Superior [mm]</label><input type="text" id="f_manta_sup" value="N/A"></div>
+      <div><label class="fld">Manta Inferior [mm]</label><input type="text" id="f_manta_inf" value="N/A" inputmode="numeric"></div>
+      <div><label class="fld">Manta Superior [mm]</label><input type="text" id="f_manta_sup" value="N/A" inputmode="numeric"></div>
     </div>
 
     <!-- Check List -->
@@ -320,12 +320,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
     <label class="fld" style="font-weight:700;color:var(--blue)">AMBIENTE</label>
     <div class="row">
-      <div><label class="fld">Temp. Ambiente °C</label><input type="number" step="0.1" id="f_temp_ambiente"></div>
-      <div><label class="fld">Umidade Relativa %</label><input type="number" step="0.1" id="f_umidade_ambiente"></div>
+      <div><label class="fld">Temp. Ambiente °C</label><input type="number" step="0.1" id="f_temp_ambiente" inputmode="decimal"></div>
+      <div><label class="fld">Umidade Relativa %</label><input type="number" step="0.1" id="f_umidade_ambiente" inputmode="decimal"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Temp. Ponto de Orvalho °C</label><input type="number" step="0.1" id="f_temp_orvalho"></div>
-      <div><label class="fld">Temp. Superfície °C</label><input type="number" step="0.1" id="f_temp_superficie"></div>
+      <div><label class="fld">Temp. Ponto de Orvalho °C</label><input type="number" step="0.1" id="f_temp_orvalho" inputmode="decimal"></div>
+      <div><label class="fld">Temp. Superfície °C</label><input type="number" step="0.1" id="f_temp_superficie" inputmode="decimal"></div>
     </div>
     <div>
       <label class="fld">Clima</label>
@@ -348,12 +348,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
     <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">VULCANIZAÇÃO</label>
     <div class="row">
-      <div><label class="fld">Temperatura Vulc. °C</label><input type="text" id="f_temp_vulc" value="N/A"></div>
-      <div><label class="fld">Tempo Vulc. (Min)</label><input type="text" id="f_tempo_vulc" value="N/A"></div>
+      <div><label class="fld">Temperatura Vulc. °C</label><input type="text" id="f_temp_vulc" value="N/A" inputmode="decimal"></div>
+      <div><label class="fld">Tempo Vulc. (Min)</label><input type="text" id="f_tempo_vulc" value="N/A" inputmode="numeric"></div>
     </div>
     <div class="row">
-      <div><label class="fld">Pressão [Kg/cm²]</label><input type="text" id="f_pressao_vulc" value="N/A"></div>
-      <div><label class="fld">Temp. Abertura Prensa °C</label><input type="text" id="f_temp_abertura" value="N/A"></div>
+      <div><label class="fld">Pressão [Kg/cm²]</label><input type="text" id="f_pressao_vulc" value="N/A" inputmode="decimal"></div>
+      <div><label class="fld">Temp. Abertura Prensa °C</label><input type="text" id="f_temp_abertura" value="N/A" inputmode="decimal"></div>
     </div>
     <div>
       <label class="fld">Hora Abertura Prensa</label><input type="text" id="f_hora_abertura" value="N/A">
@@ -361,7 +361,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
     <label class="fld" style="font-weight:700;color:var(--blue);margin-top:12px">INSPEÇÃO PÓS-VULCANIZAÇÃO</label>
     <div class="check-grid">
-      <div><label class="fld">Menor valor Dureza ShoreA</label><input type="text" id="f_dureza_shore" value="-" style="flex:0 0 80px;padding:6px 8px;font-size:12px"></div>
+      <div><label class="fld">Menor valor Dureza ShoreA</label><input type="text" id="f_dureza_shore" value="-" inputmode="numeric" style="flex:0 0 80px;padding:6px 8px;font-size:12px"></div>
       <div><label class="fld">Presença Bolha?</label><select id="f_ck_bolha"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
       <div><label class="fld">Feito Acabamento?</label><select id="f_ck_acabamento"><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
       <div><label class="fld">Faltou Material?</label><select id="f_ck_faltou_mat"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
@@ -942,7 +942,7 @@ function matEmendaOptions(selected) {
 }
 function renderMateriaisEmenda() {
   const c = document.getElementById('materiaisEmendaList');
-  c.innerHTML = (cur.materiaisEmenda || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisEmenda[${i}].material=this.value">${matEmendaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisEmenda[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisEmenda[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisEmenda[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisEmenda[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisEmenda.splice(${i},1);renderMateriaisEmenda()">×</button></div>`).join('');
+  c.innerHTML = (cur.materiaisEmenda || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisEmenda[${i}].material=this.value">${matEmendaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisEmenda[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisEmenda[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" inputmode="numeric" onchange="cur.materiaisEmenda[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisEmenda[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisEmenda.splice(${i},1);renderMateriaisEmenda()">×</button></div>`).join('');
 }
 function addMaterialEmenda() { const te = document.getElementById('f_tipo_emenda'); const fab = te && te.value === 'Quente' ? 'BENETECH' : 'VIPAFIX'; cur.materiaisEmenda.push({ material: '', fabricante: fab, lote: '', qtd: '', validade: '' }); renderMateriaisEmenda(); }
 
@@ -960,7 +960,7 @@ function matMantaOptions(selected) {
 }
 function renderMateriaisManta() {
   const c = document.getElementById('materiaisMantaList');
-  c.innerHTML = (cur.materiaisManta || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisManta[${i}].material=this.value">${matMantaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisManta[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisManta[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" onchange="cur.materiaisManta[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisManta[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisManta.splice(${i},1);renderMateriaisManta()">×</button></div>`).join('');
+  c.innerHTML = (cur.materiaisManta || []).map((m, i) => `<div class="ef-row"><div><label class="fld">Material</label><select onchange="cur.materiaisManta[${i}].material=this.value">${matMantaOptions(m.material)}</select></div><div><label class="fld">Fabricante</label><select onchange="cur.materiaisManta[${i}].fabricante=this.value">${fabOptions(m.fabricante)}</select></div><div><label class="fld">Lote</label><input type="text" value="${esc(m.lote)}" onchange="cur.materiaisManta[${i}].lote=this.value"></div><div><label class="fld">Qtd</label><input type="number" value="${esc(m.qtd)}" inputmode="numeric" onchange="cur.materiaisManta[${i}].qtd=this.value" style="width:60px"></div><div><label class="fld">Validade</label><input type="date" value="${esc(m.validade)}" onchange="cur.materiaisManta[${i}].validade=this.value"></div><button class="ef-remove" onclick="cur.materiaisManta.splice(${i},1);renderMateriaisManta()">×</button></div>`).join('');
 }
 function addMaterialManta() { const te = document.getElementById('f_tipo_emenda'); const fab = te && te.value === 'Quente' ? 'BENETECH' : 'VIPAFIX'; cur.materiaisManta.push({ material: '', fabricante: fab, lote: '', qtd: '', validade: '' }); renderMateriaisManta(); }
 
