@@ -661,6 +661,7 @@ let FB = null;
 let currentUser = null;
 let cloudUnsub = [];
 let booted = false;
+let localReady = false;
 let formDirty = false;
 
 /* ═══ CONTROLE DE ACESSO ═══ */
@@ -803,7 +804,7 @@ function persistRegistro(reg) {
     syncFotosToCloud(clean.id, fotos);
     cacheSnapshot();
     if (!navigator.onLine) setSync('offline');
-  } else { saveLocal(); }
+  } else { saveLocal(); try { localStorage.setItem('ctv_emenda_local_dirty', '1'); } catch(e) {} }
 }
 function removeRegistroStore(id) {
   db.registros = db.registros.filter(r => r.id !== id);
@@ -812,7 +813,7 @@ function removeRegistroStore(id) {
     FB.deleteDoc(FB.doc(FB.fs, 'emendas', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
     deleteFotosFromCloud(id);
     cacheSnapshot();
-  } else { saveLocal(); }
+  } else { saveLocal(); try { localStorage.setItem('ctv_emenda_local_dirty', '1'); } catch(e) {} }
 }
 function onWriteError(err) {
   const code = (err && err.code) || '';
@@ -1649,6 +1650,8 @@ function bootLocal() {
   initFotosDB().then(function() {
     loadFuncionarios(); loadMateriais(); loadFiscais(); loadLocal(); applyDark();
     checkAccess(); updateModeUI(); renderList();
+    localReady = true;
+    if (window.__pendingUpgrade) { upgradeToCloud(window.__pendingUpgrade); window.__pendingUpgrade = null; }
   });
 }
 function bootCloud(api) {
@@ -1668,6 +1671,41 @@ function bootCloud(api) {
     window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
     window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
   });
+}
+function upgradeToCloud(api) {
+  if (MODE === 'cloud') return;
+  if (!localReady) { window.__pendingUpgrade = api; return; }
+  FB = api;
+  var needsPush = false;
+  try { needsPush = localStorage.getItem('ctv_emenda_local_dirty') === '1'; } catch(e) {}
+  var localRegsCopy = needsPush ? db.registros.map(function(r) { return JSON.parse(JSON.stringify(r)); }) : null;
+  MODE = 'cloud';
+  try { var raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_emenda_local_backup')) localStorage.setItem('ctv_emenda_local_backup', raw); } catch(e) {}
+  updateModeUI();
+  FB.onAuthStateChanged(FB.auth, function(user) {
+    currentUser = user;
+    if (user) {
+      try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){}
+      checkAccess(); hideAuth(); showUserChip(user); setSync('connecting');
+      if (localRegsCopy && localRegsCopy.length) {
+        Promise.all(localRegsCopy.map(function(lr) {
+          var forCloud = JSON.parse(JSON.stringify(lr));
+          var fotos = forCloud.fotos || [];
+          if (fotos.length) syncFotosToCloud(forCloud.id, fotos);
+          forCloud.fotos = (forCloud.fotos || []).map(function(f) { return { label: f.label || '', data: null }; });
+          forCloud.updatedBy = user.email || user.uid || '';
+          return FB.setDoc(FB.doc(FB.fs, 'emendas', forCloud.id), forCloud).catch(function() {});
+        })).then(function() {
+          try { localStorage.removeItem('ctv_emenda_local_dirty'); } catch(e) {}
+          startCloudListeners();
+        }).catch(function() { startCloudListeners(); });
+      } else {
+        startCloudListeners();
+      }
+    } else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); checkAccess(); showAuth(); }
+  });
+  window.addEventListener('online', function() { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', function() { if (currentUser) setSync('offline'); });
 }
 function setSync(state, extra) {
   const card = document.getElementById('syncCard'); if (!card) return;
@@ -1815,8 +1853,8 @@ function hideAuth() { document.getElementById('authOverlay').classList.remove('o
 document.getElementById('editorView').addEventListener('input', function() { formDirty = true; });
 document.getElementById('editorView').addEventListener('change', function() { formDirty = true; });
 
-window.__EMENDA = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
-if (!window.__EMENDA.wantCloud) bootLocal();
+window.__EMENDA = { wantCloud: isConfigured(), bootLocal, upgradeToCloud, firebaseConfig };
+bootLocal();   // sempre inicia local primeiro — upgrade para nuvem em background
 
 // Proteção console
 (function(){
@@ -1829,20 +1867,16 @@ if (!window.__EMENDA.wantCloud) bootLocal();
   if (R && R.wantCloud) {
     try {
       const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
-      const fbTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
-      const [appMod, authMod, fsMod] = await Promise.race([
-        Promise.all([
-          import(V + 'firebase-app.js'),
-          import(V + 'firebase-auth.js'),
-          import(V + 'firebase-firestore.js')
-        ]),
-        fbTimeout
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
       ]);
       const app = appMod.initializeApp(R.firebaseConfig);
       const auth = authMod.getAuth(app);
       const fs = fsMod.getFirestore(app);
       try { await fsMod.enableIndexedDbPersistence(fs); } catch(e){}
-      R.bootCloud({
+      R.upgradeToCloud({
         app, auth, fs,
         signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
         createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
@@ -1855,8 +1889,7 @@ if (!window.__EMENDA.wantCloud) bootLocal();
         serverTimestamp: fsMod.serverTimestamp
       });
     } catch(e) {
-      console.warn('Firebase indisponível — modo local.', e);
-      R.bootLocal();
+      console.warn('Firebase indisponível — continuando em modo local.', e);
     }
   }
 </script>
