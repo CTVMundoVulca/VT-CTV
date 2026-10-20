@@ -1135,24 +1135,35 @@ function addFotoSlot() {
 function capturarFoto(idx) {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
+  input.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;overflow:hidden';
+  document.body.appendChild(input);
   input.onchange = e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
-        persistRegistro(cur); renderFotos();
-      };
-      img.src = ev.target.result;
+      function tryLoad(attempt) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 800;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
+          persistRegistro(cur); renderFotos();
+        };
+        img.onerror = () => {
+          if (attempt < 2) { setTimeout(() => tryLoad(attempt + 1), 100); }
+          else { cur.fotos[idx].data = ev.target.result; persistRegistro(cur); renderFotos(); }
+        };
+        img.src = ev.target.result;
+      }
+      tryLoad(0);
     };
+    reader.onerror = () => {};
     reader.readAsDataURL(file);
+    setTimeout(() => { try { document.body.removeChild(input); } catch(e){} }, 1000);
   };
   input.click();
 }
@@ -1637,10 +1648,22 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html' });
+  const filename = 'Emenda_' + (r.numEmenda || '') + '_TAG_' + (r.tag || '') + '.html';
+  if (navigator.share && navigator.canShare) {
+    const file = new File([blob], filename, { type: 'text/html' });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Emenda ' + (r.numEmenda || '') }).catch(() => {});
+      return;
+    }
+  }
   const url = URL.createObjectURL(blob);
   const w = window.open(url, '_blank');
   if (w) { setTimeout(() => URL.revokeObjectURL(url), 60000); }
-  else { URL.revokeObjectURL(url); showToast('Permita pop-ups para gerar o PDF.'); }
+  else {
+    URL.revokeObjectURL(url);
+    const dl = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = dl; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(dl), 1000);
+    showToast('Arquivo salvo. Abra e use "Imprimir" → "Salvar como PDF".');
+  }
 }
 
 /* ══════════════ NUVEM: boot, login, tempo real ══════════════ */
