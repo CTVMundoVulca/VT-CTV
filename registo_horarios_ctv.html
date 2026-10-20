@@ -642,7 +642,62 @@ const TIPOS = [['sede', 'Sede', '#0070C0'], ['suzano', 'Suzano', '#1E8449'], ['e
 const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br', 'michael.lopes@benetechbrasil.com.br'];
 function isAdmin() { return !!(currentUser && currentUser.email && ADMIN_EMAILS.indexOf(currentUser.email.toLowerCase()) >= 0); }
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
-function colabList() { const l = (db.config.colaboradores && db.config.colaboradores.length) ? db.config.colaboradores : DEFAULT_COLAB; return l.slice().sort((a, b) => a.localeCompare(b, 'pt')); }
+
+/* ═══ LISTA UNIFICADA DE FUNCIONÁRIOS (compartilhada entre todos os apps) ═══ */
+const FUNCIONARIOS_DEFAULT = [
+  {nome:'ADILSON ANDRADE DOS SANTOS',doc:'096.749.787-63'},
+  {nome:'ALCEMAR JOSÉ DA CONCEIÇÃO',doc:'70001258'},
+  {nome:'ALEX RODRIGUES DAS NEVES',doc:'4826263562'},
+  {nome:'ALLAN ALMEIDA OLIVEIRA',doc:'19346602724'},
+  {nome:'BRUNO CLAUDIO PAULO PORTO',doc:'195.023.607-29'},
+  {nome:'BRUNO SOUZA NERES',doc:'70001272'},
+  {nome:'CLAUDIO HENRIQUE RODRIGUES SOARES',doc:'133.184.636-63'},
+  {nome:'CLEITON DO NASCIMENTO SILVA',doc:'17504037737'},
+  {nome:'DOUGLAS DA SILVA DOS SANTOS',doc:'70162129'},
+  {nome:'ERICK VINICIUS COSTA COSTA',doc:'619.594.593-38'},
+  {nome:'EVERSON SOUZA RIBEIRO',doc:'093.524.567-77'},
+  {nome:'GABRIEL VIEIRA COSTA',doc:'70136280'},
+  {nome:'GLAUBER DUTRA DA SILVA',doc:'146.380.647-79'},
+  {nome:'IZAIAS BATISTA MARTINS',doc:'140.616.877-78'},
+  {nome:'JEFFERSON FERREIRA DE SOUZA',doc:'122.518.037-69'},
+  {nome:'JEFFERSON SILVA SANTOS',doc:'20617331740'},
+  {nome:'JEREMIAS DOS SANTOS BRITO',doc:'70156736'},
+  {nome:'JHENIFESON DUARTE',doc:'20790601710'},
+  {nome:'JOÃO HENRIQUE CORREIA',doc:'18553634701'},
+  {nome:'JOÃO PEDRO PEREIRA CHAYIDY SILVA',doc:'094.119.451-55'},
+  {nome:'JORGE LUIZ PINTO',doc:'70022177'},
+  {nome:'JOÃO PEDRO TRINDADE PEREIRA',doc:'14280661790'},
+  {nome:'KLEBSON DOS SANTOS JANEIRO',doc:'7917186709'},
+  {nome:'LUCAS GONÇALVEZ',doc:'16897143212'},
+  {nome:'LUCAS JORDÃO CETTO',doc:'70115063'},
+  {nome:'MANOEL ANSELMO SOUZA PEREIRA',doc:'70023629'},
+  {nome:'MAURICIO DA COSTA LAMANA',doc:'027.586.668-80'},
+  {nome:'MURILO S. CUNHA',doc:'13576117734'},
+  {nome:'PAULO ERQUES ALMEIDA SOUZA',doc:'70007628'},
+  {nome:'PAULO HENRIQUE DE SOUZA PINHEIRO',doc:'097.926.065-56'},
+  {nome:'PAULO HENRIQUE SOARES ALVES',doc:'15549441730'},
+  {nome:'RAFAEL BELEM BRANDÃO',doc:'161.358.777.55'},
+  {nome:'RAMON RICARDO DE AVILA GOMES',doc:'175.522.877-56'},
+  {nome:'ROBERT DO ESPÍRITO SANTO CAMILO',doc:'16459848777'},
+  {nome:'ROBERTO FONTES BISPO',doc:'715.474.605-04'},
+  {nome:'SAMUEL DOS SANTOS',doc:'3725896852'},
+  {nome:'SANDRO VIANA',doc:'70061341'},
+  {nome:'SERGIO CARDOZO',doc:'1730485790'},
+  {nome:'THIAGO FERREIRA BARBOSA',doc:'12319871705'},
+  {nome:'VICENTE EDIVINO DOS SANTOS',doc:'70001250'},
+  {nome:'VINICIUS FONSECA DE OLIVEIRA',doc:'70652713'},
+  {nome:'WELLINGTON ALEXANDRE MARQUES',doc:'70120338'}
+];
+const FUNC_SHARED_KEY = 'ctv_shared_funcionarios';
+let FUNCIONARIOS = [];
+function loadFuncionarios() {
+  try { const s = JSON.parse(localStorage.getItem(FUNC_SHARED_KEY)); if (Array.isArray(s) && s.length) { FUNCIONARIOS = s; return; } } catch(e){}
+  try { const o = JSON.parse(localStorage.getItem('ctv_emenda_funcionarios')); if (Array.isArray(o) && o.length) { FUNCIONARIOS = o; saveFuncionarios(); return; } } catch(e){}
+  FUNCIONARIOS = JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT));
+}
+function saveFuncionarios() { try { localStorage.setItem(FUNC_SHARED_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){} }
+
+function colabList() { return FUNCIONARIOS.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt')).map(f => f.nome); }
 function tipoColor(t) { const f = TIPOS.find(x => x[0] === t); return f ? f[2] : '#0070C0'; }
 function tipoLabel(t) { const f = TIPOS.find(x => x[0] === t); return f ? f[1] : 'Sede'; }
 function sessTipo(s) { return s.tipo || 'externo'; }
@@ -673,6 +728,7 @@ function loadLocal() {
   if (!db.config.feriados) db.config.feriados = {};
   if (!db.config.plantoes) db.config.plantoes = {};
   if (!db.equipe) db.equipe = [];
+  loadFuncionarios();
   let migrou = false;
   db.sessoes.forEach(s => { if (!s.tipo) { s.tipo = 'externo'; migrou = true; } });
   if (migrou) saveLocal();
@@ -1307,16 +1363,15 @@ function eqColabChanged() {
 }
 function addColaboradorEquipe(nome) {
   nome = (nome || '').trim(); if (!nome) return;
-  db.config.colaboradores = (db.config.colaboradores && db.config.colaboradores.length) ? db.config.colaboradores : DEFAULT_COLAB.slice();
-  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) {
-    db.config.colaboradores.push(nome);
+  if (!FUNCIONARIOS.some(f => f.nome.toLowerCase() === nome.toLowerCase())) {
+    FUNCIONARIOS.push({nome: nome, doc: ''});
     persistColaboradores();
   }
 }
 function persistColaboradores() {
-  save();
+  saveFuncionarios();
   if (MODE === 'cloud' && FB && isAdmin()) {
-    FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(() => {});
+    FB.setDoc(FB.doc(FB.fs, 'shared', 'funcionarios'), { list: FUNCIONARIOS }).catch(() => {});
   }
 }
 /* nome amigável de quem registrou o ponto pessoal (só temos o e-mail) */
@@ -1851,7 +1906,8 @@ function bootCloud(api) {
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_ponto_local_backup')) localStorage.setItem('ctv_ponto_local_backup', raw); } catch (e) {}
   db = { version: 1, sessoes: [], equipe: [], config: {} };
-  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.config && c.config.feriados) db.config.feriados = c.config.feriados; if (c && c.config && c.config.plantoes) db.config.plantoes = c.config.plantoes; if (c && c.equipe) db.equipe = c.equipe; if (c && c.config && c.config.colaboradores) db.config.colaboradores = c.config.colaboradores; } catch (e) {}
+  try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.config && c.config.feriados) db.config.feriados = c.config.feriados; if (c && c.config && c.config.plantoes) db.config.plantoes = c.config.plantoes; if (c && c.equipe) db.equipe = c.equipe; } catch (e) {}
+  loadFuncionarios();
   if (!db.config.feriados) db.config.feriados = {};
   if (!db.config.plantoes) db.config.plantoes = {};
   if (!db.equipe) db.equipe = [];
@@ -1925,11 +1981,10 @@ function startCloudListeners() {
   }, () => { /* sem permissão: mantém plantões locais */ }));
   // Equipe (só admins): lista de colaboradores (mesma do RDO) e o ponto compartilhado da equipe
   if (isAdmin()) {
-    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'shared', 'colaboradores'), s => {
-      const d = s.data(); db.config.colaboradores = (d && d.list) || DEFAULT_COLAB.slice();
-      cacheSnapshot();
+    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'shared', 'funcionarios'), s => {
+      const d = s.data(); if (d && d.list) { FUNCIONARIOS = d.list; saveFuncionarios(); }
       if (document.getElementById('view-equipe').classList.contains('active')) { fillEquipeSelects(); }
-    }, () => { /* sem permissão: usa DEFAULT_COLAB */ }));
+    }, () => {}));
     cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'pontos_equipe'), s => {
       db.equipe = s.docs.map(d => d.data());
       cacheSnapshot();

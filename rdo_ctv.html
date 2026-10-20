@@ -409,11 +409,14 @@
 <div class="modal-bg" id="colabModalBg">
   <div class="modal">
     <h3>Colaboradores</h3>
-    <div class="hint" style="margin-bottom:10px">Estes nomes aparecem na lista suspensa do campo "Nome". Você pode adicionar ou remover.</div>
+    <div class="hint" style="margin-bottom:10px">Lista unificada de efetivo — compartilhada com todos os apps CTV.</div>
     <div id="colabModalList" style="max-height:45vh;overflow-y:auto;margin-bottom:12px"></div>
     <label class="fld">Adicionar novo</label>
+    <div class="row" style="margin-bottom:6px">
+      <input type="text" id="colabNew" placeholder="Nome completo" style="flex:2">
+      <input type="text" id="colabNewDoc" placeholder="Matrícula / CPF" style="flex:1">
+    </div>
     <div class="row" style="margin-bottom:12px">
-      <input type="text" id="colabNew" placeholder="Nome do colaborador" style="flex:2">
       <button class="btn btn-primary" style="flex:1" onclick="addColabFromModal()">Adicionar</button>
     </div>
     <button class="btn btn-ghost" onclick="closeColabModal()">Fechar</button>
@@ -472,6 +475,60 @@ let formDirty = false;
 
 const DEFAULT_FUNCOES = ['Supervisor','Encarregado','Líder de Vulcanização','Vulcanizador I','Vulcanizador II','Ajud. Vulcanização','Mecânico','Soldador'];
 const DEFAULT_COLAB = ['Glauber Dutra','Cláudio Henrique','Gabriel Vieira','Robert Camilo','Jeremias dos Santos','Erick Vinícius','Jorge Luiz','Vinícius Fonseca','Jhenifesson Duarte','Jhenifesson Loureiro','Paulo Erques','Lucas Jordão Ceto','Daniel Dalcor','Lucas Gonçalves','Matheus Valin','Pedro Metesker','Luiz Guilherme','Wagner'];
+
+/* ═══ LISTA UNIFICADA DE FUNCIONÁRIOS (compartilhada entre todos os apps) ═══ */
+const FUNCIONARIOS_DEFAULT = [
+  {nome:'ADILSON ANDRADE DOS SANTOS',doc:'096.749.787-63'},
+  {nome:'ALCEMAR JOSÉ DA CONCEIÇÃO',doc:'70001258'},
+  {nome:'ALEX RODRIGUES DAS NEVES',doc:'4826263562'},
+  {nome:'ALLAN ALMEIDA OLIVEIRA',doc:'19346602724'},
+  {nome:'BRUNO CLAUDIO PAULO PORTO',doc:'195.023.607-29'},
+  {nome:'BRUNO SOUZA NERES',doc:'70001272'},
+  {nome:'CLAUDIO HENRIQUE RODRIGUES SOARES',doc:'133.184.636-63'},
+  {nome:'CLEITON DO NASCIMENTO SILVA',doc:'17504037737'},
+  {nome:'DOUGLAS DA SILVA DOS SANTOS',doc:'70162129'},
+  {nome:'ERICK VINICIUS COSTA COSTA',doc:'619.594.593-38'},
+  {nome:'EVERSON SOUZA RIBEIRO',doc:'093.524.567-77'},
+  {nome:'GABRIEL VIEIRA COSTA',doc:'70136280'},
+  {nome:'GLAUBER DUTRA DA SILVA',doc:'146.380.647-79'},
+  {nome:'IZAIAS BATISTA MARTINS',doc:'140.616.877-78'},
+  {nome:'JEFFERSON FERREIRA DE SOUZA',doc:'122.518.037-69'},
+  {nome:'JEFFERSON SILVA SANTOS',doc:'20617331740'},
+  {nome:'JEREMIAS DOS SANTOS BRITO',doc:'70156736'},
+  {nome:'JHENIFESON DUARTE',doc:'20790601710'},
+  {nome:'JOÃO HENRIQUE CORREIA',doc:'18553634701'},
+  {nome:'JOÃO PEDRO PEREIRA CHAYIDY SILVA',doc:'094.119.451-55'},
+  {nome:'JORGE LUIZ PINTO',doc:'70022177'},
+  {nome:'JOÃO PEDRO TRINDADE PEREIRA',doc:'14280661790'},
+  {nome:'KLEBSON DOS SANTOS JANEIRO',doc:'7917186709'},
+  {nome:'LUCAS GONÇALVEZ',doc:'16897143212'},
+  {nome:'LUCAS JORDÃO CETTO',doc:'70115063'},
+  {nome:'MANOEL ANSELMO SOUZA PEREIRA',doc:'70023629'},
+  {nome:'MAURICIO DA COSTA LAMANA',doc:'027.586.668-80'},
+  {nome:'MURILO S. CUNHA',doc:'13576117734'},
+  {nome:'PAULO ERQUES ALMEIDA SOUZA',doc:'70007628'},
+  {nome:'PAULO HENRIQUE DE SOUZA PINHEIRO',doc:'097.926.065-56'},
+  {nome:'PAULO HENRIQUE SOARES ALVES',doc:'15549441730'},
+  {nome:'RAFAEL BELEM BRANDÃO',doc:'161.358.777.55'},
+  {nome:'RAMON RICARDO DE AVILA GOMES',doc:'175.522.877-56'},
+  {nome:'ROBERT DO ESPÍRITO SANTO CAMILO',doc:'16459848777'},
+  {nome:'ROBERTO FONTES BISPO',doc:'715.474.605-04'},
+  {nome:'SAMUEL DOS SANTOS',doc:'3725896852'},
+  {nome:'SANDRO VIANA',doc:'70061341'},
+  {nome:'SERGIO CARDOZO',doc:'1730485790'},
+  {nome:'THIAGO FERREIRA BARBOSA',doc:'12319871705'},
+  {nome:'VICENTE EDIVINO DOS SANTOS',doc:'70001250'},
+  {nome:'VINICIUS FONSECA DE OLIVEIRA',doc:'70652713'},
+  {nome:'WELLINGTON ALEXANDRE MARQUES',doc:'70120338'}
+];
+const FUNC_SHARED_KEY = 'ctv_shared_funcionarios';
+let FUNCIONARIOS = [];
+function loadFuncionarios() {
+  try { const s = JSON.parse(localStorage.getItem(FUNC_SHARED_KEY)); if (Array.isArray(s) && s.length) { FUNCIONARIOS = s; return; } } catch(e){}
+  try { const o = JSON.parse(localStorage.getItem('ctv_emenda_funcionarios')); if (Array.isArray(o) && o.length) { FUNCIONARIOS = o; saveFuncionarios(); return; } } catch(e){}
+  FUNCIONARIOS = JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT));
+}
+function saveFuncionarios() { try { localStorage.setItem(FUNC_SHARED_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){} }
 const SEC = {
   efetivo:     [['nome','Nome','nome'],['funcao','Função','func'],['entrada','Hora Entrada','time'],['saida','Hora Saída','time'],['obs','Obs.','text']],
   alimentacao: [['inicio','Início','time'],['fim','Fim','time'],['motivo','Motivo','text'],['liberado','Liberado por','text']],
@@ -522,8 +579,8 @@ function loadLocal() {
   try { const raw = localStorage.getItem(STORE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
   if (!db.rdos) db.rdos = [];
   if (!db.config) db.config = {};
-  if (!('colaboradores' in db.config)) db.config.colaboradores = DEFAULT_COLAB.slice();
   if (!('funcoes' in db.config)) db.config.funcoes = DEFAULT_FUNCOES.slice();
+  loadFuncionarios();
   if (!db.config.feriados) db.config.feriados = {};
   db.rdos.forEach(r => {
     if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
@@ -683,8 +740,8 @@ function onWriteError(err) {
   else setSync('error', code);
 }
 function persistColab() {
-  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'colaboradores'), { list: db.config.colaboradores || [] }).catch(err => onWriteError(err)); }
-  else { saveLocal(); }
+  saveFuncionarios();
+  if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'funcionarios'), { list: FUNCIONARIOS }).catch(err => onWriteError(err)); }
 }
 function persistFuncoes() {
   if (MODE === 'cloud' && FB) { FB.setDoc(FB.doc(FB.fs, 'shared', 'funcoes'), { list: db.config.funcoes || [] }).catch(err => onWriteError(err)); }
@@ -983,8 +1040,8 @@ function syncSection(section) {
 function addRow(section) { syncSection(section); (cur[section] = cur[section] || []).push({}); renderSection(section); formDirty = true; saveDraftDebounced(); }
 function removeRow(section, idx) { syncSection(section); cur[section].splice(idx, 1); renderSection(section); formDirty = true; saveDraftDebounced(); }
 
-/* ── colaboradores (lista de nomes) ── */
-function colabList() { return (db.config.colaboradores || []).slice().sort((a, b) => a.localeCompare(b, 'pt')); }
+/* ── colaboradores (lista unificada {nome, doc}) ── */
+function colabList() { return FUNCIONARIOS.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt')).map(f => f.nome); }
 function colabOptions(val) {
   const list = colabList();
   const cur = String(val || '');
@@ -995,10 +1052,12 @@ function colabOptions(val) {
   opts += '<option value="__novo__">➕ Novo nome…</option>';
   return opts;
 }
-function addColaborador(nome) {
+function addColaborador(nome, doc) {
   nome = (nome || '').trim(); if (!nome) return false;
-  db.config.colaboradores = db.config.colaboradores || [];
-  if (!db.config.colaboradores.some(n => n.toLowerCase() === nome.toLowerCase())) { db.config.colaboradores.push(nome); persistColab(); }
+  if (!FUNCIONARIOS.some(f => f.nome.toLowerCase() === nome.toLowerCase())) {
+    FUNCIONARIOS.push({nome: nome, doc: (doc || '').trim()});
+    persistColab();
+  }
   return true;
 }
 function nameSelectChanged(sel, section) {
@@ -1018,18 +1077,19 @@ function openColabModal() { renderColabModal(); document.getElementById('colabMo
 function closeColabModal() { document.getElementById('colabModalBg').classList.remove('open'); }
 function renderColabModal() {
   const el = document.getElementById('colabModalList');
-  const list = colabList();
-  el.innerHTML = list.length ? list.map(n => `<div class="entry" style="cursor:default">
-      <div class="entry-main"><div class="top">${escapeHtml(n)}</div></div>
-      <button class="mini-del" onclick="removeColab('${escapeAttr(n).replace(/'/g, "\\'")}')">✕</button>
+  const list = FUNCIONARIOS.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+  el.innerHTML = list.length ? list.map(f => `<div class="entry" style="cursor:default">
+      <div class="entry-main"><div class="top">${escapeHtml(f.nome)}</div>${f.doc ? `<div class="sub">${escapeHtml(f.doc)}</div>` : ''}</div>
+      <button class="mini-del" onclick="removeColab('${escapeAttr(f.nome).replace(/'/g, "\\'")}')">✕</button>
     </div>`).join('') : `<div class="empty">Nenhum colaborador. Adicione abaixo.</div>`;
 }
 function addColabFromModal() {
   const inp = document.getElementById('colabNew');
-  if (addColaborador(inp.value)) { inp.value = ''; renderColabModal(); showToast('Colaborador adicionado ✔️'); }
+  const inpDoc = document.getElementById('colabNewDoc');
+  if (addColaborador(inp.value, inpDoc.value)) { inp.value = ''; inpDoc.value = ''; renderColabModal(); showToast('Colaborador adicionado ✔️'); }
 }
 function removeColab(nome) {
-  db.config.colaboradores = (db.config.colaboradores || []).filter(n => n.toLowerCase() !== String(nome).toLowerCase());
+  FUNCIONARIOS = FUNCIONARIOS.filter(f => f.nome.toLowerCase() !== String(nome).toLowerCase());
   persistColab(); renderColabModal();
 }
 
@@ -1533,13 +1593,13 @@ function bootCloud(api) {
   initFotosDB().then(function() {
     db = { version: 1, rdos: [], config: {} };
     loadDark(); applyDark();
-    try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.colaboradores = (c.config && c.config.colaboradores) || DEFAULT_COLAB.slice(); db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
+    try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
+    loadFuncionarios();
     db.rdos.forEach(r => {
       if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
       const f = loadFotos(r.id);
       if (f.length) r.inspecao.fotos = f;
     });
-    if (!db.config.colaboradores) db.config.colaboradores = DEFAULT_COLAB.slice();
     if (!db.config.funcoes) db.config.funcoes = DEFAULT_FUNCOES.slice();
     if (!db.config.feriados) db.config.feriados = {};
     updateModeUI();
@@ -1649,10 +1709,10 @@ function alterarSenha() {
 function logout() { if (FB) FB.signOut(FB.auth); }
 function startCloudListeners() {
   clearCloudListeners();
-  const colRef = FB.doc(FB.fs, 'shared', 'colaboradores');
-  FB.getDoc(colRef).then(s => { if (!s.exists()) FB.setDoc(colRef, { list: DEFAULT_COLAB.slice() }); }).catch(() => {});
+  const colRef = FB.doc(FB.fs, 'shared', 'funcionarios');
+  FB.getDoc(colRef).then(s => { if (!s.exists()) FB.setDoc(colRef, { list: JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT)) }); }).catch(() => {});
   cloudUnsub.push(FB.onSnapshot(colRef, s => {
-    const d = s.data(); db.config.colaboradores = (d && d.list) || DEFAULT_COLAB.slice();
+    const d = s.data(); if (d && d.list) { FUNCIONARIOS = d.list; saveFuncionarios(); }
     if (document.getElementById('colabModalBg').classList.contains('open')) renderColabModal();
   }, () => {}));
   const funcRef = FB.doc(FB.fs, 'shared', 'funcoes');
