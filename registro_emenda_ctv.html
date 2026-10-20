@@ -584,17 +584,16 @@ const FUNCIONARIOS_DEFAULT = [
   {nome:'VINICIUS FONSECA DE OLIVEIRA',doc:'70652713'},
   {nome:'WELLINGTON ALEXANDRE MARQUES',doc:'70120338'}
 ];
-const FUNC_STORE_KEY = 'ctv_emenda_funcionarios';
+const FUNC_SHARED_KEY = 'ctv_shared_funcionarios';
+const FUNC_OLD_KEY = 'ctv_emenda_funcionarios';
 let FUNCIONARIOS = [];
 function loadFuncionarios() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(FUNC_STORE_KEY));
-    if (Array.isArray(saved) && saved.length) { FUNCIONARIOS = saved; return; }
-  } catch(e){}
+  try { const s = JSON.parse(localStorage.getItem(FUNC_SHARED_KEY)); if (Array.isArray(s) && s.length) { FUNCIONARIOS = s; return; } } catch(e){}
+  try { const o = JSON.parse(localStorage.getItem(FUNC_OLD_KEY)); if (Array.isArray(o) && o.length) { FUNCIONARIOS = o; saveFuncionarios(); return; } } catch(e){}
   FUNCIONARIOS = JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT));
 }
 function saveFuncionarios() {
-  try { localStorage.setItem(FUNC_STORE_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){}
+  try { localStorage.setItem(FUNC_SHARED_KEY, JSON.stringify(FUNCIONARIOS)); } catch(e){}
 }
 
 const MATERIAIS_EMENDA_DEFAULT = ['CIMENTO VIPAL','CATALISADOR VIPAL','LIGAÇÃO 0060 BLT1.2MT','LIGAÇÃO 0083 BLSC 1.5ST','LIGAÇÃO 0205 BLSC 5.0ST','SOLVENTE 0131 SOL-1 3.6','CIMENTO 0069 CIMSC-ST 3.6','CIMENTO 0065 CIMT-ST 3.6','CIMENTO 0066 CIMT-MT 3.6'];
@@ -823,7 +822,7 @@ function onWriteError(err) {
 }
 function persistFuncionarios() {
   if (MODE === 'cloud' && FB) {
-    FB.setDoc(FB.doc(FB.fs, 'shared', 'emenda_funcionarios'), { list: FUNCIONARIOS }).catch(err => onWriteError(err));
+    FB.setDoc(FB.doc(FB.fs, 'shared', 'funcionarios'), { list: FUNCIONARIOS }).catch(err => onWriteError(err));
   }
   saveFuncionarios();
 }
@@ -1135,24 +1134,35 @@ function addFotoSlot() {
 function capturarFoto(idx) {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
+  input.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;overflow:hidden';
+  document.body.appendChild(input);
   input.onchange = e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
-        persistRegistro(cur); renderFotos();
-      };
-      img.src = ev.target.result;
+      function tryLoad(attempt) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 800;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w *= r; h *= r; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          cur.fotos[idx].data = canvas.toDataURL('image/jpeg', 0.7);
+          persistRegistro(cur); renderFotos();
+        };
+        img.onerror = () => {
+          if (attempt < 2) { setTimeout(() => tryLoad(attempt + 1), 100); }
+          else { cur.fotos[idx].data = ev.target.result; persistRegistro(cur); renderFotos(); }
+        };
+        img.src = ev.target.result;
+      }
+      tryLoad(0);
     };
+    reader.onerror = () => {};
     reader.readAsDataURL(file);
+    setTimeout(() => { try { document.body.removeChild(input); } catch(e){} }, 1000);
   };
   input.click();
 }
@@ -1637,10 +1647,22 @@ ${fotosHTML ? `<div class="foto-section"><div class="sec">ETAPAS DO PROCESSO (RE
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html' });
+  const filename = 'Emenda_' + (r.numEmenda || '') + '_TAG_' + (r.tag || '') + '.html';
+  if (navigator.share && navigator.canShare) {
+    const file = new File([blob], filename, { type: 'text/html' });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Emenda ' + (r.numEmenda || '') }).catch(() => {});
+      return;
+    }
+  }
   const url = URL.createObjectURL(blob);
   const w = window.open(url, '_blank');
   if (w) { setTimeout(() => URL.revokeObjectURL(url), 60000); }
-  else { URL.revokeObjectURL(url); showToast('Permita pop-ups para gerar o PDF.'); }
+  else {
+    URL.revokeObjectURL(url);
+    const dl = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = dl; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(dl), 1000);
+    showToast('Arquivo salvo. Abra e use "Imprimir" → "Salvar como PDF".');
+  }
 }
 
 /* ══════════════ NUVEM: boot, login, tempo real ══════════════ */
@@ -1768,7 +1790,7 @@ function alterarSenha() {
 function logout() { if (FB) FB.signOut(FB.auth); }
 function startCloudListeners() {
   clearCloudListeners();
-  const funcRef = FB.doc(FB.fs, 'shared', 'emenda_funcionarios');
+  const funcRef = FB.doc(FB.fs, 'shared', 'funcionarios');
   FB.getDoc(funcRef).then(s => { if (!s.exists()) FB.setDoc(funcRef, { list: JSON.parse(JSON.stringify(FUNCIONARIOS_DEFAULT)) }); }).catch(() => {});
   cloudUnsub.push(FB.onSnapshot(funcRef, s => {
     const d = s.data(); if (d && d.list) { FUNCIONARIOS = d.list; saveFuncionarios(); }
