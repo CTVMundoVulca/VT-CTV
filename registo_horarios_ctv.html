@@ -661,7 +661,7 @@ const firebaseConfig = {
 };
 function isConfigured() { const k = firebaseConfig.apiKey, p = firebaseConfig.projectId; return !!(k && p && !/^COLE_AQUI/.test(k) && !/^COLE_AQUI/.test(p)); }
 
-let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], booted = false;
+let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], booted = false, localReady = false;
 
 function loadDark() { try { db.config.dark = localStorage.getItem('ctv_ponto_dark') === '1'; } catch (e) {} }
 function saveDark() { try { localStorage.setItem('ctv_ponto_dark', db.config.dark ? '1' : '0'); } catch (e) {} }
@@ -693,14 +693,14 @@ function persistSession(s) {
     FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', clean.id), clean)
       .then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
     cacheSnapshot(); if (!navigator.onLine) setSync('offline');
-  } else saveLocal();
+  } else { saveLocal(); try { localStorage.setItem('ctv_horarios_local_dirty', '1'); } catch(e) {} }
 }
 function removeSession(id) {
   db.sessoes = db.sessoes.filter(x => x.id !== id);
   if (MODE === 'cloud' && FB && currentUser) {
     FB.deleteDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
     cacheSnapshot();
-  } else saveLocal();
+  } else { saveLocal(); try { localStorage.setItem('ctv_horarios_local_dirty', '1'); } catch(e) {} }
 }
 function onWriteError(err) { const c = (err && err.code) || ''; if (c.includes('permission-denied')) setSync('denied'); else if (!navigator.onLine || c.includes('unavailable')) setSync('offline'); else setSync('error', c); }
 /* marca ownerEmail/ownerUid nos registros antigos deste usuário (uma vez por sessão)
@@ -1843,6 +1843,8 @@ function bootLocal() {
   loadLocal(); loadDark(); applyDark();
   updateModeUI();
   renderPonto();
+  localReady = true;
+  if (window.__pendingUpgrade) { upgradeToCloud(window.__pendingUpgrade); window.__pendingUpgrade = null; }
 }
 function bootCloud(api) {
   if (booted) return; booted = true;
@@ -1863,6 +1865,39 @@ function bootCloud(api) {
   });
   window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
   window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+function upgradeToCloud(api) {
+  if (MODE === 'cloud') return;
+  if (!localReady) { window.__pendingUpgrade = api; return; }
+  FB = api;
+  var needsPush = false;
+  try { needsPush = localStorage.getItem('ctv_horarios_local_dirty') === '1'; } catch(e) {}
+  var localSessoesCopy = needsPush ? db.sessoes.map(function(s) { return JSON.parse(JSON.stringify(s)); }) : null;
+  MODE = 'cloud';
+  try { var raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_ponto_local_backup')) localStorage.setItem('ctv_ponto_local_backup', raw); } catch (e) {}
+  updateModeUI();
+  FB.onAuthStateChanged(FB.auth, function(user) {
+    currentUser = user;
+    if (user) {
+      try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){}
+      hideAuth(); showUserChip(user); setSync('connecting');
+      if (localSessoesCopy && localSessoesCopy.length) {
+        Promise.all(localSessoesCopy.map(function(s) {
+          var forCloud = JSON.parse(JSON.stringify(s));
+          forCloud.ownerEmail = user.email || '';
+          forCloud.ownerUid = user.uid || '';
+          return FB.setDoc(FB.doc(FB.fs, 'users', user.uid, 'sessoes', forCloud.id), forCloud).catch(function() {});
+        })).then(function() {
+          try { localStorage.removeItem('ctv_horarios_local_dirty'); } catch(e) {}
+          startCloudListeners(); updateAdminUI();
+        }).catch(function() { startCloudListeners(); updateAdminUI(); });
+      } else {
+        startCloudListeners(); updateAdminUI();
+      }
+    } else { clearCloudListeners(); db.sessoes = []; db.equipe = []; db.allSessoes = []; updateAdminUI(); renderPonto(); showAuth(); }
+  });
+  window.addEventListener('online', function() { if (currentUser) setSync('ok'); });
+  window.addEventListener('offline', function() { if (currentUser) setSync('offline'); });
 }
 function startCloudListeners() {
   clearCloudListeners();
@@ -1962,28 +1997,24 @@ function showAuth() { const c = document.getElementById('userChip'); if (c) c.st
 function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
 
 /* ═══════════════════ INIT ═══════════════════ */
-window.__PONTO = { wantCloud: isConfigured(), bootLocal, bootCloud, firebaseConfig };
-if (!window.__PONTO.wantCloud) bootLocal();
+window.__PONTO = { wantCloud: isConfigured(), bootLocal, upgradeToCloud, firebaseConfig };
+bootLocal();
 </script>
 <script type="module">
   const R = window.__PONTO;
   if (R && R.wantCloud) {
     try {
       const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
-      const fbTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
-      const [appMod, authMod, fsMod] = await Promise.race([
-        Promise.all([
-          import(V + 'firebase-app.js'),
-          import(V + 'firebase-auth.js'),
-          import(V + 'firebase-firestore.js')
-        ]),
-        fbTimeout
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import(V + 'firebase-app.js'),
+        import(V + 'firebase-auth.js'),
+        import(V + 'firebase-firestore.js')
       ]);
       const app = appMod.initializeApp(R.firebaseConfig);
       const auth = authMod.getAuth(app);
       const fs = fsMod.getFirestore(app);
       try { await fsMod.enableIndexedDbPersistence(fs); } catch (e) {}
-      R.bootCloud({
+      R.upgradeToCloud({
         app, auth, fs,
         signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
         createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
@@ -1996,8 +2027,7 @@ if (!window.__PONTO.wantCloud) bootLocal();
         collectionGroup: fsMod.collectionGroup
       });
     } catch (e) {
-      console.warn('Firebase indisponível — modo local.', e);
-      R.bootLocal();
+      console.warn('Firebase indisponível — continuando em modo local.', e);
     }
   }
 </script>
