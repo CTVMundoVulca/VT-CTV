@@ -743,21 +743,60 @@ function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db))
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
 function save() { if (MODE === 'cloud') cacheSnapshot(); else saveLocal(); }
 
+/* ── pending-writes: rastreia registros não confirmados pelo servidor ── */
+var _pendingSessoes = new Set();
+var _pendingEquipe = new Set();
+function loadPending() {
+  try { _pendingSessoes = new Set(JSON.parse(localStorage.getItem('ctv_horarios_pending') || '[]')); } catch(e) { _pendingSessoes = new Set(); }
+  try { _pendingEquipe = new Set(JSON.parse(localStorage.getItem('ctv_equipe_pending') || '[]')); } catch(e) { _pendingEquipe = new Set(); }
+}
+function savePendingSessoes() { try { localStorage.setItem('ctv_horarios_pending', JSON.stringify([..._pendingSessoes])); } catch(e) {} }
+function savePendingEquipe() { try { localStorage.setItem('ctv_equipe_pending', JSON.stringify([..._pendingEquipe])); } catch(e) {} }
+function markPendingSessao(id) { _pendingSessoes.add(id); savePendingSessoes(); }
+function unmarkPendingSessao(id) { _pendingSessoes.delete(id); savePendingSessoes(); }
+function markPendingEquipe(id) { _pendingEquipe.add(id); savePendingEquipe(); }
+function unmarkPendingEquipe(id) { _pendingEquipe.delete(id); savePendingEquipe(); }
+function retryAllPendingSessoes() {
+  if (MODE !== 'cloud' || !FB || !currentUser || !_pendingSessoes.size) return;
+  _pendingSessoes.forEach(function(pid) {
+    var r = db.sessoes.find(function(x) { return x.id === pid; });
+    if (!r) { unmarkPendingSessao(pid); return; }
+    var forCloud = JSON.parse(JSON.stringify(r));
+    forCloud.ownerEmail = currentUser.email || ''; forCloud.ownerUid = currentUser.uid || '';
+    FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', forCloud.id), forCloud)
+      .then(function() { unmarkPendingSessao(pid); if (navigator.onLine) setSync('ok'); })
+      .catch(function() {});
+  });
+}
+function retryAllPendingEquipe() {
+  if (MODE !== 'cloud' || !FB || !isAdmin() || !_pendingEquipe.size) return;
+  _pendingEquipe.forEach(function(pid) {
+    var r = (db.equipe || []).find(function(x) { return x.id === pid; });
+    if (!r) { unmarkPendingEquipe(pid); return; }
+    FB.setDoc(FB.doc(FB.fs, 'pontos_equipe', r.id), JSON.parse(JSON.stringify(r)))
+      .then(function() { unmarkPendingEquipe(pid); if (navigator.onLine) setSync('ok'); })
+      .catch(function() {});
+  });
+}
+function retryAllPending() { retryAllPendingSessoes(); retryAllPendingEquipe(); }
+
 /* persistência por sessão (a UI chama estas) */
 function persistSession(s) {
   if (!s) return;
   const clean = JSON.parse(JSON.stringify(s));
   const i = db.sessoes.findIndex(x => x.id === clean.id);
   if (i >= 0) db.sessoes[i] = clean; else db.sessoes.push(clean);
+  markPendingSessao(clean.id);
   if (MODE === 'cloud' && FB && currentUser) {
     clean.ownerEmail = currentUser.email || ''; clean.ownerUid = currentUser.uid || '';
     const i2 = db.sessoes.findIndex(x => x.id === clean.id); if (i2 >= 0) db.sessoes[i2] = clean;
     FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', clean.id), clean)
-      .then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+      .then(() => { unmarkPendingSessao(clean.id); if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
     cacheSnapshot(); if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); try { localStorage.setItem('ctv_horarios_local_dirty', '1'); } catch(e) {} }
 }
 function removeSession(id) {
+  unmarkPendingSessao(id);
   db.sessoes = db.sessoes.filter(x => x.id !== id);
   if (MODE === 'cloud' && FB && currentUser) {
     FB.deleteDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
@@ -1645,13 +1684,15 @@ function removeEquipe(id) {
   showToast('Registro excluído.');
 }
 function persistEquipe(rec) {
+  markPendingEquipe(rec.id);
   save();
   if (MODE === 'cloud' && FB && isAdmin()) {
     FB.setDoc(FB.doc(FB.fs, 'pontos_equipe', rec.id), JSON.parse(JSON.stringify(rec)))
-      .then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
+      .then(() => { unmarkPendingEquipe(rec.id); if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
   }
 }
 function removeEquipeStore(id) {
+  unmarkPendingEquipe(id);
   save();
   if (MODE === 'cloud' && FB && isAdmin()) {
     FB.deleteDoc(FB.doc(FB.fs, 'pontos_equipe', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
@@ -1938,7 +1979,7 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadLocal(); loadDark(); applyDark();
+  loadLocal(); loadPending(); loadDark(); applyDark();
   updateModeUI();
   renderPonto();
   localReady = true;
@@ -1955,7 +1996,7 @@ function bootCloud(api) {
   if (!db.config.plantoes) db.config.plantoes = {};
   if (!db.config.folgas) db.config.folgas = {};
   if (!db.equipe) db.equipe = [];
-  loadDark(); applyDark();
+  loadPending(); loadDark(); applyDark();
   updateModeUI();
   renderPonto();
   FB.onAuthStateChanged(FB.auth, user => {
@@ -1963,7 +2004,7 @@ function bootCloud(api) {
     if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); updateAdminUI(); }
     else { clearCloudListeners(); db.sessoes = []; db.equipe = []; db.allSessoes = []; updateAdminUI(); renderPonto(); showAuth(); }
   });
-  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('online', () => { if (currentUser) { setSync('ok'); retryAllPending(); } });
   window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
 }
 function upgradeToCloud(api) {
@@ -1996,7 +2037,7 @@ function upgradeToCloud(api) {
       }
     } else { clearCloudListeners(); db.sessoes = []; db.equipe = []; db.allSessoes = []; updateAdminUI(); renderPonto(); showAuth(); }
   });
-  window.addEventListener('online', function() { if (currentUser) setSync('ok'); });
+  window.addEventListener('online', function() { if (currentUser) { setSync('ok'); retryAllPending(); } });
   window.addEventListener('offline', function() { if (currentUser) setSync('offline'); });
 }
 function startCloudListeners() {
@@ -2005,16 +2046,10 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'users', currentUser.uid, 'sessoes'), s => {
     const cloudIds = new Set();
     const incoming = s.docs.map(d => { const r = d.data(); cloudIds.add(r.id); return r; });
-    const now = Date.now();
-    const localPending = db.sessoes.filter(r => r.id && !cloudIds.has(r.id) && (r.atualizadoEm || r.criadoEm) && (now - (r.atualizadoEm || r.criadoEm)) < 300000);
+    incoming.forEach(function(r) { if (_pendingSessoes.has(r.id)) unmarkPendingSessao(r.id); });
+    const localPending = db.sessoes.filter(r => r.id && !cloudIds.has(r.id) && _pendingSessoes.has(r.id));
     db.sessoes = incoming.concat(localPending);
-    if (localPending.length && FB && currentUser) {
-      localPending.forEach(r => {
-        const forCloud = JSON.parse(JSON.stringify(r));
-        forCloud.ownerEmail = currentUser.email || ''; forCloud.ownerUid = currentUser.uid || '';
-        FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', forCloud.id), forCloud).catch(() => {});
-      });
-    }
+    if (localPending.length) retryAllPendingSessoes();
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     backfillOwner(); // marca o dono (e-mail) nos registros antigos deste usuário, uma vez
@@ -2048,12 +2083,10 @@ function startCloudListeners() {
     cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'pontos_equipe'), s => {
       const eqCloudIds = new Set();
       const eqIncoming = s.docs.map(d => { const r = d.data(); eqCloudIds.add(r.id); return r; });
-      const eqNow = Date.now();
-      const eqLocalPending = db.equipe.filter(r => r.id && !eqCloudIds.has(r.id) && (r.atualizadoEm || r.criadoEm) && (eqNow - (r.atualizadoEm || r.criadoEm)) < 300000);
+      eqIncoming.forEach(function(r) { if (_pendingEquipe.has(r.id)) unmarkPendingEquipe(r.id); });
+      const eqLocalPending = db.equipe.filter(r => r.id && !eqCloudIds.has(r.id) && _pendingEquipe.has(r.id));
       db.equipe = eqIncoming.concat(eqLocalPending);
-      if (eqLocalPending.length && FB) {
-        eqLocalPending.forEach(r => { FB.setDoc(FB.doc(FB.fs, 'pontos_equipe', r.id), JSON.parse(JSON.stringify(r))).catch(() => {}); });
-      }
+      if (eqLocalPending.length) retryAllPendingEquipe();
       cacheSnapshot();
       if (document.getElementById('view-equipe').classList.contains('active')) renderEquipe();
     }, () => { /* sem permissão: mantém o que houver em cache */ }));
