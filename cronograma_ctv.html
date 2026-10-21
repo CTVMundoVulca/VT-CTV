@@ -428,20 +428,41 @@ function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 function cacheSnapshot() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch(e){} }
 
+/* ── pending-writes: rastreia registros não confirmados pelo servidor ── */
+var _pendingIds = new Set();
+function loadPending() { try { _pendingIds = new Set(JSON.parse(localStorage.getItem('ctv_crono_pending') || '[]')); } catch(e) { _pendingIds = new Set(); } }
+function savePending() { try { localStorage.setItem('ctv_crono_pending', JSON.stringify([..._pendingIds])); } catch(e) {} }
+function markPending(id) { _pendingIds.add(id); savePending(); }
+function unmarkPending(id) { _pendingIds.delete(id); savePending(); }
+function retryAllPending() {
+  if (MODE !== 'cloud' || !FB || !currentUser || !_pendingIds.size) return;
+  _pendingIds.forEach(function(pid) {
+    var r = db.cronogramas.find(function(x) { return x.id === pid; });
+    if (!r) { unmarkPending(pid); return; }
+    var forCloud = JSON.parse(JSON.stringify(r));
+    forCloud.updatedBy = currentUser.email || currentUser.uid || '';
+    FB.setDoc(FB.doc(FB.fs, 'cronogramas', forCloud.id), forCloud)
+      .then(function() { unmarkPending(pid); if (navigator.onLine) setSync('ok'); })
+      .catch(function() {});
+  });
+}
+
 function persistCronograma(crono) {
   const clean = JSON.parse(JSON.stringify(crono));
   const i = db.cronogramas.findIndex(r => r.id === clean.id);
   if (i >= 0) db.cronogramas[i] = clean; else db.cronogramas.push(clean);
+  markPending(clean.id);
   if (MODE === 'cloud' && FB) {
     clean.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
     FB.setDoc(FB.doc(FB.fs, 'cronogramas', clean.id), clean)
-      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .then(() => { unmarkPending(clean.id); if (navigator.onLine) setSync('ok'); })
       .catch(err => onWriteError(err));
     cacheSnapshot();
     if (!navigator.onLine) setSync('offline');
   } else { saveLocal(); try { localStorage.setItem('ctv_crono_local_dirty', '1'); } catch(e) {} }
 }
 function removeCronogramaStore(id) {
+  unmarkPending(id);
   db.cronogramas = db.cronogramas.filter(r => r.id !== id);
   if (MODE === 'cloud' && FB) {
     FB.deleteDoc(FB.doc(FB.fs, 'cronogramas', id)).then(() => { if (navigator.onLine) setSync('ok'); }).catch(err => onWriteError(err));
@@ -1381,7 +1402,7 @@ function fromLocalDT(s) {
 function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
-  loadLocal(); applyDark();
+  loadLocal(); loadPending(); applyDark();
   updateModeUI(); renderList();
   localReady = true;
   if (window.__pendingUpgrade) { upgradeToCloud(window.__pendingUpgrade); window.__pendingUpgrade = null; }
@@ -1391,14 +1412,14 @@ function bootCloud(api) {
   MODE = 'cloud'; FB = api;
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_crono_local_backup')) localStorage.setItem('ctv_crono_local_backup', raw); } catch(e){}
   db = { cronogramas: [], config: { dark: false } };
-  loadLocal();
+  loadLocal(); loadPending();
   applyDark(); updateModeUI(); renderList();
   FB.onAuthStateChanged(FB.auth, user => {
     currentUser = user;
     if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
     else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
   });
-  window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+  window.addEventListener('online', () => { if (currentUser) { setSync('ok'); retryAllPending(); } });
   window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
 }
 function upgradeToCloud(api) {
@@ -1430,7 +1451,7 @@ function upgradeToCloud(api) {
       }
     } else { try{localStorage.removeItem('ctv_user_email')}catch(x){} clearCloudListeners(); showAuth(); }
   });
-  window.addEventListener('online', function() { if (currentUser) setSync('ok'); });
+  window.addEventListener('online', function() { if (currentUser) { setSync('ok'); retryAllPending(); } });
   window.addEventListener('offline', function() { if (currentUser) setSync('offline'); });
 }
 
@@ -1502,16 +1523,10 @@ function startCloudListeners() {
     const editingId = (editorOpen && cur) ? cur.id : null;
     const cloudIds = new Set();
     const incoming = s.docs.map(d => { const r = d.data(); cloudIds.add(r.id); return r; });
-    const now = Date.now();
-    const localPending = db.cronogramas.filter(r => r.id && !cloudIds.has(r.id) && r.updatedAt && (now - new Date(r.updatedAt).getTime()) < 300000);
+    incoming.forEach(function(r) { if (_pendingIds.has(r.id)) unmarkPending(r.id); });
+    const localPending = db.cronogramas.filter(r => r.id && !cloudIds.has(r.id) && _pendingIds.has(r.id));
     db.cronogramas = incoming.concat(localPending);
-    if (localPending.length && FB && currentUser) {
-      localPending.forEach(r => {
-        const forCloud = JSON.parse(JSON.stringify(r));
-        forCloud.updatedBy = currentUser.email || currentUser.uid || '';
-        FB.setDoc(FB.doc(FB.fs, 'cronogramas', forCloud.id), forCloud).catch(() => {});
-      });
-    }
+    if (localPending.length) retryAllPending();
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (editingId) {

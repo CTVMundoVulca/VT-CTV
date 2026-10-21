@@ -707,6 +707,26 @@ function deleteFotosFromCloud(rdoId) {
   }).catch(function(){});
 }
 
+/* ── pending-writes: rastreia registros não confirmados pelo servidor ── */
+var _pendingIds = new Set();
+function loadPending() { try { _pendingIds = new Set(JSON.parse(localStorage.getItem('ctv_rdo_pending') || '[]')); } catch(e) { _pendingIds = new Set(); } }
+function savePending() { try { localStorage.setItem('ctv_rdo_pending', JSON.stringify([..._pendingIds])); } catch(e) {} }
+function markPending(id) { _pendingIds.add(id); savePending(); }
+function unmarkPending(id) { _pendingIds.delete(id); savePending(); }
+function retryAllPending() {
+  if (MODE !== 'cloud' || !FB || !currentUser || !_pendingIds.size) return;
+  _pendingIds.forEach(function(pid) {
+    var r = db.rdos.find(function(x) { return x.id === pid; });
+    if (!r) { unmarkPending(pid); return; }
+    var forCloud = JSON.parse(JSON.stringify(r));
+    if (forCloud.inspecao) forCloud.inspecao.fotos = [];
+    forCloud.updatedBy = currentUser.email || currentUser.uid || '';
+    FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud)
+      .then(function() { unmarkPending(pid); if (navigator.onLine) setSync('ok'); })
+      .catch(function() {});
+  });
+}
+
 /* ── persistência unificada (a UI chama estas) ── */
 function persistRDO(rdo) {
   const clean = JSON.parse(JSON.stringify(rdo));
@@ -714,12 +734,13 @@ function persistRDO(rdo) {
   saveFotos(clean.id, fotos);
   const i = db.rdos.findIndex(r => r.id === clean.id);
   if (i >= 0) db.rdos[i] = clean; else db.rdos.push(clean);
+  markPending(clean.id);
   if (MODE === 'cloud' && FB) {
     const forCloud = JSON.parse(JSON.stringify(clean));
     if (forCloud.inspecao) forCloud.inspecao.fotos = [];
     forCloud.updatedBy = currentUser ? (currentUser.email || currentUser.uid) : '';
     FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud)
-      .then(() => { if (navigator.onLine) setSync('ok'); })
+      .then(() => { unmarkPending(clean.id); if (navigator.onLine) setSync('ok'); })
       .catch(err => { showToast('Erro ao salvar na nuvem. Dados mantidos neste aparelho.'); onWriteError(err); });
     syncFotosToCloud(clean.id, fotos);
     cacheSnapshot();
@@ -727,6 +748,7 @@ function persistRDO(rdo) {
   } else { saveLocal(); try { localStorage.setItem('ctv_rdo_local_dirty', '1'); } catch(e) {} }
 }
 function removeRDOStore(id) {
+  unmarkPending(id);
   db.rdos = db.rdos.filter(r => r.id !== id);
   removeFotos(id);
   deleteFotosFromCloud(id);
@@ -1576,7 +1598,7 @@ function bootLocal() {
   if (booted) return; booted = true;
   MODE = 'local';
   initFotosDB().then(function() {
-    loadLocal(); loadDark(); applyDark();
+    loadLocal(); loadPending(); loadDark(); applyDark();
     updateModeUI();
     renderList(); renderCalendar();
     localReady = true;
@@ -1592,7 +1614,7 @@ function bootCloud(api) {
   try { const raw = localStorage.getItem(STORE_KEY); if (raw && !localStorage.getItem('ctv_rdo_local_backup')) localStorage.setItem('ctv_rdo_local_backup', raw); } catch (e) {}
   initFotosDB().then(function() {
     db = { version: 1, rdos: [], config: {} };
-    loadDark(); applyDark();
+    loadPending(); loadDark(); applyDark();
     try { const c = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (c && c.rdos) { db.rdos = c.rdos; db.config.funcoes = (c.config && c.config.funcoes) || DEFAULT_FUNCOES.slice(); db.config.feriados = (c.config && c.config.feriados) || {}; } } catch (e) {}
     loadFuncionarios();
     db.rdos.forEach(r => {
@@ -1609,7 +1631,7 @@ function bootCloud(api) {
       if (user) { try{localStorage.setItem('ctv_user_email',user.email||'')}catch(x){} hideAuth(); showUserChip(user); setSync('connecting'); startCloudListeners(); }
       else { clearCloudListeners(); showAuth(); }
     });
-    window.addEventListener('online', () => { if (currentUser) setSync('ok'); });
+    window.addEventListener('online', () => { if (currentUser) { setSync('ok'); retryAllPending(); } });
     window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
   });
 }
@@ -1746,19 +1768,10 @@ function startCloudListeners() {
       });
       return r;
     });
-    const now = Date.now();
-    const localPending = db.rdos.filter(r => r.id && !cloudIds.has(r.id) && r.atualizadoEm && (now - r.atualizadoEm) < 300000);
+    incoming.forEach(function(r) { if (_pendingIds.has(r.id)) unmarkPending(r.id); });
+    const localPending = db.rdos.filter(r => r.id && !cloudIds.has(r.id) && _pendingIds.has(r.id));
     db.rdos = incoming.concat(localPending);
-    if (localPending.length) {
-      localPending.forEach(r => {
-        if (FB && currentUser) {
-          const forCloud = JSON.parse(JSON.stringify(r));
-          if (forCloud.inspecao) forCloud.inspecao.fotos = [];
-          forCloud.updatedBy = currentUser.email || currentUser.uid || '';
-          FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud).catch(() => {});
-        }
-      });
-    }
+    if (localPending.length) retryAllPending();
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (eid) {
