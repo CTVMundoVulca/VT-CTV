@@ -29,6 +29,26 @@ Todos os 6 apps seguem o padrão:
 - `cronograma_ctv.html` — Cronograma
 - `registo_horarios_ctv.html` — Registro de Horários
 
+## Regra de Deploy Seguro (CRÍTICA)
+Problema ocorrido: código foi perdido porque a branch foi resetada para main antes de confirmar que TODAS as alterações estavam incluídas no PR mergeado. O PR #103 foi mergeado com apenas 2 dos 3 arquivos modificados, e o reset apagou as mudanças do terceiro arquivo.
+
+**Regras para evitar recorrência:**
+1. **Antes de fazer merge de um PR**, sempre verificar o diff do PR e confirmar que TODOS os arquivos modificados localmente estão incluídos. Usar `git diff main...HEAD --stat` para listar os arquivos.
+2. **Nunca resetar a branch para main** até confirmar que o merge do PR contém todas as alterações pendentes.
+3. **Se houver múltiplas features na mesma branch**, criar PRs separados ou garantir que todas estejam no mesmo commit antes do PR.
+4. **Após o merge**, verificar o resultado do squash-merge no GitHub (número de arquivos alterados) antes de resetar a branch.
+
+## Mecanismo de Auto-Update Agressivo
+Todos os apps usam `app-update.js` + `service-worker.js` com:
+- `updateViaCache: 'none'` no registro do SW
+- Listener `SKIP_WAITING` no SW para ativação imediata
+- Checagem a cada 30s (`setInterval`), ao voltar ao foreground (`visibilitychange`), e quando a rede volta (`online`)
+- `updatefound` + `statechange` para detectar e ativar SW em espera
+- Proteção de formulários abertos (`editando()`) antes de recarregar
+- **`CACHE_VERSION` deve ser incrementado a cada deploy** no `service-worker.js`
+
+Ao criar ou modificar qualquer app, garantir que ele inclui `<script src="app-update.js"></script>` e que o `service-worker.js` lista o arquivo do app no `APP_SHELL`.
+
 ## Cores da Marca
 - Navy: `#001a33`
 - Blue accent: `#43a6ea`
