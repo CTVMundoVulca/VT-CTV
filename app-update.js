@@ -1,7 +1,8 @@
 /* Atualização automática dos apps CTV.
-   Baseado no mecanismo do Vulca Calc Pro: checa por versão nova toda vez
-   que o app volta ao primeiro plano (visibilitychange) e quando a rede
-   volta (online). Recarrega automaticamente quando o novo SW assume,
+   Estratégia agressiva: checa por versão nova no load, a cada 30s,
+   quando o app volta ao primeiro plano (visibilitychange), e quando a
+   rede volta (online). Detecta SW em espera (waiting) e força ativação
+   via postMessage. Recarrega automaticamente quando o novo SW assume,
    mas protege formulários abertos para nunca perder dados em edição. */
 (function () {
   if (!('serviceWorker' in navigator)) return;
@@ -32,6 +33,18 @@
     if (swReg && swReg.update) { try { swReg.update(); } catch (e) {} }
   }
 
+  function ativarWaiting(sw) {
+    if (sw) { try { sw.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {} }
+  }
+
+  function monitorarInstalacao(sw) {
+    sw.addEventListener('statechange', function () {
+      if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+        ativarWaiting(sw);
+      }
+    });
+  }
+
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (!hadController) { hadController = true; return; }
     pending = true;
@@ -39,8 +52,16 @@
   });
 
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('service-worker.js').then(function (reg) {
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(function (reg) {
       swReg = reg;
+
+      if (reg.waiting) { ativarWaiting(reg.waiting); }
+      if (reg.installing) { monitorarInstalacao(reg.installing); }
+
+      reg.addEventListener('updatefound', function () {
+        if (reg.installing) { monitorarInstalacao(reg.installing); }
+      });
+
       checarUpdate();
     }).catch(function () {});
   });
@@ -53,6 +74,8 @@
   });
 
   window.addEventListener('online', checarUpdate);
+
+  setInterval(checarUpdate, 30000);
 
   document.addEventListener('focusout', function () { setTimeout(tentarRecarregar, 100); }, true);
 })();
