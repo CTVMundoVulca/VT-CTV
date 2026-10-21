@@ -1372,8 +1372,10 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'revestimentos'), s => {
     const editorOpen = document.getElementById('editorView').style.display !== 'none';
     const editingId = (editorOpen && cur) ? cur.id : null;
-    db.registros = s.docs.map(d => {
+    const cloudIds = new Set();
+    const incoming = s.docs.map(d => {
       const r = d.data();
+      cloudIds.add(r.id);
       const localF = loadFotosLocal(r.id);
       if (localF.length) r.fotos = localF;
       else loadFotosFromCloud(r.id, function(cf) {
@@ -1384,6 +1386,18 @@ function startCloudListeners() {
       });
       return r;
     });
+    const now = Date.now();
+    const localPending = db.registros.filter(r => r.id && !cloudIds.has(r.id) && (r.criadoEm || r.atualizadoEm) && (now - (r.atualizadoEm || r.criadoEm)) < 300000);
+    db.registros = incoming.concat(localPending);
+    if (localPending.length && FB && currentUser) {
+      localPending.forEach(r => {
+        const forCloud = JSON.parse(JSON.stringify(r));
+        forCloud.fotos = (forCloud.fotos || []).map(function(f){ return {label:f.label||'',data:null}; });
+        forCloud.updatedBy = currentUser.email || currentUser.uid || '';
+        FB.setDoc(FB.doc(FB.fs, 'revestimentos', forCloud.id), forCloud).catch(() => {});
+        syncFotosToCloud(r.id, r.fotos || []);
+      });
+    }
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (editingId) {
