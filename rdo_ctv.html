@@ -1730,8 +1730,10 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'rdos'), s => {
     const editorOpen = document.getElementById('view-editor').classList.contains('active');
     const eid = (editorOpen && editingId) ? editingId : null;
-    db.rdos = s.docs.map(d => {
+    const cloudIds = new Set();
+    const incoming = s.docs.map(d => {
       const r = d.data();
+      cloudIds.add(r.id);
       if (!r.inspecao) r.inspecao = { inicio:'', termino:'', responsavel:'', anormalidades:'', fotos:[] };
       const f = loadFotos(r.id);
       if (f.length || (r.id in fotosCache)) r.inspecao.fotos = f;
@@ -1744,6 +1746,19 @@ function startCloudListeners() {
       });
       return r;
     });
+    const now = Date.now();
+    const localPending = db.rdos.filter(r => r.id && !cloudIds.has(r.id) && r.atualizadoEm && (now - r.atualizadoEm) < 300000);
+    db.rdos = incoming.concat(localPending);
+    if (localPending.length) {
+      localPending.forEach(r => {
+        if (FB && currentUser) {
+          const forCloud = JSON.parse(JSON.stringify(r));
+          if (forCloud.inspecao) forCloud.inspecao.fotos = [];
+          forCloud.updatedBy = currentUser.email || currentUser.uid || '';
+          FB.setDoc(FB.doc(FB.fs, 'rdos', forCloud.id), forCloud).catch(() => {});
+        }
+      });
+    }
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (eid) {
