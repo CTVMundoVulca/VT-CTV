@@ -1500,7 +1500,18 @@ function startCloudListeners() {
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'cronogramas'), s => {
     const editorOpen = document.getElementById('editorView').style.display !== 'none';
     const editingId = (editorOpen && cur) ? cur.id : null;
-    db.cronogramas = s.docs.map(d => d.data());
+    const cloudIds = new Set();
+    const incoming = s.docs.map(d => { const r = d.data(); cloudIds.add(r.id); return r; });
+    const now = Date.now();
+    const localPending = db.cronogramas.filter(r => r.id && !cloudIds.has(r.id) && r.updatedAt && (now - new Date(r.updatedAt).getTime()) < 300000);
+    db.cronogramas = incoming.concat(localPending);
+    if (localPending.length && FB && currentUser) {
+      localPending.forEach(r => {
+        const forCloud = JSON.parse(JSON.stringify(r));
+        forCloud.updatedBy = currentUser.email || currentUser.uid || '';
+        FB.setDoc(FB.doc(FB.fs, 'cronogramas', forCloud.id), forCloud).catch(() => {});
+      });
+    }
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     if (editingId) {

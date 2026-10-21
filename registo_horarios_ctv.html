@@ -2003,7 +2003,18 @@ function startCloudListeners() {
   clearCloudListeners();
   _backfilled = false;
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'users', currentUser.uid, 'sessoes'), s => {
-    db.sessoes = s.docs.map(d => d.data());
+    const cloudIds = new Set();
+    const incoming = s.docs.map(d => { const r = d.data(); cloudIds.add(r.id); return r; });
+    const now = Date.now();
+    const localPending = db.sessoes.filter(r => r.id && !cloudIds.has(r.id) && (r.atualizadoEm || r.criadoEm) && (now - (r.atualizadoEm || r.criadoEm)) < 300000);
+    db.sessoes = incoming.concat(localPending);
+    if (localPending.length && FB && currentUser) {
+      localPending.forEach(r => {
+        const forCloud = JSON.parse(JSON.stringify(r));
+        forCloud.ownerEmail = currentUser.email || ''; forCloud.ownerUid = currentUser.uid || '';
+        FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', forCloud.id), forCloud).catch(() => {});
+      });
+    }
     cacheSnapshot();
     setSync(navigator.onLine ? 'ok' : 'offline');
     backfillOwner(); // marca o dono (e-mail) nos registros antigos deste usuário, uma vez
@@ -2035,7 +2046,14 @@ function startCloudListeners() {
       if (document.getElementById('view-equipe').classList.contains('active')) { fillEquipeSelects(); }
     }, () => {}));
     cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, 'pontos_equipe'), s => {
-      db.equipe = s.docs.map(d => d.data());
+      const eqCloudIds = new Set();
+      const eqIncoming = s.docs.map(d => { const r = d.data(); eqCloudIds.add(r.id); return r; });
+      const eqNow = Date.now();
+      const eqLocalPending = db.equipe.filter(r => r.id && !eqCloudIds.has(r.id) && (r.atualizadoEm || r.criadoEm) && (eqNow - (r.atualizadoEm || r.criadoEm)) < 300000);
+      db.equipe = eqIncoming.concat(eqLocalPending);
+      if (eqLocalPending.length && FB) {
+        eqLocalPending.forEach(r => { FB.setDoc(FB.doc(FB.fs, 'pontos_equipe', r.id), JSON.parse(JSON.stringify(r))).catch(() => {}); });
+      }
       cacheSnapshot();
       if (document.getElementById('view-equipe').classList.contains('active')) renderEquipe();
     }, () => { /* sem permissão: mantém o que houver em cache */ }));
