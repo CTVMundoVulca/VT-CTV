@@ -1519,10 +1519,7 @@ function doPrint() {
   window.print();
 }
 function openPrintWindow() {
-  const html = buildPrintHTML();
-  var w = window.open('', '_blank');
-  if (w) { w.document.write(html); w.document.close(); }
-  else { showToast('Não foi possível abrir a janela de impressão.'); }
+  doPrint();
 }
 function shareRDO() { openPrintWindow(); }
 function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
