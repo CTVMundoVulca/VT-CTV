@@ -195,8 +195,8 @@
   #printArea .assin .sig-id { font-size: 10px; color: #555; margin-top: 2px; }
   @media print {
     body > *:not(#printOverlay) { display: none !important; }
-    #printOverlay { display: block !important; position: static; }
-    #printArea { overflow: visible; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #printOverlay { display: block !important; position: static !important; overflow: visible !important; inset: auto !important; z-index: auto !important; }
+    #printArea { overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #printBar { display: none !important; }
     @page { margin: 10mm; size: A4; }
   }
@@ -1521,7 +1521,18 @@ function doPrint() {
 function openPrintWindow() {
   doPrint();
 }
-function shareRDO() { openPrintWindow(); }
+function shareRDO() {
+  if (navigator.share) {
+    try {
+      var html = buildPrintHTML();
+      var blob = new Blob([html], {type:'text/html'});
+      var file = new File([blob], 'rdo.html', {type:'text/html'});
+      navigator.share({title:'RDO', files:[file]}).catch(function(){});
+      return;
+    } catch(e) {}
+  }
+  openPrintWindow();
+}
 function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
 
 /* ── CSV ── */

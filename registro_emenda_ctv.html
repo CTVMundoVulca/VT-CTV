@@ -1563,7 +1563,17 @@ function _openPrintWindow(html) {
   bV.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#001a33;color:#fff';
   var bP = document.createElement('button'); bP.textContent = '🖨 Imprimir / Salvar PDF';
   bP.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#43a6ea;color:#fff';
-  bar.appendChild(bV); bar.appendChild(bP); ovr.appendChild(bar);
+  bar.appendChild(bV); bar.appendChild(bP);
+  if (navigator.share) {
+    var bS = document.createElement('button'); bS.textContent = '📤 Compartilhar';
+    bS.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#28a745;color:#fff';
+    bS.onclick = function() {
+      try { var blob = new Blob([html],{type:'text/html'}); var file = new File([blob],'relatorio.html',{type:'text/html'}); navigator.share({title:'Relatório',files:[file]}).catch(function(){}); }
+      catch(e) { showToast('Compartilhamento não disponível'); }
+    };
+    bar.appendChild(bS);
+  }
+  ovr.appendChild(bar);
   var wrap = document.createElement('div'); wrap.id = '_rptWrap';
   var parsed = new DOMParser().parseFromString(html, 'text/html');
   parsed.querySelectorAll('style').forEach(function(s) {
@@ -1578,7 +1588,7 @@ function _openPrintWindow(html) {
   });
   ovr.appendChild(wrap); document.body.appendChild(ovr);
   var pCSS = document.createElement('style'); pCSS.id = '_rptCSS';
-  pCSS.textContent = '@media print{body>*:not(#_rptOvr){display:none!important}#_rptOvr{position:static;overflow:visible}#_rptBar{display:none!important}#_rptWrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:6mm;size:A4}}';
+  pCSS.textContent = '@media print{body>*:not(#_rptOvr){display:none!important}#_rptOvr{position:static!important;overflow:visible!important;inset:auto!important;z-index:auto!important;background:#fff!important}#_rptBar{display:none!important}#_rptWrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:6mm;size:A4}}';
   document.head.appendChild(pCSS);
   bV.onclick = function() { ovr.remove(); pCSS.remove(); };
   bP.onclick = function() { window.print(); };
