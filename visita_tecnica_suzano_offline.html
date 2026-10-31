@@ -1603,8 +1603,7 @@ function gerarPDF() {
     ? '<table class="emendas"><tr><th>Item</th><th style="width:80px;text-align:center">Qtd</th></tr>' + linhasFerramentas + '</table>'
     : '<table class="dados"><tr><td>Itens selecionados</td><td>Nenhum selecionado</td></tr></table>';
 
-  const secFotos = temFotos ? '<div class="sec-title">9. REGISTRO FOTOGRAFICO</div>' + fotosHTML : '';
-  const numConclusao = temFotos ? '10' : '9';
+  const secFotos = temFotos ? '<div class="pdf-fotos"><div class="sec-title">10. REGISTRO FOTOGRAFICO</div>' + fotosHTML + '</div>' : '';
 
   const tsVT = new Date().toISOString();
   const html = '<!DOCTYPE html>'
@@ -1711,14 +1710,14 @@ function gerarPDF() {
     + '<div class="sec-title">8. FERRAMENTAS - MOBILIZACAO CTV</div>'
     + secFerramentas
     + '<table class="dados" style="margin-top:4px"><tr><td>Observacoes</td><td>' + (d.obs_ferramentas||'—') + '</td></tr></table>'
-    + secFotos
-    + '<div class="sec-title">' + numConclusao + '. CONCLUSAO TECNICA</div>'
+    + '<div class="sec-title">9. CONCLUSAO TECNICA</div>'
     + '<table class="dados"><tr><td>Urgencia do servico</td><td>' + getSelected('urgencia') + '</td></tr></table>'
     + '<div class="conclusao-box">' + (d.conclusao||'Nao preenchida.').replace(/\n/g,'<br>') + '</div>'
     + '<div class="assinatura">'
     + (() => { const sc=getSigDataURL('ctv'); return sc ? '<div class="assin-block"><img src="'+sc+'" style="width:160px;height:60px;object-fit:contain;border-bottom:1px solid #333;display:block;margin:0 auto 4px;"><div class="assin-label"><strong>'+(d.responsavel||'Responsavel CTV')+'</strong></div><div class="assin-label">CTV Consultoria Tecnica em Vulcanizacao</div></div>' : '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>'+(d.responsavel||'Responsavel CTV')+'</strong></div><div class="assin-label">CTV Consultoria Tecnica em Vulcanizacao</div></div>'; })()
     + (() => { const sc=getSigDataURL('cliente'); return sc ? '<div class="assin-block"><img src="'+sc+'" style="width:160px;height:60px;object-fit:contain;border-bottom:1px solid #333;display:block;margin:0 auto 4px;"><div class="assin-label"><strong>'+(d.contato_cliente||'Responsavel Suzano')+'</strong></div><div class="assin-label">Suzano S.A. - Complexo Aracruz/ES</div></div>' : '<div class="assin-block"><div class="assin-line"></div><div class="assin-label"><strong>'+(d.contato_cliente||'Responsavel Suzano')+'</strong></div><div class="assin-label">Suzano S.A. - Complexo Aracruz/ES</div></div>'; })()
     + '</div>'
+    + secFotos
     + '<div class="footer"><span>Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados</span><span>Gerado em: ' + agora + '</span></div>'
     + '<div style="font-size:5px;color:#fff;text-align:center">Software protegido pela Lei 9.609/98. Autor: Glauber Dutra. CNPJ 65.601.481/0001-36</div>'
     + '<div style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-' + tsVT + '</div>'
