@@ -50,7 +50,10 @@
      para não afetar o app. Barras de ferramenta e scripts são descartados. */
   function mountReport(html, host) {
     var brk = document.createElement('style');
-    brk.textContent = '#' + host.id + ' .foto-section,#' + host.id + ' .pdf-fotos{page-break-before:always;break-before:page}';
+    // text-size-adjust: o iOS aumenta sozinho o texto de blocos mais largos que a tela,
+    // o que deixa fontes desiguais e desalinha medição e captura (quebras erradas).
+    brk.textContent = '#' + host.id + ',#' + host.id + ' *{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}'
+      + '#' + host.id + ' .foto-section,#' + host.id + ' .pdf-fotos{page-break-before:always;break-before:page}';
     host.appendChild(brk);
     var parsed = new DOMParser().parseFromString(html, 'text/html');
     parsed.querySelectorAll('style').forEach(function (s) {
@@ -87,7 +90,11 @@
       var cs = getComputedStyle(el);
       if (cs.position === 'fixed') return;
       if ((cs.breakBefore === 'page' || cs.pageBreakBefore === 'always') && top > 1) forced.push(top);
-      if (r.height <= pageH * 0.35) atoms.push([top, bottom]);
+      if (/^(H[1-6])$/.test(el.tagName) || el.classList.contains('sec') || el.classList.contains('sec-title')) {
+        atoms.push([top, bottom + 40]);   // título não fica sozinho no fim da página
+      } else if (r.height <= pageH * 0.15 || (r.height <= pageH * 0.4 && (el.tagName === 'IMG' || el.querySelector('img')))) {
+        atoms.push([top, bottom]);
+      }
     });
     forced.sort(function (a, b) { return a - b; });
 
@@ -117,7 +124,7 @@
     return ensureLibs().then(function () {
       var host = document.createElement('div');
       host.id = '_pdfCap';
-      host.style.cssText = 'position:absolute;left:0;top:0;width:' + CAP_WIDTH + 'px;background:#fff;z-index:-1;pointer-events:none';
+      host.style.cssText = 'position:absolute;left:0;top:0;width:' + CAP_WIDTH + 'px;background:#fff;z-index:-1;pointer-events:none;-webkit-text-size-adjust:100%;text-size-adjust:100%';
       mountReport(html, host);
       document.body.appendChild(host);
 
