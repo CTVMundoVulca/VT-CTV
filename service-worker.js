@@ -3,13 +3,16 @@
    atualização quando há rede) com fallback para o cache (offline).
    Demais assets = cache-first. Troque CACHE_VERSION ao publicar
    mudanças para forçar atualização nos aparelhos. */
-const CACHE_VERSION = 'ctv-campo-v124';
+const CACHE_VERSION = 'ctv-campo-v125';
 
 /* Caminhos relativos ao escopo do SW (funciona sob /vt-ctv/ no GitHub Pages) */
 const APP_SHELL = [
   './',
   './index.html',
   './app-update.js',
+  './pdf-export.js',
+  './vendor/jspdf.umd.min.js',
+  './vendor/html2canvas.min.js',
   './registo_horarios_ctv.html',
   './rdo_ctv.html',
   './transportadores_suzano.html',
