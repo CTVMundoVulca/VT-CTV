@@ -198,6 +198,7 @@
     #printOverlay { display: block !important; position: static !important; overflow: visible !important; inset: auto !important; z-index: auto !important; }
     #printArea { overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #printBar { display: none !important; }
+    #printArea .pdf-fotos { page-break-before: always; break-before: page; }
     @page { margin: 10mm; size: A4; }
   }
 </style>
@@ -1458,15 +1459,6 @@ function gerarPDF() {
     html += `<tr><th>Responsável</th><td colspan="3">${escapeHtml(insp.responsavel||'')}</td></tr>`;
     if (insp.anormalidades) html += `<tr><th>Anormalidades</th><td colspan="3" style="white-space:pre-wrap">${escapeHtml(insp.anormalidades)}</td></tr>`;
     html += `</tbody></table>`;
-    if (insp.fotos && insp.fotos.length) {
-      html += `<div style="display:flex;flex-wrap:wrap;gap:12px;padding:10px 14px">`;
-      insp.fotos.forEach(f => {
-        html += `<div style="text-align:center;max-width:220px"><img src="${f.data}" style="max-width:200px;max-height:150px;border:1px solid #ccc;border-radius:6px">`;
-        if (f.descricao) html += `<div style="font-size:10px;color:#555;margin-top:3px">${escapeHtml(f.descricao)}</div>`;
-        html += `</div>`;
-      });
-      html += `</div>`;
-    }
   }
   html += tbl('Horário de alimentação', ['Início','Fim','Motivo','Liberado por'], (r.alimentacao||[]).map(x => [x.inicio,x.fim,x.motivo,x.liberado]));
   html += tbl('Tempos parados (aguard. liberação)', ['Início','Fim','Motivo','Área/Equip.','Liberado por'], (r.paradas||[]).map(x => [x.inicio,x.fim,x.motivo,x.area,x.liberado]));
@@ -1476,6 +1468,15 @@ function gerarPDF() {
     <div>${r.assBenetech ? `<img src="${r.assBenetech}">` : '<div style="height:70px"></div>'}<div class="ln">Responsável Técnico (Benetech)</div>${r.sigNomeBenetech ? `<div class="sig-id">${escapeHtml(r.sigNomeBenetech)}${r.sigDocBenetech ? ' · ' + escapeHtml(r.sigDocBenetech) : ''}</div>` : ''}</div>
     <div>${r.assFiscal ? `<img src="${r.assFiscal}">` : '<div style="height:70px"></div>'}<div class="ln">Fiscal / Representante do Cliente</div>${r.sigNomeFiscal ? `<div class="sig-id">${escapeHtml(r.sigNomeFiscal)}${r.sigDocFiscal ? ' · ' + escapeHtml(r.sigDocFiscal) : ''}</div>` : ''}</div>
   </div>`;
+  if (insp.fotos && insp.fotos.length) {
+    html += `<div class="pdf-fotos"><h3>Fotos da inspeção do transportador</h3><div style="display:flex;flex-wrap:wrap;gap:12px;padding:10px 14px">`;
+    insp.fotos.forEach(f => {
+      html += `<div style="text-align:center;max-width:220px"><img src="${f.data}" style="max-width:200px;max-height:150px;border:1px solid #ccc;border-radius:6px">`;
+      if (f.descricao) html += `<div style="font-size:10px;color:#555;margin-top:3px">${escapeHtml(f.descricao)}</div>`;
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+  }
   document.getElementById('printArea').innerHTML = html;
   document.getElementById('printOverlay').classList.add('open');
   window.scrollTo(0, 0);

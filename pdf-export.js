@@ -7,6 +7,7 @@
   'use strict';
 
   var CAP_WIDTH = 760;          // largura de layout do relatório (px)
+  var MIN_FIT = 0.8;            // redução máxima do texto para caber na página 1
   var MARGIN_MM = 8;
   var PAGE_W_MM = 210, PAGE_H_MM = 297;
   var libsPromise = null;
@@ -48,6 +49,9 @@
   /* Monta o relatório dentro de `host`, trocando o seletor body{ por #id{
      para não afetar o app. Barras de ferramenta e scripts são descartados. */
   function mountReport(html, host) {
+    var brk = document.createElement('style');
+    brk.textContent = '#' + host.id + ' .foto-section,#' + host.id + ' .pdf-fotos{page-break-before:always;break-before:page}';
+    host.appendChild(brk);
     var parsed = new DOMParser().parseFromString(html, 'text/html');
     parsed.querySelectorAll('style').forEach(function (s) {
       var st = document.createElement('style');
@@ -119,8 +123,23 @@
 
       return waitImages(host).then(function () {
         var contentWmm = PAGE_W_MM - 2 * MARGIN_MM;
-        var pxPerMm = CAP_WIDTH / contentWmm;
-        var pageHpx = Math.floor((PAGE_H_MM - 2 * MARGIN_MM) * pxPerMm);
+        var pageHmm = PAGE_H_MM - 2 * MARGIN_MM;
+        var basePageHpx = pageHmm * CAP_WIDTH / contentWmm;
+        var fotos = host.querySelector('.foto-section, .pdf-fotos');
+        var textHeight = function () {
+          return fotos ? fotos.getBoundingClientRect().top - host.getBoundingClientRect().top : host.scrollHeight;
+        };
+        // Reduz até MIN_FIT (layout mais largo, depois encolhido) para o texto caber na página 1.
+        var fit = 1;
+        for (var k = 1; k >= MIN_FIT - 0.001; k -= 0.05) {
+          host.style.width = (CAP_WIDTH / k) + 'px';
+          if (textHeight() <= basePageHpx / k) { fit = k; break; }
+          fit = 0;
+        }
+        if (!fit) { fit = 1; host.style.width = CAP_WIDTH + 'px'; }
+        var layoutW = CAP_WIDTH / fit;
+        var pxPerMm = layoutW / contentWmm;
+        var pageHpx = Math.floor(pageHmm * pxPerMm);
         var breaks = pageBreaks(host, pageHpx);
         var rect = host.getBoundingClientRect();
         var docTop = rect.top + window.pageYOffset;
@@ -136,9 +155,9 @@
           chain = chain.then(function () {
             return window.html2canvas(host, {
               scale: scale, backgroundColor: '#ffffff', logging: false, useCORS: true,
-              x: docLeft, y: docTop + y0, width: CAP_WIDTH, height: hPx,
+              x: docLeft, y: docTop + y0, width: Math.ceil(layoutW), height: hPx,
               scrollX: -window.pageXOffset, scrollY: -window.pageYOffset,
-              windowWidth: CAP_WIDTH
+              windowWidth: Math.ceil(layoutW)
             }).then(function (canvas) {
               if (i > 0) pdf.addPage();
               var img = canvas.toDataURL('image/jpeg', 0.92);
