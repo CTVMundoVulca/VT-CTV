@@ -399,8 +399,8 @@
 <div id="printOverlay">
   <div id="printBar">
     <button class="btn btn-ghost" onclick="closePrint()" style="color:#fff;border-color:#31445c">‹ Voltar</button>
-    <button class="btn btn-primary" onclick="doPrint()">🖨️ Imprimir / PDF</button>
-    <button class="btn btn-ghost" onclick="shareRDO()" style="color:#fff;border-color:#31445c">📤 Compartilhar</button>
+    <button class="btn btn-primary" id="rdoPdfBtn" onclick="shareRDO()">📄 Salvar / Compartilhar PDF</button>
+    <button class="btn btn-ghost" id="rdoPrintBtn" onclick="doPrint()" style="color:#fff;border-color:#31445c">🖨️ Imprimir</button>
   </div>
   <div id="printArea"></div>
 </div>
@@ -1479,6 +1479,28 @@ function gerarPDF() {
   document.getElementById('printArea').innerHTML = html;
   document.getElementById('printOverlay').classList.add('open');
   window.scrollTo(0, 0);
+  prepararPdfRDO();
+}
+let _rdoPdf = { file: null, token: 0 };
+function _setRdoPdfBtn(label, enabled) {
+  const b = document.getElementById('rdoPdfBtn');
+  b.textContent = label; b.disabled = !enabled; b.style.opacity = enabled ? '1' : '.6';
+}
+function prepararPdfRDO() {
+  const token = ++_rdoPdf.token;
+  _rdoPdf.file = null;
+  document.getElementById('rdoPrintBtn').style.display = CTVPdf.isStandaloneIOS() ? 'none' : '';
+  _setRdoPdfBtn('⏳ Gerando PDF...', false);
+  const nome = 'RDO_' + String(cur.numero || '').replace(/[\\/:*?"<>|#\s]+/g, '_') + '_' + (cur.data || '') + '.pdf';
+  CTVPdf.fromHtml(buildPrintHTML(), nome).then(f => {
+    if (token !== _rdoPdf.token) return;
+    _rdoPdf.file = f;
+    _setRdoPdfBtn('📄 Salvar / Compartilhar PDF', true);
+  }).catch(e => {
+    if (token !== _rdoPdf.token) return;
+    console.error('[RDO pdf]', e);
+    _setRdoPdfBtn('⚠ Falha ao gerar — tocar p/ tentar', true);
+  });
 }
 function buildPrintHTML() {
   const content = document.getElementById('printArea').innerHTML;
@@ -1512,28 +1534,14 @@ th{background:#0D1B2A;color:#fff;font-weight:600}
 .wm{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:4px;color:rgba(255,255,255,.01);pointer-events:none;z-index:-1}
 </style></head><body>${content}<div class="rdo-footer">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<div class="legal">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98. Autor: Glauber Dutra. Gerado em: ${ts}</div></div><div class="wm">CTV-CNPJ65601481000136-AUTOR-GLAUBER-DUTRA-${ts}</div><script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>`;
 }
-function isStandaloneMode() {
-  return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-}
 function doPrint() {
   window.print();
 }
-function openPrintWindow() {
-  doPrint();
-}
 function shareRDO() {
-  if (navigator.share) {
-    try {
-      var html = buildPrintHTML();
-      var blob = new Blob([html], {type:'text/html'});
-      var file = new File([blob], 'rdo.html', {type:'text/html'});
-      navigator.share({title:'RDO', files:[file]}).catch(function(){});
-      return;
-    } catch(e) {}
-  }
-  openPrintWindow();
+  if (_rdoPdf.file) { CTVPdf.deliver(_rdoPdf.file); return; }
+  if (!document.getElementById('rdoPdfBtn').disabled) prepararPdfRDO();
 }
-function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
+function closePrint() { _rdoPdf.token++; _rdoPdf.file = null; document.getElementById('printOverlay').classList.remove('open'); }
 
 /* ── CSV ── */
 function csvCell(v) { const s = String(v == null ? '' : v); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
@@ -1870,6 +1878,7 @@ bootLocal();   // sempre inicia local primeiro — upgrade para nuvem em backgro
   setInterval(function(){if(!_f||!document.body.contains(_f)){var d=document.createElement('div');d.id='ctv-copyright';d.style.cssText='text-align:center;padding:12px 16px 20px;font-size:10px;opacity:.55;line-height:1.4;color:gray';d.innerHTML='Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026';document.body.appendChild(d);_f=d;}},5000);
 })();
 </script>
+<script src="pdf-export.js"></script>
 <script src="app-update.js"></script>
 </body>
 </html>

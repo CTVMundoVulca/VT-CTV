@@ -1553,45 +1553,7 @@ function excluirRegistro() {
 function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtData(d) { if (!d) return ''; const p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
 function _openPrintWindow(html) {
-  var old = document.getElementById('_rptOvr'); if (old) old.remove();
-  var oldCSS = document.getElementById('_rptCSS'); if (oldCSS) oldCSS.remove();
-  var ovr = document.createElement('div'); ovr.id = '_rptOvr';
-  ovr.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch';
-  var bar = document.createElement('div'); bar.id = '_rptBar';
-  bar.style.cssText = 'position:sticky;top:0;z-index:1;background:#f5f5f5;padding:8px 14px;display:flex;gap:8px;border-bottom:1px solid #ddd';
-  var bV = document.createElement('button'); bV.textContent = '← Voltar';
-  bV.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#001a33;color:#fff';
-  var bP = document.createElement('button'); bP.textContent = '🖨 Imprimir / Salvar PDF';
-  bP.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#43a6ea;color:#fff';
-  bar.appendChild(bV); bar.appendChild(bP);
-  if (navigator.share) {
-    var bS = document.createElement('button'); bS.textContent = '📤 Compartilhar';
-    bS.style.cssText = 'padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#28a745;color:#fff';
-    bS.onclick = function() {
-      try { var blob = new Blob([html],{type:'text/html'}); var file = new File([blob],'relatorio.html',{type:'text/html'}); navigator.share({title:'Relatório',files:[file]}).catch(function(){}); }
-      catch(e) { showToast('Compartilhamento não disponível'); }
-    };
-    bar.appendChild(bS);
-  }
-  ovr.appendChild(bar);
-  var wrap = document.createElement('div'); wrap.id = '_rptWrap';
-  var parsed = new DOMParser().parseFromString(html, 'text/html');
-  parsed.querySelectorAll('style').forEach(function(s) {
-    var st = document.createElement('style');
-    st.textContent = s.textContent.replace(/\bbody\s*\{/g, '#_rptWrap{');
-    wrap.appendChild(st);
-  });
-  Array.from(parsed.body.children).forEach(function(el) {
-    if (el.classList && el.classList.contains('toolbar')) return;
-    if (el.tagName === 'SCRIPT') return;
-    wrap.appendChild(document.importNode(el, true));
-  });
-  ovr.appendChild(wrap); document.body.appendChild(ovr);
-  var pCSS = document.createElement('style'); pCSS.id = '_rptCSS';
-  pCSS.textContent = '@media print{body>*:not(#_rptOvr){display:none!important}#_rptOvr{position:static!important;overflow:visible!important;inset:auto!important;z-index:auto!important;background:#fff!important}#_rptBar{display:none!important}#_rptWrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:6mm;size:A4}}';
-  document.head.appendChild(pCSS);
-  bV.onclick = function() { ovr.remove(); pCSS.remove(); };
-  bP.onclick = function() { window.print(); };
+  CTVPdf.openReport(html);
 }
 
 function gerarPDF() {
@@ -1970,6 +1932,7 @@ bootLocal();   // sempre inicia local primeiro — upgrade para nuvem em backgro
   }
 </script>
 <div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script src="pdf-export.js"></script>
 <script src="app-update.js"></script>
 </body>
 </html>
