@@ -3,7 +3,7 @@
    atualização quando há rede) com fallback para o cache (offline).
    Demais assets = cache-first. Troque CACHE_VERSION ao publicar
    mudanças para forçar atualização nos aparelhos. */
-const CACHE_VERSION = 'ctv-campo-v126';
+const CACHE_VERSION = 'ctv-campo-v127';
 
 /* Caminhos relativos ao escopo do SW (funciona sob /vt-ctv/ no GitHub Pages) */
 const APP_SHELL = [
@@ -54,7 +54,12 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))))
+      // Só apaga caches DESTE app (prefixo ctv-campo-). O domínio ctvmundovulca.github.io
+      // é compartilhado com outros apps (ex.: portal AMT em /Correias-AMT-Benetech/):
+      // apagar tudo derrubava o modo offline deles a cada publicação deste app.
+      .then(keys => Promise.all(keys
+        .filter(k => k.startsWith('ctv-campo-') && k !== CACHE_VERSION)
+        .map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
