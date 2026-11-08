@@ -2106,9 +2106,20 @@ function migrarLocalParaNuvem() {
   try { local = JSON.parse(localStorage.getItem('ctv_ponto_local_backup') || 'null'); } catch (e) {}
   const arr = (local && local.sessoes) || [];
   if (!arr.length) { showToast('Nenhum registro local para enviar.'); return; }
-  if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a sua conta na nuvem?')) return;
-  Promise.all(arr.map(s => FB.setDoc(FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', s.id), JSON.parse(JSON.stringify(s)))))
-    .then(() => showToast('Registros enviados ✔️')).catch(() => showToast('Falha ao enviar alguns registros.'));
+  if (!confirm('Enviar ' + arr.length + ' registro(s) deste aparelho para a nuvem?\n\nSó vão os que ainda NÃO existem na nuvem. Nenhum registro que já está na nuvem será substituído.')) return;
+  // Nunca sobrescreve: confere a nuvem antes e só cria o que falta. Se a conferência falhar, não envia.
+  let novos = 0, mantidos = 0, falhas = 0;
+  Promise.all(arr.map(r => {
+    if (!r || !r.id) return null;
+    const ref = FB.doc(FB.fs, 'users', currentUser.uid, 'sessoes', r.id);
+    return FB.getDoc(ref).then(s => {
+      if (s.exists()) { mantidos++; return null; }
+      const c = JSON.parse(JSON.stringify(r));
+      return FB.setDoc(ref, c).then(() => { novos++;  });
+    }).catch(() => { falhas++; });
+  })).then(() => {
+    alert('Envio concluído:\n• ' + novos + ' enviado(s) para a nuvem\n• ' + mantidos + ' já estavam na nuvem (mantidos sem alteração)' + (falhas ? '\n• ' + falhas + ' não enviado(s): sem conexão ou sem permissão. Tente de novo depois.' : ''));
+  });
 }
 function updateModeUI() {
   const banner = document.getElementById('modeBanner'); if (banner) banner.style.display = (MODE === 'local') ? '' : 'none';
