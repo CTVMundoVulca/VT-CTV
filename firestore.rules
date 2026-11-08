@@ -1,0 +1,94 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════
+// Regras do Firestore — projeto Firebase "rdo-benetech" — CONTRATO SUZANO
+// (Apps CTV Campo: RDO, Emenda, Revestimento, Placa, Cronograma, Horários)
+//
+// NÃO publicar no projeto do AMT ("vulcaescala-amt"), e NUNCA publicar aqui
+// as regras do AMT: em 08/11/2026 as regras do AMT foram coladas neste
+// projeto por engano e bloquearam todos os apps da Suzano.
+//
+// Cópia da versão publicada em 08/10/2026 (restaurada em 08/11/2026).
+// Os e-mails foram ocultados porque este repositório é público. A cópia
+// integral, com os e-mails, está no Google Drive do responsável. Antes de
+// colar no console, troque cada marcador pelo e-mail real.
+// ═══════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAllowed() {
+      return request.auth != null && request.auth.token.email in [
+        '<<EMAIL_1: admin — ver cópia no Drive>>',
+        '<<EMAIL_2: admin — ver cópia no Drive>>',
+        '<<EMAIL_3 — ver cópia no Drive>>',
+        '<<EMAIL_4 — ver cópia no Drive>>',
+        '<<EMAIL_5 — ver cópia no Drive>>',
+        '<<EMAIL_6 — ver cópia no Drive>>',
+        '<<EMAIL_7 — ver cópia no Drive>>'
+      ];
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in [
+        '<<EMAIL_1: admin — ver cópia no Drive>>',
+        '<<EMAIL_2: admin — ver cópia no Drive>>'
+      ];
+    }
+
+    // ---- RDO (compartilhado) ----
+    match /rdos/{id} {
+      allow read, write: if isAllowed();
+    }
+    match /rdos/{id}/fotos/{fotoId} {
+      allow read, write: if isAllowed();
+    }
+
+    // ---- Registro de Emenda ----
+    match /emendas/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /emendas/{docId}/fotos/{fotoId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ---- Revestimento de Tambor ----
+    match /revestimentos/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /revestimentos/{docId}/fotos/{fotoId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ---- Listas compartilhadas (todas) ----
+    match /shared/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ---- Feriados (regra específica mantida) ----
+    match /shared/feriados {
+      allow read: if request.auth != null;
+      allow write: if isAllowed();
+    }
+
+    // ---- Ponto pessoal: cada pessoa é dona do próprio ----
+    match /users/{uid}/sessoes/{id} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---- Config pessoal (plantões etc.) ----
+    match /users/{uid}/config/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---- Admins leem o ponto pessoal de TODOS (collectionGroup) ----
+    match /{path=**}/sessoes/{id} {
+      allow read: if isAdmin();
+    }
+
+    // ---- Ponto da equipe (lançado pelo encarregado) ----
+    match /pontos_equipe/{id} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
