@@ -23,6 +23,7 @@ const APP_SHELL = [
   './icon-512-maskable.png',
   './apple-touch-icon.png',
   './logo-benetech.png',
+  './logo-ctv.png',
   './logo-suzano.png',
   './registro_emenda_ctv.html',
   './registro_revestimento_ctv.html',
