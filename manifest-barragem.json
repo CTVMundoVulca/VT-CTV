@@ -1,0 +1,18 @@
+{
+  "id": "./orcamento_barragem.html",
+  "name": "Barragem — Orçamentos",
+  "short_name": "Barragem",
+  "description": "Orçamentos de elétrica geral e climatização da Barragem. Funciona offline.",
+  "start_url": "./orcamento_barragem.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#023681",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-barragem-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-barragem-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-barragem-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
