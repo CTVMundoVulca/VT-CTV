@@ -3,38 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#001a33">
+<meta name="theme-color" content="#023681">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Orçamentos — Barragem</title>
 <style>
 :root {
-  --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
+  /* Cores da marca Barragem (amostradas do logo) */
+  --navy: #023681; --blue: #2076c1; --green: #037e45; --yellow: #fbb603;
+  --bg: #F4F7FB; --card: #FFFFFF;
   --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
-  --success: #10b981; --warn: #f59e0b; --danger: #ef4444;
+  --success: #037e45; --warn: #f59e0b; --danger: #dc2626;
   --radius: 12px;
 }
 html[data-dark="1"] {
   --bg: #0a0f1a; --card: #131a2b; --text: #e4e8f1; --text-light: #8892a4;
-  --border: #1e2a3f; --navy: #000d1a;
+  --border: #1e2a3f; --navy: #0b2a5e;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { max-width: 100vw; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 90px; overflow-x: hidden; }
-.topbar { background: var(--navy); color: #fff; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 90; }
-.topbar h1 { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.topbar h1 small { display: block; font-size: 11px; font-weight: 500; opacity: .7; }
-.icon-btn { background: var(--navy); border: 1px solid rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; flex: 0 0 auto; }
-.tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 80; }
+.hdr { position: sticky; top: 0; z-index: 90; }
+.topbar { background: #fff; color: var(--navy); padding: 8px 14px; padding-top: max(8px, env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; }
+.topbar img { height: 52px; width: auto; display: block; }
+.topbar h1 { font-size: 13px; font-weight: 800; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--navy); text-transform: uppercase; letter-spacing: .4px; }
+.stripe { height: 4px; background: linear-gradient(90deg, var(--green) 0 33.3%, var(--yellow) 33.3% 66.6%, var(--navy) 66.6% 100%); }
+.icon-btn { background: var(--navy); border: none; color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; flex: 0 0 auto; }
+.tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); }
 .tabs button { flex: 1; padding: 11px 4px; border: none; background: none; font-size: 13px; font-weight: 700; color: var(--text-light); border-bottom: 3px solid transparent; cursor: pointer; }
-.tabs button.on { color: var(--blue); border-bottom-color: var(--blue); }
+.tabs button.on { color: var(--navy); border-bottom-color: var(--yellow); }
+html[data-dark="1"] .tabs button.on { color: #fff; }
 .view { display: none; }
 .view.active { display: block; }
 .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding: 6px 10px; background: var(--navy); color: #fff; border-radius: 6px; }
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding: 6px 10px; background: var(--navy); color: #fff; border-radius: 6px; border-left: 5px solid var(--yellow); }
 .fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 8px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
 input, select, textarea { width: 100%; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; background: var(--bg); color: var(--text); font-family: inherit; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,166,234,.15); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(32,118,193,.18); }
 textarea { resize: vertical; min-height: 60px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row > div { flex: 1 1 calc(50% - 4px); min-width: 130px; }
@@ -57,7 +62,8 @@ html[data-dark="1"] .banner { background: #2a2210; color: #f5d38a; border-color:
 /* lista de orçamentos */
 .orc-item { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; background: var(--card); }
 .orc-item .main { flex: 1; min-width: 0; }
-.orc-item .num { font-size: 11px; font-weight: 800; color: var(--blue); }
+.orc-item .num { font-size: 11px; font-weight: 800; color: var(--green); }
+.orc-item { border-left: 4px solid var(--navy); }
 .orc-item .cli { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .orc-item .sub { font-size: 12px; color: var(--text-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .orc-item .val { font-weight: 800; font-size: 14px; white-space: nowrap; text-align: right; }
@@ -87,7 +93,7 @@ html[data-dark="1"] .banner { background: #2a2210; color: #f5d38a; border-color:
 .cat-row .main { flex: 1; min-width: 0; }
 .cat-row .p { font-weight: 800; white-space: nowrap; }
 .cat-row .zero { color: var(--danger); }
-.fab { position: fixed; right: 16px; bottom: max(18px, env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 50%; background: var(--blue); color: #fff; border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,.25); cursor: pointer; z-index: 85; }
+.fab { position: fixed; right: 16px; bottom: max(18px, env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 50%; background: var(--green); color: #fff; border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,.25); cursor: pointer; z-index: 85; }
 
 /* modal */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
@@ -95,27 +101,31 @@ html[data-dark="1"] .banner { background: #2a2210; color: #f5d38a; border-color:
 .modal .box { background: var(--card); width: 100%; max-width: 560px; border-radius: 16px 16px 0 0; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); max-height: 88vh; overflow: auto; }
 .modal h3 { font-size: 16px; margin-bottom: 8px; }
 .pick { padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
-.pick:active, .pick.sel { border-color: var(--blue); background: rgba(67,166,234,.1); }
+.pick:active, .pick.sel { border-color: var(--green); background: rgba(3,126,69,.08); }
 
-#authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+#authOverlay { position: fixed; inset: 0; z-index: 500; background: linear-gradient(160deg, var(--navy), #011d47); display: none; align-items: center; justify-content: center; padding: 24px; }
 #authOverlay.open { display: flex; }
 #authOverlay .box { background: var(--card); border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; }
 #toast { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%); background: #111; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; z-index: 999; display: none; max-width: 90vw; text-align: center; }
+.auth-logo { display: block; width: 200px; max-width: 70%; margin: 0 auto 10px; }
 .logo-prev { max-height: 60px; max-width: 200px; display: block; margin: 6px 0; }
 </style>
 </head>
 <body>
 
+<div class="hdr">
 <div class="topbar">
-  <div style="flex:1;min-width:0"><h1 id="topTitle">Barragem<small>Orçamentos de serviços elétricos</small></h1></div>
+  <img src="logo-barragem.png" alt="Barragem — Elétrica Geral e Climatização">
+  <h1 id="topTitle">Orçamentos</h1>
   <button class="icon-btn" id="btnBack" style="display:none" onclick="fecharEditor()" aria-label="Voltar">←</button>
   <button class="icon-btn" onclick="toggleDark()" aria-label="Tema">◐</button>
 </div>
-
+<div class="stripe"></div>
 <div class="tabs" id="tabs">
   <button data-v="list" class="on" onclick="showTab('list')">Orçamentos</button>
   <button data-v="cat" onclick="showTab('cat')">Catálogo</button>
   <button data-v="emp" onclick="showTab('emp')">Empresa</button>
+</div>
 </div>
 
 <div id="modeBanner" class="banner" style="display:none">Modo local: os orçamentos ficam salvos neste aparelho. Quando a nuvem for conectada, eles serão enviados automaticamente.</div>
@@ -223,7 +233,7 @@ html[data-dark="1"] .banner { background: #2a2210; color: #f5d38a; border-color:
     <label class="fld">E-mail</label><input id="empEmail" type="email">
     <label class="fld">Endereço</label><input id="empEnd">
     <label class="fld">Responsável técnico</label><input id="empResp">
-    <label class="fld">Logo (aparece no PDF)</label>
+    <label class="fld">Logo do PDF (em branco = logo padrão da Barragem)</label>
     <img id="empLogoPrev" class="logo-prev" alt="" style="display:none">
     <input type="file" id="empLogoFile" accept="image/*" onchange="carregarLogo(this)">
     <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="removerLogo()">Remover logo</button>
@@ -286,7 +296,8 @@ html[data-dark="1"] .banner { background: #2a2210; color: #f5d38a; border-color:
 <!-- ═════ LOGIN ═════ -->
 <div id="authOverlay">
   <div class="box">
-    <h3 style="margin-bottom:4px">Barragem — Orçamentos</h3>
+    <img class="auth-logo" src="logo-barragem.png" alt="Barragem">
+    <h3 style="margin-bottom:4px;text-align:center;color:var(--navy)">Orçamentos</h3>
     <p class="muted" style="margin-bottom:10px">Entre para sincronizar os orçamentos na nuvem.</p>
     <label class="fld">E-mail</label><input id="authEmail" type="email" autocomplete="username">
     <label class="fld">Senha</label><input id="authPass" type="password" autocomplete="current-password">
@@ -351,6 +362,7 @@ let EMP = Object.assign({}, EMPRESA_PADRAO);
 let cur = null;           // orçamento em edição
 let formDirty = false;
 let pickSel = null;
+let LOGO_PADRAO = '';     // logo-barragem.png em base64, usado no PDF quando nenhum logo foi enviado
 let catEditId = null;
 
 let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], localReady = false, booted = false;
@@ -684,7 +696,7 @@ function renderEmpresa() {
   $('empEmail').value = EMP.email || ''; $('empEnd').value = EMP.end || ''; $('empResp').value = EMP.resp || '';
   $('empValidade').value = EMP.validade || ''; $('empGarantia').value = EMP.garantia || '';
   $('empPagto').value = EMP.pagto || ''; $('empObs').value = EMP.obs || '';
-  const p = $('empLogoPrev'); if (EMP.logo) { p.src = EMP.logo; p.style.display = ''; } else { p.removeAttribute('src'); p.style.display = 'none'; }
+  const p = $('empLogoPrev'); p.src = EMP.logo || 'logo-barragem.png'; p.style.display = '';
   $('contaCard').style.display = (MODE === 'cloud' && currentUser) ? '' : 'none';
   if (currentUser) $('contaEmail').textContent = 'Conectado como ' + (currentUser.email || '');
 }
@@ -722,6 +734,7 @@ function relatorioHTML(o) {
     '<tr><td>' + esc(it.desc) + '</td><td class="c">' + esc(fmtQtd(it.qtd)) + ' ' + esc(it.un) + '</td><td class="r">' + brl(it.preco) + '</td><td class="r">' + brl(round2(num(it.qtd) * num(it.preco))) + '</td></tr>').join('');
   const mat = linhas('material'), srv = linhas('servico');
   const cab = '<tr><th>Descrição</th><th class="c">Qtd.</th><th class="r">Valor unit.</th><th class="r">Total</th></tr>';
+  const logo = EMP.logo || LOGO_PADRAO;
   const empLinha = [EMP.cnpj && ('CNPJ ' + esc(EMP.cnpj)), EMP.tel && esc(EMP.tel), EMP.email && esc(EMP.email)].filter(Boolean).join(' · ');
   const cond = [
     o.validade ? '<li><b>Validade da proposta:</b> ' + o.validade + ' dias (até ' + addDias(o.data, o.validade) + ')</li>' : '',
@@ -731,21 +744,23 @@ function relatorioHTML(o) {
   ].join('');
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Orcamento ' + esc(o.numero) + ' ' + esc(o.cliente.nome) + '</title><style>'
     + 'body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:12px;margin:0;padding:24px;background:#fff;width:760px;max-width:100%}'
-    + '.hd{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:3px solid #001a33;padding-bottom:12px}'
-    + '.hd img{max-height:64px;max-width:180px}.hd .e{font-size:11px;color:#444;line-height:1.5}.hd .e b{font-size:16px;color:#001a33;display:block}'
-    + '.tit{background:#001a33;color:#fff;padding:10px 14px;margin:16px 0 12px;display:flex;justify-content:space-between;font-size:15px;font-weight:bold}'
-    + '.box{border:1px solid #dde1e7;border-radius:6px;padding:10px 12px;margin-bottom:12px}.box h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;color:#43a6ea;letter-spacing:.4px}'
+    + '.hd{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:10px}'
+    + '.hd img{max-height:90px;max-width:200px}.hd .e{font-size:11px;color:#444;line-height:1.5;text-align:right}.hd .e b{font-size:16px;color:#023681;display:block}'
+    + '.stripe{display:flex;height:5px}.stripe i{flex:1}.stripe i:nth-child(1){background:#037e45}.stripe i:nth-child(2){background:#fbb603}.stripe i:nth-child(3){background:#023681}'
+    + '.tit{background:#023681;color:#fff;padding:10px 14px;margin:14px 0 12px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px;font-weight:bold;border-left:6px solid #fbb603}'
+    + '.box{border:1px solid #dde1e7;border-radius:6px;padding:10px 12px;margin-bottom:12px}.box h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;color:#037e45;letter-spacing:.4px}'
     + '.g{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}'
-    + 'table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#eef3f8;color:#001a33;text-align:left;padding:7px 8px;font-size:11px;border-bottom:2px solid #43a6ea}'
+    + 'table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#eaf1fa;color:#023681;text-align:left;padding:7px 8px;font-size:11px;border-bottom:2px solid #2076c1}'
     + 'td{padding:7px 8px;border-bottom:1px solid #e5e7eb;vertical-align:top}.c{text-align:center;white-space:nowrap}.r{text-align:right;white-space:nowrap}'
-    + '.sec{font-weight:bold;color:#001a33;margin:10px 0 4px;font-size:12px;text-transform:uppercase}'
-    + '.tot{width:300px;margin-left:auto}.tot td{border:none;padding:4px 8px}.tot .f td{border-top:2px solid #001a33;font-size:15px;font-weight:bold;color:#001a33;padding-top:8px}'
+    + '.sec{font-weight:bold;color:#023681;margin:10px 0 4px;font-size:12px;text-transform:uppercase}'
+    + '.tot{width:300px;margin-left:auto}.tot td{border:none;padding:4px 8px}.tot .f td{border-top:2px solid #023681;font-size:15px;font-weight:bold;color:#023681;padding-top:8px}'
     + 'ul{margin:0;padding-left:18px}li{margin:2px 0}.obs{white-space:pre-wrap}'
     + '.ass{display:flex;gap:40px;margin-top:48px}.ass div{flex:1;border-top:1px solid #333;text-align:center;padding-top:6px;font-size:11px}'
     + '.ft{margin-top:24px;text-align:center;font-size:9px;color:#888}'
     + '</style></head><body>'
-    + '<div class="hd"><div class="e"><b>' + esc(EMP.nome || 'Barragem') + '</b>' + (empLinha ? empLinha + '<br>' : '') + (EMP.end ? esc(EMP.end) : '') + '</div>'
-    + (EMP.logo ? '<img src="' + EMP.logo + '" alt="">' : '') + '</div>'
+    + '<div class="hd">' + (logo ? '<img src="' + logo + '" alt="">' : '')
+    + '<div class="e"><b>' + esc(EMP.nome || 'Barragem') + '</b>' + (empLinha ? empLinha + '<br>' : '') + (EMP.end ? esc(EMP.end) : '') + '</div></div>'
+    + '<div class="stripe"><i></i><i></i><i></i></div>'
     + '<div class="tit"><span>ORÇAMENTO Nº ' + esc(o.numero) + '</span><span>' + esc(fmtData(o.data)) + '</span></div>'
     + '<div class="box"><h4>Cliente</h4><div class="g"><div><b>Nome:</b> ' + esc(o.cliente.nome) + '</div>'
     + (o.cliente.doc ? '<div><b>CPF/CNPJ:</b> ' + esc(o.cliente.doc) + '</div>' : '')
@@ -966,6 +981,11 @@ function resetSenha() {
 function logout() { if (FB && confirm('Sair da conta?')) FB.signOut(FB.auth); }
 
 /* ═══ BOOT ═══ */
+(function carregarLogoPadrao() {
+  fetch('logo-barragem.png').then(r => r.blob()).then(b => {
+    const rd = new FileReader(); rd.onload = () => { LOGO_PADRAO = rd.result; }; rd.readAsDataURL(b);
+  }).catch(() => {});
+})();
 $('view-editor').addEventListener('input', () => { formDirty = true; });
 window.addEventListener('beforeunload', e => { if (cur && formDirty) { e.preventDefault(); e.returnValue = ''; } });
 window.__BARRAGEM = { wantCloud: isConfigured(), bootLocal, upgradeToCloud, firebaseConfig };

@@ -3,7 +3,7 @@
    atualização quando há rede) com fallback para o cache (offline).
    Demais assets = cache-first. Troque CACHE_VERSION ao publicar
    mudanças para forçar atualização nos aparelhos. */
-const CACHE_VERSION = 'ctv-campo-v132';
+const CACHE_VERSION = 'ctv-campo-v133';
 
 /* Caminhos relativos ao escopo do SW (funciona sob /vt-ctv/ no GitHub Pages) */
 const APP_SHELL = [
@@ -34,7 +34,8 @@ const APP_SHELL = [
   './icon-emenda.webp',
   './icon-revestimento.webp',
   './registro_placa_ctv.html',
-  './orcamento_barragem.html'
+  './orcamento_barragem.html',
+  './logo-barragem.png'
 ];
 
 self.addEventListener('message', event => {
