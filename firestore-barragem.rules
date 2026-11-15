@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // ═══════════════════════════════════════════════════════════════════════
-// Regras do Firestore — projeto Firebase PRÓPRIO DA BARRAGEM
+// Regras do Firestore — projeto Firebase PRÓPRIO DA BARRAGEM: AppBarragem (appbarragem-8138e)
 // App: orcamento_barragem.html (coleções barragem_orcamentos e barragem_config)
 //
 // NÃO publicar no "rdo-benetech" (Suzano) nem no "vulcaescala-amt" (AMT).
