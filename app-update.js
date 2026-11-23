@@ -19,6 +19,7 @@
     if (ed && ed.classList.contains('active')) return true;
     var po = document.getElementById('printOverlay');
     if (po && po.classList.contains('open')) return true;
+    if (document.querySelector('.modal-bg.open')) return true;
     return false;
   }
 

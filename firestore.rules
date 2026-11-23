@@ -8,7 +8,8 @@ rules_version = '2';
 // as regras do AMT: em 08/11/2026 as regras do AMT foram coladas neste
 // projeto por engano e bloquearam todos os apps da Suzano.
 //
-// Cópia da versão publicada em 08/10/2026 (restaurada em 08/11/2026).
+// Base: versão publicada em 08/10/2026 (restaurada em 08/11/2026), sem alterações.
+// 23/11/2026: acrescentados os blocos da Programação Suzano (prog_suzano_*), no fim.
 // Os e-mails foram ocultados porque este repositório é público. A cópia
 // integral, com os e-mails, está no Google Drive do responsável. Antes de
 // colar no console, troque cada marcador pelo e-mail real.
@@ -89,6 +90,97 @@ service cloud.firestore {
     // ---- Ponto da equipe (lançado pelo encarregado) ----
     match /pontos_equipe/{id} {
       allow read, write: if isAdmin();
+    }
+
+    // ═══ PROGRAMAÇÃO SUZANO (programacao_suzano.html) — acrescentado em 23/11/2026 ═══
+    // Suzano informa paradas e previsões de atividades; a equipe CTV (isAllowed) confirma ou recusa.
+    // Acesso da Suzano: e-mails listados em prog_suzano_config/acessos (mantidos pelos admins no app).
+    function isSuzano() {
+      return request.auth != null && request.auth.token.email != null
+        && exists(/databases/$(database)/documents/prog_suzano_config/acessos)
+        && request.auth.token.email.lower() in get(/databases/$(database)/documents/prog_suzano_config/acessos).data.emails;
+    }
+    function podeProg() { return isAllowed() || isSuzano(); }
+
+    match /prog_suzano_config/acessos {
+      allow read: if isAllowed();
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['emails', 'atualizadoEm', 'atualizadoPor'])
+        && request.resource.data.emails is list
+        && request.resource.data.emails.size() <= 100;
+    }
+    match /prog_suzano_config/geral {
+      allow read: if isAllowed();
+      allow write: if isAllowed()
+        && request.resource.data.keys().hasOnly(['efetivoBase', 'atualizadoEm', 'atualizadoPor'])
+        && request.resource.data.efetivoBase is number
+        && request.resource.data.efetivoBase >= 0 && request.resource.data.efetivoBase <= 200;
+    }
+
+    function progBaseValida(id, status) {
+      let d = request.resource.data;
+      return d.id == id
+        && d.area is string && d.area.size() <= 60
+        && d.linhas is list && d.linhas.size() <= 60
+        && d.inicio is string && d.inicio.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.solicitante is string && d.solicitante.size() > 0 && d.solicitante.size() <= 80
+        && d.contato is string && d.contato.size() <= 80
+        && d.status in status
+        && d.resposta is string && d.resposta.size() <= 300
+        && d.criadoUid is string && d.criadoEm is string && d.criadoPor is string
+        && d.atualizadoEm is string && d.atualizadoPor is string;
+    }
+    // Suzano só cria pendente e, depois, só edita/cancela o que é seu enquanto estiver pendente.
+    function progCreateOk() {
+      return request.resource.data.criadoUid == request.auth.uid
+        && (isAllowed() || (request.resource.data.status == 'pendente' && request.resource.data.resposta == ''));
+    }
+    function progUpdateOk() {
+      return request.resource.data.criadoUid == resource.data.criadoUid
+        && request.resource.data.criadoEm == resource.data.criadoEm
+        && (isAllowed()
+            || (resource.data.criadoUid == request.auth.uid
+                && resource.data.status == 'pendente'
+                && request.resource.data.status in ['pendente', 'cancelada']
+                && request.resource.data.resposta == resource.data.resposta));
+    }
+
+    match /prog_suzano_paradas/{id} {
+      allow read: if podeProg();
+      allow create: if podeProg() && paradaSuzValida(id) && progCreateOk();
+      allow update: if podeProg() && paradaSuzValida(id) && progUpdateOk();
+      allow delete: if isAdmin();
+    }
+    function paradaSuzValida(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['id', 'tipo', 'area', 'linhas', 'inicio', 'fim', 'descricao', 'solicitante', 'contato',
+                               'status', 'resposta', 'criadoUid', 'criadoEm', 'criadoPor', 'atualizadoEm', 'atualizadoPor'])
+        && progBaseValida(id, ['pendente', 'confirmada', 'recusada', 'cancelada'])
+        && d.tipo in ['geral', 'parcial']
+        && d.fim is string && d.fim.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && d.fim >= d.inicio
+        && d.descricao is string && d.descricao.size() <= 500;
+    }
+
+    match /prog_suzano_previsoes/{id} {
+      allow read: if podeProg();
+      allow create: if podeProg() && previsaoSuzValida(id) && progCreateOk();
+      allow update: if podeProg() && previsaoSuzValida(id) && progUpdateOk();
+      allow delete: if isAdmin();
+    }
+    function previsaoSuzValida(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['id', 'descricao', 'servico', 'prioridade', 'area', 'linhas', 'inicio', 'dias', 'pessoas', 'om',
+                               'paradaId', 'obs', 'solicitante', 'contato', 'status', 'resposta',
+                               'criadoUid', 'criadoEm', 'criadoPor', 'atualizadoEm', 'atualizadoPor'])
+        && progBaseValida(id, ['pendente', 'confirmada', 'recusada', 'cancelada', 'realizada'])
+        && d.descricao is string && d.descricao.size() > 0 && d.descricao.size() <= 200
+        && d.servico is string && d.servico.size() <= 40
+        && d.prioridade in ['normal', 'alta', 'urgente']
+        && d.dias is int && d.dias >= 1 && d.dias <= 60
+        && d.pessoas is int && d.pessoas >= 1 && d.pessoas <= 40
+        && d.om is string && d.om.size() <= 20
+        && d.paradaId is string && d.paradaId.size() <= 40
+        && d.obs is string && d.obs.size() <= 500;
     }
   }
 }
