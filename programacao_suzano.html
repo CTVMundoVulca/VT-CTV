@@ -1,0 +1,934 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOFTWARE PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS              ║
+  ║  © 2024-2026 CTV Consultoria Técnica em Vulcanização               ║
+  ║  CNPJ: 65.601.481/0001-36                                         ║
+  ║  Autor: Glauber Dutra                                              ║
+  ║                                                                    ║
+  ║  Este software é protegido pela Lei nº 9.609/98 (Lei do Software)  ║
+  ║  e pela Lei nº 9.610/98 (Lei de Direitos Autorais).                ║
+  ║  É vedada a reprodução, distribuição, modificação ou utilização    ║
+  ║  deste código, total ou parcialmente, sem autorização expressa     ║
+  ║  por escrito do titular dos direitos.                              ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="author" content="Glauber Dutra — CTV Consultoria Técnica em Vulcanização">
+<meta name="copyright" content="© 2024-2026 CTV Consultoria Técnica em Vulcanização — CNPJ 65.601.481/0001-36">
+<meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
+<meta name="theme-color" content="#001a33">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Programação Suzano — CTV</title>
+<style>
+:root {
+  --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
+  --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
+  --success: #10b981; --warn: #f59e0b; --danger: #ef4444; --violet: #7c3aed;
+  --radius: 12px;
+}
+html[data-dark="1"] {
+  --bg: #0a0f1a; --card: #131a2b; --text: #e4e8f1; --text-light: #8892a4;
+  --border: #1e2a3f; --navy: #000d1a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { max-width: 100vw; -webkit-text-size-adjust: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; padding-bottom: 84px; overflow-x: hidden; }
+.topbar { background: var(--navy); color: #fff; padding: 12px 14px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 90; }
+.topbar h1 { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-btn { background: var(--blue); color: #fff; border: none; padding: 8px 13px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.icon-btn { background: var(--navy); border: 1px solid rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card h2 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.hint { font-size: 12px; color: var(--text-light); line-height: 1.4; }
+.fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 10px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
+input, select, textarea { width: 100%; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; background: var(--bg); color: var(--text); font-family: inherit; }
+textarea { min-height: 70px; resize: vertical; }
+.row2 { display: flex; gap: 8px; } .row2 > * { flex: 1; min-width: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: .5; }
+.month-nav { display: flex; gap: 8px; margin-bottom: 10px; }
+.month-nav .btn { flex: 0 0 52px; font-size: 18px; padding: 10px 0; }
+.month-nav .month-label { flex: 1; font-size: 16px; font-weight: 800; }
+/* calendário */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal .dow { font-size: 11px; font-weight: 700; text-align: center; color: var(--text-light); padding: 2px 0; }
+.cal .day { min-height: 58px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); padding: 3px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cal .day.out { opacity: .35; }
+.cal .day.hoje { border: 2px solid var(--navy); }
+html[data-dark="1"] .cal .day.hoje { border-color: var(--blue); }
+.cal .num { font-size: 12px; font-weight: 800; }
+.cal .bar { height: 5px; border-radius: 3px; }
+.bar.geral { background: var(--danger); } .bar.parcial { background: var(--warn); }
+.bar.pend { opacity: .45; background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,.7) 3px 5px); }
+.cal .ppl { font-size: 10px; font-weight: 700; color: var(--violet); margin-top: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 11px; color: var(--text-light); margin-top: 10px; }
+.legend i { display: inline-block; width: 14px; height: 6px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+/* listas */
+.lst-count { font-size: 13px; color: var(--text-light); margin: 4px 2px 8px; }
+.item { border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: var(--radius); padding: 11px 13px; margin: 8px 0; cursor: pointer; background: var(--card); }
+.item.geral { border-left-color: var(--danger); } .item.parcial { border-left-color: var(--warn); } .item.ativ { border-left-color: var(--violet); }
+.item h3 { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.item .meta { font-size: 12px; color: var(--text-light); margin-top: 3px; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chip { font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
+.st { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; margin-left: 4px; vertical-align: middle; }
+.st.pendente { background: #fef3c7; color: #92400e; } .st.confirmada { background: #d1fae5; color: #065f46; }
+.st.recusada { background: #fee2e2; color: #991b1b; } .st.cancelada { background: #e5e7eb; color: #374151; }
+.st.realizada { background: #dbeafe; color: #1e40af; }
+.st.sync { background: #ede9fe; color: #5b21b6; }
+/* tabela de efetivo */
+table.ef { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.ef th, table.ef td { padding: 7px 5px; border-bottom: 1px solid var(--border); text-align: center; }
+table.ef th { font-size: 11px; color: var(--text-light); text-transform: uppercase; }
+table.ef td:first-child, table.ef th:first-child { text-align: left; }
+.sobra { font-weight: 800; color: var(--success); } .falta { font-weight: 800; color: var(--danger); }
+/* modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--card); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+.modal h3 { font-size: 17px; margin-bottom: 4px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.modal-actions .btn { flex: 1; }
+.picker { max-height: 210px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; }
+.picker label { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+.picker input { width: auto; margin-top: 3px; }
+/* navegação inferior */
+.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 80; padding-bottom: env(safe-area-inset-bottom); }
+.nav button { flex: 1; background: none; border: none; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+.nav button span { font-size: 20px; }
+.nav button.active { color: var(--blue); }
+.nav .badge { position: absolute; top: 4px; right: calc(50% - 22px); background: var(--danger); color: #fff; font-size: 10px; border-radius: 999px; padding: 0 5px; min-width: 16px; }
+.view { display: none; } .view.active { display: block; }
+#authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
+#authOverlay.open { display: flex; }
+.auth-card { background: var(--card); border-radius: 16px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+.toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: .3s; z-index: 999; pointer-events: none; max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="authOverlay">
+  <div class="auth-card">
+    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
+    <h3 style="margin-bottom:6px">Programação Suzano — Aracruz</h3>
+    <p class="hint" id="authMsg" style="margin-bottom:16px">Entre com o e-mail e a senha fornecidos pela CTV.</p>
+    <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="authPass" placeholder="Senha" autocomplete="current-password" style="margin-bottom:12px">
+    <button class="btn btn-primary btn-block" onclick="loginEmail()" style="margin-bottom:10px">Entrar</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetSenha()" style="width:100%;border:none;color:var(--text-light)">Esqueci minha senha</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
+  <h1>Programação Suzano</h1>
+  <span id="userChip" style="display:none;align-items:center;gap:6px;color:#ccc;font-size:11px">
+    <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="icon-btn" onclick="logout()" title="Sair" style="width:32px;height:32px;font-size:14px">⏻</button>
+  </span>
+  <button class="icon-btn" id="darkBtn" onclick="toggleDark()" title="Modo escuro">🌙</button>
+</div>
+
+<div class="card" id="modeBanner" style="display:none;padding:11px 14px">
+  <div style="color:#8a5a00;font-size:12px">📴 Sem conexão com a nuvem — o que você lançar fica salvo neste aparelho e é enviado quando a conexão voltar.</div>
+</div>
+<div class="card" id="syncCard" style="display:none;padding:11px 14px">
+  <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+    <span id="syncDot" style="width:9px;height:9px;border-radius:50%;background:#999;flex:0 0 auto"></span>
+    <span id="syncText" style="flex:1;color:var(--text-light);line-height:1.35"></span>
+  </div>
+</div>
+
+<!-- ═══ CALENDÁRIO ═══ -->
+<div class="view active" id="view-cal">
+  <div class="card">
+    <div class="month-nav">
+      <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+      <button class="btn btn-ghost month-label" id="mesLabelCal" onclick="irMesAtual()" title="Voltar ao mês atual"></button>
+      <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <div class="cal" id="calGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--danger)"></i>Parada geral</span>
+      <span><i style="background:var(--warn)"></i>Parada parcial</span>
+      <span><i style="background:var(--warn);opacity:.45"></i>Pendente</span>
+      <span style="color:var(--violet);font-weight:700">👷 pessoas previstas no dia</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row2">
+      <button class="btn btn-primary" onclick="abrirParada()">+ Informar parada</button>
+      <button class="btn btn-primary" style="background:var(--violet)" onclick="abrirAtividade()">+ Prever atividade</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PARADAS ═══ -->
+<div class="view" id="view-paradas">
+  <div class="card">
+    <h2>Paradas</h2>
+    <div class="month-nav">
+      <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+      <button class="btn btn-ghost month-label" id="mesLabelPar" onclick="irMesAtual()"></button>
+      <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <button class="btn btn-primary btn-block" style="padding:13px" onclick="abrirParada()">+ Informar parada</button>
+  </div>
+  <div class="card">
+    <input type="search" id="buscaPar" placeholder="Buscar área, linha/TAG ou descrição" oninput="renderParadas()" autocomplete="off">
+    <div class="lst-count" id="countPar" style="margin-top:10px"></div>
+    <div id="listPar"></div>
+  </div>
+</div>
+
+<!-- ═══ ATIVIDADES PREVISTAS ═══ -->
+<div class="view" id="view-ativ">
+  <div class="card">
+    <h2>Atividades previstas</h2>
+    <div class="month-nav">
+      <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+      <button class="btn btn-ghost month-label" id="mesLabelAtv" onclick="irMesAtual()"></button>
+      <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <button class="btn btn-primary btn-block" style="padding:13px;background:var(--violet)" onclick="abrirAtividade()">+ Prever atividade</button>
+  </div>
+  <div class="card">
+    <input type="search" id="buscaAtv" placeholder="Buscar atividade, área, linha/TAG ou OM" oninput="renderAtividades()" autocomplete="off">
+    <div class="lst-count" id="countAtv" style="margin-top:10px"></div>
+    <div id="listAtv"></div>
+  </div>
+</div>
+
+<!-- ═══ EFETIVO (só CTV) ═══ -->
+<div class="view" id="view-efetivo">
+  <div class="card">
+    <h2>Demanda de efetivo</h2>
+    <p class="hint">Soma das atividades previstas (pendentes e confirmadas) nas próximas semanas. Use para saber quando sobra efetivo para outros contratos.</p>
+    <label class="fld" for="efBase">Efetivo disponível no contrato Suzano (pessoas por dia)</label>
+    <div class="row2">
+      <input type="number" id="efBase" min="0" max="200" inputmode="numeric" placeholder="ex.: 8">
+      <button class="btn btn-primary" style="flex:0 0 auto" onclick="salvarEfetivoBase()">Salvar</button>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <table class="ef">
+      <thead><tr><th>Semana</th><th>Pessoas-dia</th><th>Pico/dia</th><th>Sobra</th></tr></thead>
+      <tbody id="efBody"></tbody>
+    </table>
+    <p class="hint" style="margin-top:8px">Pessoas-dia = pessoas × dias de cada atividade. Pico = maior número de pessoas num mesmo dia da semana. Sobra = efetivo disponível − pico. Entre parênteses: quanto ainda está pendente de confirmação.</p>
+  </div>
+  <div class="card" id="cardAcessos" style="display:none">
+    <h2>Acessos da Suzano</h2>
+    <p class="hint">E-mails da Suzano que podem informar paradas e atividades. Crie a conta (e-mail e senha) em Firebase → Authentication → Adicionar usuário e depois inclua o e-mail aqui.</p>
+    <div class="row2" style="margin-top:10px">
+      <input type="email" id="novoAcesso" placeholder="nome@suzano.com.br" autocomplete="off">
+      <button class="btn btn-primary" style="flex:0 0 auto" onclick="adicionarAcesso()">Incluir</button>
+    </div>
+    <div id="listaAcessos" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="active" data-view="cal" onclick="switchView('cal')"><span>📅</span>Calendário</button>
+  <button data-view="paradas" onclick="switchView('paradas')"><span>🛑</span>Paradas<i class="badge" id="badgePar" style="display:none"></i></button>
+  <button data-view="ativ" onclick="switchView('ativ')"><span>🛠️</span>Atividades<i class="badge" id="badgeAtv" style="display:none"></i></button>
+  <button data-view="efetivo" id="navEfetivo" style="display:none" onclick="switchView('efetivo')"><span>👷</span>Efetivo</button>
+</div>
+
+<!-- ═══ MODAL: PARADA ═══ -->
+<div class="modal-bg" id="mParada">
+  <div class="modal">
+    <h3 id="mParadaTit">Informar parada</h3>
+    <p class="hint">Dias em que as linhas ficam paradas para manutenção.</p>
+    <label class="fld">Tipo</label>
+    <select id="pTipo"><option value="geral">Parada geral</option><option value="parcial">Parada parcial</option></select>
+    <label class="fld">Área</label>
+    <input id="pArea" list="dlAreas" maxlength="60" placeholder="Ex.: Pátio de Madeira">
+    <div class="row2">
+      <div><label class="fld">Início</label><input type="date" id="pInicio"></div>
+      <div><label class="fld">Fim</label><input type="date" id="pFim"></div>
+    </div>
+    <label class="fld">Linhas / equipamentos parados</label>
+    <div id="pLinhasSel" class="chips"></div>
+    <input type="search" id="pBusca" placeholder="Buscar TAG ou linha (ex.: L1, TORAS, 23-132)" oninput="renderPicker('p')" autocomplete="off" style="margin-top:6px">
+    <div class="picker" id="pPicker"></div>
+    <div class="row2" style="margin-top:6px">
+      <input id="pLivre" maxlength="60" placeholder="Outra linha/equipamento (texto livre)">
+      <button class="btn btn-ghost" style="flex:0 0 auto" onclick="addLivre('p')">Incluir</button>
+    </div>
+    <label class="fld">Observação</label>
+    <textarea id="pDesc" maxlength="500" placeholder="O que será feito na parada, horários, restrições…"></textarea>
+    <div class="row2">
+      <div><label class="fld">Solicitante</label><input id="pSolic" maxlength="80" placeholder="Seu nome"></div>
+      <div><label class="fld">Contato</label><input id="pContato" maxlength="80" placeholder="Ramal / telefone"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('mParada')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarParada()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ATIVIDADE ═══ -->
+<div class="modal-bg" id="mAtiv">
+  <div class="modal">
+    <h3 id="mAtivTit">Prever atividade</h3>
+    <p class="hint">Atividade prevista para a equipe da CTV, com a estimativa de pessoas e dias.</p>
+    <label class="fld">Atividade</label>
+    <input id="aDesc" maxlength="200" placeholder="Ex.: Troca da correia do 23-132">
+    <div class="row2">
+      <div><label class="fld">Serviço</label><select id="aServico"></select></div>
+      <div><label class="fld">Prioridade</label><select id="aPrior"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+    </div>
+    <label class="fld">Área</label>
+    <input id="aArea" list="dlAreas" maxlength="60" placeholder="Ex.: Pátio de Madeira">
+    <label class="fld">Linhas / equipamentos</label>
+    <div id="aLinhasSel" class="chips"></div>
+    <input type="search" id="aBusca" placeholder="Buscar TAG ou linha" oninput="renderPicker('a')" autocomplete="off" style="margin-top:6px">
+    <div class="picker" id="aPicker"></div>
+    <div class="row2" style="margin-top:6px">
+      <input id="aLivre" maxlength="60" placeholder="Outra linha/equipamento (texto livre)">
+      <button class="btn btn-ghost" style="flex:0 0 auto" onclick="addLivre('a')">Incluir</button>
+    </div>
+    <div class="row2">
+      <div><label class="fld">Data prevista</label><input type="date" id="aInicio" onchange="renderParadaVinculo()"></div>
+      <div><label class="fld">Duração (dias)</label><input type="number" id="aDias" min="1" max="60" inputmode="numeric" value="1"></div>
+    </div>
+    <div class="row2">
+      <div><label class="fld">Pessoas (estimativa)</label><input type="number" id="aPessoas" min="1" max="40" inputmode="numeric" value="2"></div>
+      <div><label class="fld">OM (se houver)</label><input id="aOm" maxlength="20" inputmode="numeric"></div>
+    </div>
+    <label class="fld">Vinculada a uma parada</label>
+    <select id="aParada"></select>
+    <label class="fld">Observação</label>
+    <textarea id="aObs" maxlength="500"></textarea>
+    <div class="row2">
+      <div><label class="fld">Solicitante</label><input id="aSolic" maxlength="80" placeholder="Seu nome"></div>
+      <div><label class="fld">Contato</label><input id="aContato" maxlength="80" placeholder="Ramal / telefone"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('mAtiv')">Cancelar</button>
+      <button class="btn btn-primary" style="background:var(--violet)" onclick="salvarAtividade()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: DETALHE / DIA ═══ -->
+<div class="modal-bg" id="mDet">
+  <div class="modal">
+    <div id="detBody"></div>
+    <div class="modal-actions" id="detActions"></div>
+  </div>
+</div>
+
+<datalist id="dlAreas"></datalist>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ═══ CONFIG ═══ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9PMA7tmevHqpjYYWzREhfXmUgdTcJXg8",
+  authDomain: "rdo-benetech.firebaseapp.com",
+  projectId: "rdo-benetech",
+  storageBucket: "rdo-benetech.firebasestorage.app",
+  messagingSenderId: "784889553730",
+  appId: "1:784889553730:web:d0dcaad912a793a80f1edb"
+};
+const ADMIN_EMAILS = ['glauber.dutra@benetechbrasil.com.br', 'michael.lopes@benetechbrasil.com.br'];
+const COL_PAR = 'prog_suzano_paradas', COL_ATV = 'prog_suzano_previsoes';
+const STORE_KEY = 'ctv_progsuz_v1', PENDING_KEY = 'ctv_progsuz_pending', ROLE_KEY = 'ctv_progsuz_role';
+const SERVICOS = ['Troca de correia', 'Emenda', 'Reparo de correia', 'Revestimento de tambor', 'Inspeção', 'Preparação / logística', 'Outros'];
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+/* Transportadores de Aracruz (mesma lista do app Transportadores): [TAG, descrição] */
+const LINHAS = [["3070-23-3152-132","TRANSP. CORREIA ( 23-132 ) P/ CASCA L1"],["3070-23-3152-137","TRANSP. CORREIA ( 23-137 ) P/ CASCA L2"],["3070-23-3153-20","TRANSP. DE CORREIA ( 23-20 ) P/ CASCA"],["3070-23-3153-21","TRANSP. DE CORREIA ( 23-21 ) P/ CASCA"],["3070-23-3152-159","TRANSP. CORREIA ( 23-159 ) P/ TORAS L1"],["3070-23-3152-160","TRANSP. CORREIA ( 23-160 ) P/ TORAS L2"],["3070-23-3152-19","TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L1"],["3070-23-3152-148","TRANSP. CORREIA ( 23-148 ) P/ TORAS L2"],["3070-23-3152-3","TRANSP. DE CORREIA ( 23-3 ) P/ TORAS L3"],["3070-23-3153-59","TRANSP. CORREIA ( 23-59 ) P/ CASCAS L3"],["3070-23-3153-23","TRANSP. DE CORREIA ( 23-23 ) P/ CASCA"],["3070-23-3153-24","TRANSP. DE CORREIA ( 23-24 ) P/ RESÍDUOS"],["3070-23-3153-41","TRANSP. DE CORREIA ( 23-41 ) P/ CASCA"],["3070-23-3153-42","TRANSP. DE CORREIA ( 23-42 ) P/ CASCA"],["3070-23-3153-43","TRANSP. DE CORREIA ( 23-43 ) P/ CASCA"],["3070-23-3153-44","TRANSP. DE CORREIA ( 23-44 ) P/ CASCA"],["3070-23-3153-45","TRANSP. DE CORREIA ( 23-45 ) P/ CASCA"],["3070-23-3153-46","TRANSP. DE CORREIA ( 23-46 ) P/ CASCA"],["3070-23-3153-47","TRANSP. DE CORREIA ( 23-47 ) P/ CASCA"],["3070-23-3153-26","TRANSP. DE CORREIA ( 23-26 ) P/ CASCA"],["3070-23-3153-5","TRANSP CORR 23-5 MÓVEL/REVERSÍVEL  CASC"],["3070-23-3153-8","TRANSP. DE CORREIA ( 23-8 ) P/ CASCA"],["3070-23-3153-9","TRANSP. DE CORREIA ( 23-9 ) P/ CASCA"],["3070-23-3153-10","TRANSP. DE CORREIA ( 23-10 ) P/ CASCA"],["3070-23-3153-11","TRANSP. DE CORREIA ( 23-11 ) P/ CASCA"],["3070-23-3153-51","TRANSP. DE CORREIA ( 23-51 ) P/ CASCA"],["3070-23-3153-52","TRANSP. DE CORREIA ( 23-52 ) P/ CASCA"],["3070-23-3153-53","TRANSP. DE CORREIA ( 23-53 ) P/ CASCA"],["3070-23-3153-54","TRANSP. DE CORREIA ( 23-54 ) P/ CASCA"],["3070-23-3153-55","TRANSP. DE CORREIA ( 23-55 ) P/ CASCA"],["3070-23-3152-30","TRANSP CORR 23-30 P/ COLETA OVERS PENS"],["3070-23-3153-1","TRANSP CORREIA 23-1 P/ CASCAS E RESÍDUOS"],["3070-23-3174-12","CORREIA DE CASCAS SAÍDA ARRASTADOR L9"],["3070-23-3174-1","TRANSPORTADOR TORAS"],["3070-23-3174-6","TRANSPORTADOR DE CAVACOS"],["3070-23-3174-7","TRANSP CORREIAS CAVACO FAB C"],["3070-23-3152-17","TRANSP. DE CORREIA ( 23-17 ) P/ CAVACOS"],["3070-23-3152-18","TRANSP. DE CORREIA ( 23-18 ) P/ CAVACOS"],["3070-23-3152-20","TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS"],["3070-23-3152-25","TRANSP CORR 23-25 CAVACOS P/ DIGESTOR A"],["3070-23-3152-26","TRANSP CORR 23-26 CAVACOS P/ DIGESTOR A"],["3070-23-3152-27","TRANSP CORR 23-27 CAVACOS P/ DIGESTOR A"],["3070-20-3201-101","TRANSP CORREIA  CAVACOS P/ IMPBIN"],["3070-23-3152-155","TRANSP CORR 23-155 DESVIO CAV FB A P/ B"],["3070-23-3162-501","TRANSP. CORREIA ( 23-501 ) P/ TORAS L6"],["3070-23-3163-501","TRANSP CORR 23-501  COLETA RESÍDUOS MESA"],["3070-23-3163-502","TRANSP CORR 23-502 TRANSFE RESÍD L6/L4"],["3070-23-3162-507","TRANSP. CORREIA ( 23-507 ) P/ CAVACOS L6"],["3070-23-3162-1","TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L4"],["3070-23-3162-5","TRANSP. DE CORREIA ( 23-5 ) P/ TORAS L4"],["3070-23-3162-11","TRANSP. DE CORREIA ( 23-11 ) P/ TORAS L4"],["3070-23-3162-3","CORR TRANSP TORAS P/ALIM DESCASC 4"],["3070-23-3162-6","TRANSP. DE CORREIA ( 23-6 ) P/ TORAS L5"],["3070-23-3162-12","TRANSP. DE CORREIA ( 23-12 ) P/ TORAS L5"],["3070-23-3162-38","TRANSP CORR 23-38 P/ COLETA OVERS PENS"],["3070-23-3162-39","TRANSP CORR 23-39 P/ COLETA OVERS PENS"],["3070-23-3162-20","TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS"],["3070-23-3162-21","TRANSP. DE CORREIA ( 23-21 ) P/ CAVACOS"],["3070-23-3162-22","TRANSP. DE CORREIA ( 23-22 ) P/ CAVACOS"],["3070-23-3162-23","TRANSP. DE CORREIA ( 23-23 ) P/ CAVACOS"],["3070-23-3162-27","TRANSP CORR 23-27 CAVACOS P/ DIGESTOR B"],["3070-23-3162-28","TRANSP CORR 23-28 CAVACOS P/ DIGESTOR B"],["3070-23-3162-29","TRANSP CORR 23-29 CAVACOS P/ DIGESTOR B"],["3070-23-3162-30","TRANSP CORR 23-30 CAVACOS P/ DIGESTOR B"],["3070-23-3162-33","TRANSP CORR 23-33 CAVACOS P/ DIGESTOR B"],["3070-23-3162-34","TRANSP CORR 23-34 CAVACOS P/ DIGESTOR B"],["3070-23-3163-1","TRANSP. DE CORREIA ( 23-1 ) P/ CASCA L4"],["3070-23-3163-2","TRANSP. DE CORREIA ( 23-2 ) P/ CASCA L5"],["3070-23-3163-3","TRANSP. DE CORREIA ( 23-3 ) P/ CASCA L4"],["3070-23-3163-4","TRANSP. DE CORREIA ( 23-30P/ CASCA L5"],["3070-23-3163-5","TRANSP. DE CORREIA ( 23-5 ) P/ CASCA L4"],["3070-23-3163-6","TRANSP. DE CORREIA ( 23-6 ) P/ CASCA L5"],["3070-23-3163-13","TRANSP. DE CORREIA ( 23-13 ) P/ CASCA"],["3070-23-3163-14","TRANSP. DE CORREIA ( 23-14 ) P/ CASCA"],["3070-23-3163-16","TRANSP. DE CORREIA ( 23-16 ) P/ CASCA"],["3070-23-3163-17","TRANSP. DE CORREIA ( 23-17 ) P/ CASCA"],["3070-23-3163-7","TRANSP. CORREIA 23-7  P/ CASCA TRITURADA"],["3070-23-3163-18","TRANSP. CORREIA 23-18 P/ CASCA TRITURADA"],["3070-23-3163-21","TRANSP. CORREIA 23-21 P/ CASCA TRITURADA"],["3070-23-3163-22","TRANSP. CORREIA 23-22 P/ CASCA TRITURADA"],["3070-23-3163-25","TRANSP. DE CORREIA ( 23-25 ) P/ CASCA"],["3070-23-3163-26","TRANSP. DE CORREIA ( 23-26 ) P/ CASCA"],["3070-23-3163-27","TRANSP. DE CORREIA ( 23-27 ) P/ CASCA"],["3070-23-3163-28","TRANSP. DE CORREIA ( 23-28 ) P/ CASCA"],["3070-23-3172-701","CORREIA TRANSP. TORAS L7 PM/FAB C"],["3070-23-3172-801","CORREIA TRANSP. TORAS L8- PÁTIO-FAB C"],["3070-23-3173-701","CORREIA TRANSP. P/ CASCAS L7 PM/FAB C"],["3070-23-3173-801","CORREIA TRANSP. P/ CASCAS L8 PM/FAB C"],["3070-23-3173-26","CORREIA TRANSP. FINOS/OVERS L7/8"],["3070-23-3173-27","TRANSP. CORREIA P/ CASCAS/ RESÍDUOS L7/8"],["3070-23-3173-30","CORREIA TRANSP. P/ CASCAS/ RESÍDUOS L7/8"],["3070-23-3163-36","TRANSP CORR 23-36 COL REJEIT MESAS 4/5"],["3070-23-3172-1","CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C"],["3070-23-3172-2","CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C"],["3070-23-3172-3","CORREIA TRANSP. REVERSÍVEL L7/8 PM/FAB C"],["3070-23-3172-8","CORREIA TRANSP. P/ DIGESTOR PM/FAB C"],["3070-23-3172-9","CORREIA TRANSP. CAVACOS P/ DIGESTOR L7/8"]];
+
+let db = { paradas: [], previsoes: [], config: { dark: false, efetivoBase: 0 } };
+let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], booted = false, localReady = false;
+let ROLE = '';              // 'ctv' | 'suzano' | 'sem_acesso' | '' (desconhecido)
+let acessos = [];           // e-mails da Suzano (só CTV vê)
+let mes = mesChave(new Date());
+let editPar = null, editAtv = null, selP = [], selA = [];
+let _pending = new Set();   // "par:<id>" / "atv:<id>" ainda não confirmados pelo servidor
+
+/* ═══ UTIL ═══ */
+function mesChave(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function hoje() { return isoLocal(new Date()); }
+function addDias(iso, n) { const [y, m, d] = iso.split('-').map(Number); return isoLocal(new Date(y, m - 1, d + n)); }
+function fmt(iso) { if (!iso) return ''; const p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function fmtCurto(iso) { const p = iso.split('-'); return p[2] + '/' + p[1]; }
+function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function semAcento(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function txt(v, max) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max); }
+function inteiro(v, min, max) { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : min; }
+let toastTimer = null;
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
+function emailAtual() { return currentUser ? String(currentUser.email || '').toLowerCase() : ''; }
+function isAdmin() { return ADMIN_EMAILS.indexOf(emailAtual()) >= 0; }
+function isCTV() { return ROLE === 'ctv'; }
+const STATUS_NOME = { pendente: 'Pendente', confirmada: 'Confirmada', recusada: 'Recusada', cancelada: 'Cancelada', realizada: 'Realizada' };
+function stBadge(s) { return '<span class="st ' + s + '">' + (STATUS_NOME[s] || s) + '</span>'; }
+function linhaNome(l) { return l.tag ? l.tag.replace(/^3070-\d+-\d+-/, '') + (l.desc ? ' — ' + l.desc.replace(/^TRANSP\.?\s*(DE\s*)?CORREIA\s*/i, '') : '') : l.desc; }
+function linhasTexto(arr) { return (arr || []).map(linhaNome).join(' · '); }
+
+/* ═══ PERSISTÊNCIA LOCAL ═══ */
+function loadLocal() {
+  try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && Array.isArray(d.paradas) && Array.isArray(d.previsoes)) db = d; } catch (e) {}
+  if (!db.config) db.config = { dark: false, efetivoBase: 0 };
+}
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
+function loadPending() { try { _pending = new Set(JSON.parse(localStorage.getItem(PENDING_KEY) || '[]')); } catch (e) { _pending = new Set(); } }
+function savePending() { try { localStorage.setItem(PENDING_KEY, JSON.stringify([..._pending])); } catch (e) {} }
+function markPending(k) { _pending.add(k); savePending(); }
+function unmarkPending(k) { _pending.delete(k); savePending(); }
+
+/* grava local primeiro; a nuvem confirma depois (o registro fica pendente até lá) */
+function persist(kind, rec) {
+  const arr = kind === 'par' ? db.paradas : db.previsoes;
+  const clean = JSON.parse(JSON.stringify(rec));
+  const i = arr.findIndex(x => x.id === clean.id);
+  if (i >= 0) arr[i] = clean; else arr.push(clean);
+  markPending(kind + ':' + clean.id);
+  saveLocal();
+  enviar(kind, clean);
+  renderAll();
+}
+function donoSeFaltar(kind, rec) {
+  if (rec.criadoUid || !currentUser) return rec;
+  rec.criadoUid = currentUser.uid; rec.criadoPor = emailAtual();   // lançado sem login (offline): o dono é quem envia
+  const arr = kind === 'par' ? db.paradas : db.previsoes; const i = arr.findIndex(x => x.id === rec.id); if (i >= 0) arr[i] = rec;
+  saveLocal(); return rec;
+}
+function enviar(kind, rec) {
+  if (MODE !== 'cloud' || !FB || !currentUser) return;
+  rec = donoSeFaltar(kind, rec);
+  FB.setDoc(FB.doc(FB.fs, kind === 'par' ? COL_PAR : COL_ATV, rec.id), rec)
+    .then(() => { unmarkPending(kind + ':' + rec.id); setSync(navigator.onLine ? 'ok' : 'offline'); renderAll(); })
+    .catch(onWriteError);
+}
+function retryAllPending() {
+  if (MODE !== 'cloud' || !FB || !currentUser) return Promise.resolve();
+  return Promise.all([..._pending].map(k => {
+    const [kind, id] = k.split(':');
+    const rec = (kind === 'par' ? db.paradas : db.previsoes).find(x => x.id === id);
+    if (!rec) { unmarkPending(k); return null; }
+    donoSeFaltar(kind, rec);
+    return FB.setDoc(FB.doc(FB.fs, kind === 'par' ? COL_PAR : COL_ATV, id), rec).then(() => unmarkPending(k)).catch(onWriteError);
+  }));
+}
+function onWriteError(err) {
+  const c = (err && err.code) || '';
+  if (c.includes('permission-denied')) setSync('denied');
+  else if (!navigator.onLine || c.includes('unavailable')) setSync('offline');
+  else setSync('error', c);
+}
+
+/* ═══ BOOT (padrão CTV: local primeiro, nuvem depois) ═══ */
+function bootLocal() {
+  if (booted) return; booted = true;
+  loadLocal(); loadPending(); applyDark();
+  try { ROLE = localStorage.getItem(ROLE_KEY) || ''; } catch (e) {}
+  updateRoleUI(); renderAll();
+  localReady = true;
+  if (window.__pendingUpgrade) { upgradeToCloud(window.__pendingUpgrade); window.__pendingUpgrade = null; }
+}
+function upgradeToCloud(api) {
+  if (MODE === 'cloud') return;
+  if (!localReady) { window.__pendingUpgrade = api; return; }
+  FB = api; MODE = 'cloud';
+  document.getElementById('modeBanner').style.display = 'none';
+  FB.onAuthStateChanged(FB.auth, user => {
+    currentUser = user;
+    if (user) {
+      hideAuth(); showUserChip(user); setSync('connecting');
+      detectarPapel().then(() => retryAllPending()).then(() => startCloudListeners());
+    } else {
+      clearCloudListeners(); ROLE = ''; updateRoleUI(); showAuth();
+    }
+  });
+  window.addEventListener('online', () => { if (currentUser) { setSync('ok'); retryAllPending(); } });
+  window.addEventListener('offline', () => { if (currentUser) setSync('offline'); });
+}
+/* CTV = consegue ler a lista de acessos (só a equipe CTV tem permissão nas regras) */
+function detectarPapel() {
+  return FB.getDoc(FB.doc(FB.fs, 'prog_suzano_config', 'acessos')).then(s => {
+    ROLE = 'ctv';
+    acessos = (s.exists() && Array.isArray(s.data().emails)) ? s.data().emails : [];
+  }).catch(err => {
+    const c = (err && err.code) || '';
+    if (c.includes('permission-denied')) ROLE = 'suzano';      // confirmado pelo listener a seguir
+    // offline: mantém o papel salvo
+  }).then(() => {
+    try { localStorage.setItem(ROLE_KEY, ROLE); } catch (e) {}
+    updateRoleUI(); renderAll();
+  });
+}
+function startCloudListeners() {
+  clearCloudListeners();
+  const merge = (kind, snap) => {
+    const arr = kind === 'par' ? 'paradas' : 'previsoes';
+    const local = db[arr];
+    const cloud = snap.docs.map(d => d.data());
+    const ids = new Set(cloud.map(r => r.id));
+    const out = cloud.map(r => {
+      const k = kind + ':' + r.id;
+      if (!_pending.has(k)) return r;
+      const l = local.find(x => x.id === r.id);
+      if (l && (l.atualizadoEm || '') > (r.atualizadoEm || '')) return l;   // edição local mais nova: mantém e reenvia
+      unmarkPending(k); return r;
+    });
+    local.forEach(l => { if (!ids.has(l.id) && _pending.has(kind + ':' + l.id)) out.push(l); }); // criado aqui, ainda não chegou
+    db[arr] = out;
+    saveLocal();
+    if (out.some(r => _pending.has(kind + ':' + r.id))) retryAllPending();
+    setSync(navigator.onLine ? 'ok' : 'offline');
+    renderAll();
+  };
+  const onErr = err => {
+    const c = (err && err.code) || '';
+    if (c.includes('permission-denied')) { ROLE = 'sem_acesso'; try { localStorage.setItem(ROLE_KEY, ROLE); } catch (e) {} updateRoleUI(); setSync('semacesso'); }
+    else setSync('error', c);
+  };
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, COL_PAR), s => merge('par', s), onErr));
+  cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, COL_ATV), s => merge('atv', s), onErr));
+  if (isCTV()) {
+    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'prog_suzano_config', 'geral'), s => {
+      const d = s.data(); if (d && typeof d.efetivoBase === 'number') { db.config.efetivoBase = d.efetivoBase; saveLocal(); renderEfetivo(); }
+    }, () => {}));
+    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'prog_suzano_config', 'acessos'), s => {
+      acessos = (s.exists() && Array.isArray(s.data().emails)) ? s.data().emails : []; renderAcessos();
+    }, () => {}));
+  }
+}
+function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
+
+/* ═══ AUTENTICAÇÃO / ESTADO ═══ */
+function showAuth() { document.getElementById('authOverlay').classList.add('open'); }
+function hideAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+function authMsg(m, ok) { const el = document.getElementById('authMsg'); el.textContent = m; el.style.color = ok ? 'var(--success)' : 'var(--danger)'; }
+function loginEmail() {
+  if (!FB) return;
+  const e = document.getElementById('authEmail').value.trim(), p = document.getElementById('authPass').value;
+  if (!e || !p) { authMsg('Preencha e-mail e senha.'); return; }
+  FB.signInWithEmailAndPassword(FB.auth, e, p).catch(err => {
+    const c = (err && err.code) || '';
+    authMsg(c.includes('network') ? 'Sem conexão. Verifique a internet.' : c.includes('too-many') ? 'Muitas tentativas. Aguarde e tente de novo.' : 'E-mail ou senha incorretos.');
+  });
+}
+function resetSenha() {
+  if (!FB) return;
+  const e = document.getElementById('authEmail').value.trim();
+  if (!e) { authMsg('Digite seu e-mail no campo acima.'); return; }
+  FB.sendPasswordResetEmail(FB.auth, e).then(() => authMsg('Enviamos um link para redefinir a senha.', true)).catch(() => authMsg('Não foi possível enviar o link.'));
+}
+function logout() { if (FB) FB.signOut(FB.auth); }
+function showUserChip(user) { const c = document.getElementById('userChip'); c.style.display = 'inline-flex'; c.querySelector('.uname').textContent = user.email || ''; }
+function setSync(state, extra) {
+  const card = document.getElementById('syncCard');
+  if (MODE !== 'cloud' || !currentUser) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const pend = _pending.size ? ' · ' + _pending.size + ' aguardando envio' : '';
+  const map = {
+    ok: ['#2E7D32', 'Sincronizado · ' + (isCTV() ? 'Equipe CTV' : 'Suzano') + ' · ' + emailAtual() + pend],
+    connecting: ['#999', 'Conectando… · ' + emailAtual()],
+    offline: ['#F9A825', 'Offline — salvo neste aparelho; envia quando a internet voltar' + pend],
+    denied: ['#E53935', 'Sem permissão para salvar. Fale com a CTV.' + pend],
+    semacesso: ['#E53935', 'Seu e-mail (' + emailAtual() + ') ainda não tem acesso a este painel. Peça a liberação à CTV.'],
+    error: ['#E53935', 'Falha ao sincronizar' + (extra ? ' (' + extra + ')' : '') + pend]
+  };
+  const [cor, msg] = map[state] || map.ok;
+  document.getElementById('syncDot').style.background = cor;
+  document.getElementById('syncText').textContent = msg;
+}
+function updateRoleUI() {
+  document.getElementById('navEfetivo').style.display = isCTV() ? '' : 'none';
+  document.getElementById('cardAcessos').style.display = isCTV() && isAdmin() ? '' : 'none';
+  if (!isCTV() && document.getElementById('view-efetivo').classList.contains('active')) switchView('cal');
+}
+function applyDark() { const on = !!db.config.dark; document.documentElement.setAttribute('data-dark', on ? '1' : '0'); document.getElementById('darkBtn').textContent = on ? '☀️' : '🌙'; }
+function toggleDark() { db.config.dark = !db.config.dark; saveLocal(); applyDark(); }
+
+/* ═══ NAVEGAÇÃO ═══ */
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  window.scrollTo(0, 0);
+  renderAll();
+}
+function mudarMes(delta) { let [y, m] = mes.split('-').map(Number); m += delta; if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; } mes = y + '-' + String(m).padStart(2, '0'); renderAll(); }
+function irMesAtual() { mes = mesChave(new Date()); renderAll(); }
+function nomeMes(chave) { const [y, m] = chave.split('-').map(Number); return MESES[m - 1] + ' de ' + y; }
+
+/* ═══ REGRAS DE NEGÓCIO ═══ */
+const ativa = s => s === 'pendente' || s === 'confirmada';
+function fimAtividade(a) { return addDias(a.inicio, inteiro(a.dias, 1, 60) - 1); }
+function cruzaMes(ini, fim, chave) { const a = chave + '-01', b = chave + '-31'; return ini <= b && fim >= a; }
+function paradasNoDia(iso) { return db.paradas.filter(p => ativa(p.status) && p.inicio <= iso && iso <= p.fim); }
+function atividadesNoDia(iso) { return db.previsoes.filter(a => (ativa(a.status) || a.status === 'realizada') && a.inicio <= iso && iso <= fimAtividade(a)); }
+function pessoasNoDia(iso, so) { return atividadesNoDia(iso).filter(a => !so || a.status === so).reduce((s, a) => s + inteiro(a.pessoas, 0, 40), 0); }
+function podeEditar(r) { return isCTV() || (r.criadoUid === (currentUser && currentUser.uid) && r.status === 'pendente') || (MODE !== 'cloud' && r.status === 'pendente'); }
+
+/* ═══ RENDER ═══ */
+function renderAll() {
+  ['mesLabelCal', 'mesLabelPar', 'mesLabelAtv'].forEach(id => document.getElementById(id).textContent = nomeMes(mes));
+  renderCal(); renderParadas(); renderAtividades(); renderEfetivo(); renderAcessos(); renderBadges(); renderAreas();
+  if (currentUser) setSync(navigator.onLine ? 'ok' : 'offline');
+}
+function renderCal() {
+  const g = document.getElementById('calGrid');
+  const [y, m] = mes.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const start = new Date(y, m - 1, 1 - ((first.getDay() + 6) % 7));
+  let html = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'].map(d => '<div class="dow">' + d + '</div>').join('');
+  const hj = hoje();
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    if (i >= 35 && d.getMonth() !== m - 1) break;
+    const iso = isoLocal(d);
+    const ps = paradasNoDia(iso);
+    const ppl = pessoasNoDia(iso);
+    const bars = ps.slice(0, 3).map(p => '<div class="bar ' + p.tipo + (p.status === 'pendente' ? ' pend' : '') + '"></div>').join('');
+    html += '<div class="day' + (d.getMonth() !== m - 1 ? ' out' : '') + (iso === hj ? ' hoje' : '') + '" onclick="abrirDia(\'' + iso + '\')"><div class="num">' + d.getDate() + '</div>' + bars + (ppl ? '<div class="ppl">👷 ' + ppl + '</div>' : '') + '</div>';
+  }
+  g.innerHTML = html;
+}
+function filtroTexto(q, campos) { return !q || semAcento(campos.join(' ')).includes(q); }
+function cardParada(p) {
+  const pend = _pending.has('par:' + p.id) ? '<span class="st sync">⏳ enviando</span>' : '';
+  return '<div class="item ' + p.tipo + '" onclick="detalheParada(\'' + p.id + '\')"><h3>' + (p.tipo === 'geral' ? '🛑 Parada geral' : '🔧 Parada parcial') + (p.area ? ' — ' + esc(p.area) : '') + stBadge(p.status) + pend + '</h3>'
+    + '<div class="meta">' + (p.inicio === p.fim ? fmt(p.inicio) : fmt(p.inicio) + ' a ' + fmt(p.fim)) + (p.solicitante ? ' · ' + esc(p.solicitante) : '') + '</div>'
+    + (p.linhas && p.linhas.length ? '<div class="chips">' + p.linhas.slice(0, 8).map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + (p.linhas.length > 8 ? '<span class="chip">+' + (p.linhas.length - 8) + '</span>' : '') + '</div>' : '') + '</div>';
+}
+function cardAtividade(a) {
+  const pend = _pending.has('atv:' + a.id) ? '<span class="st sync">⏳ enviando</span>' : '';
+  const fim = fimAtividade(a);
+  return '<div class="item ativ" onclick="detalheAtividade(\'' + a.id + '\')"><h3>' + esc(a.descricao) + stBadge(a.status) + pend + '</h3>'
+    + '<div class="meta">' + (fim === a.inicio ? fmt(a.inicio) : fmt(a.inicio) + ' a ' + fmt(fim)) + ' · 👷 ' + inteiro(a.pessoas, 0, 40) + ' pessoa(s) × ' + inteiro(a.dias, 1, 60) + ' dia(s)'
+    + (a.prioridade !== 'normal' ? ' · ' + (a.prioridade === 'urgente' ? '🔴 Urgente' : '🟠 Alta') : '') + (a.area ? ' · ' + esc(a.area) : '') + (a.om ? ' · OM ' + esc(a.om) : '') + '</div>'
+    + (a.linhas && a.linhas.length ? '<div class="chips">' + a.linhas.slice(0, 6).map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '') + '</div>';
+}
+function renderParadas() {
+  const q = semAcento(document.getElementById('buscaPar').value.trim());
+  const doMes = db.paradas.filter(p => cruzaMes(p.inicio, p.fim, mes));
+  const l = doMes.filter(p => filtroTexto(q, [p.area, p.descricao, p.solicitante, linhasTexto(p.linhas), (p.linhas || []).map(x => x.tag).join(' ')])).sort((a, b) => a.inicio.localeCompare(b.inicio));
+  document.getElementById('countPar').textContent = l.length + ' de ' + doMes.length + ' parada(s) em ' + nomeMes(mes);
+  document.getElementById('listPar').innerHTML = l.map(cardParada).join('') || '<div class="hint" style="text-align:center;padding:24px">Nenhuma parada em ' + nomeMes(mes) + '.</div>';
+}
+function renderAtividades() {
+  const q = semAcento(document.getElementById('buscaAtv').value.trim());
+  const doMes = db.previsoes.filter(a => cruzaMes(a.inicio, fimAtividade(a), mes));
+  const l = doMes.filter(a => filtroTexto(q, [a.descricao, a.area, a.om, a.servico, linhasTexto(a.linhas), (a.linhas || []).map(x => x.tag).join(' ')])).sort((a, b) => a.inicio.localeCompare(b.inicio));
+  document.getElementById('countAtv').textContent = l.length + ' de ' + doMes.length + ' atividade(s) em ' + nomeMes(mes);
+  document.getElementById('listAtv').innerHTML = l.map(cardAtividade).join('') || '<div class="hint" style="text-align:center;padding:24px">Nenhuma atividade prevista em ' + nomeMes(mes) + '.</div>';
+}
+function renderBadges() {
+  const show = (id, n) => { const b = document.getElementById(id); b.style.display = n && isCTV() ? '' : 'none'; b.textContent = n; };
+  show('badgePar', db.paradas.filter(p => p.status === 'pendente').length);
+  show('badgeAtv', db.previsoes.filter(a => a.status === 'pendente').length);
+}
+function renderAreas() {
+  const set = new Set(); db.paradas.concat(db.previsoes).forEach(r => { if (r.area) set.add(r.area); });
+  document.getElementById('dlAreas').innerHTML = [...set].sort().map(a => '<option value="' + esc(a) + '">').join('');
+}
+function renderEfetivo() {
+  const inp = document.getElementById('efBase');
+  if (document.activeElement !== inp) inp.value = db.config.efetivoBase || '';
+  const base = inteiro(db.config.efetivoBase, 0, 200);
+  const d = new Date(); const seg = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+  let html = '';
+  for (let w = 0; w < 10; w++) {
+    const ini = isoLocal(new Date(seg.getFullYear(), seg.getMonth(), seg.getDate() + w * 7));
+    let pdia = 0, pdiaPend = 0, pico = 0, picoPend = 0, par = 0;
+    for (let i = 0; i < 7; i++) {
+      const iso = addDias(ini, i);
+      const tot = pessoasNoDia(iso), pend = pessoasNoDia(iso, 'pendente');
+      pdia += tot; pdiaPend += pend; if (tot > pico) { pico = tot; picoPend = pend; }
+      if (paradasNoDia(iso).length) par++;
+    }
+    const sobra = base ? base - pico : null;
+    html += '<tr><td>' + fmtCurto(ini) + '–' + fmtCurto(addDias(ini, 6)) + (par ? ' <span title="dias com parada">🛑' + par + '</span>' : '') + '</td>'
+      + '<td>' + pdia + (pdiaPend ? ' <span class="hint">(' + pdiaPend + ')</span>' : '') + '</td>'
+      + '<td>' + pico + (picoPend ? ' <span class="hint">(' + picoPend + ')</span>' : '') + '</td>'
+      + '<td>' + (sobra === null ? '<span class="hint">—</span>' : '<span class="' + (sobra < 0 ? 'falta' : 'sobra') + '">' + (sobra < 0 ? 'faltam ' + (-sobra) : sobra) + '</span>') + '</td></tr>';
+  }
+  document.getElementById('efBody').innerHTML = html;
+}
+function renderAcessos() {
+  const el = document.getElementById('listaAcessos');
+  el.innerHTML = acessos.length ? acessos.map((e, i) => '<div class="item" style="cursor:default;display:flex;align-items:center;gap:8px"><span style="flex:1;overflow-wrap:anywhere">' + esc(e) + '</span><button class="btn btn-ghost btn-sm" onclick="removerAcesso(' + i + ')">Remover</button></div>').join('') : '<div class="hint">Nenhum e-mail liberado ainda.</div>';
+}
+
+/* ═══ SELETOR DE LINHAS ═══ */
+function sel(pref) { return pref === 'p' ? selP : selA; }
+function renderSelecionadas(pref) {
+  document.getElementById(pref + 'LinhasSel').innerHTML = sel(pref).map((l, i) => '<span class="chip">' + esc(linhaNome(l)) + ' <a href="#" onclick="tirarLinha(\'' + pref + '\',' + i + ');return false" style="color:var(--danger);text-decoration:none">✕</a></span>').join('') || '<span class="hint">Nenhuma linha selecionada.</span>';
+}
+function renderPicker(pref) {
+  const q = semAcento(document.getElementById(pref + 'Busca').value.trim());
+  const tags = new Set(sel(pref).map(l => l.tag));
+  const lista = LINHAS.filter(([t, d]) => !q || semAcento(t + ' ' + d).includes(q)).slice(0, 120);
+  document.getElementById(pref + 'Picker').innerHTML = lista.map(([t, d]) => '<label><input type="checkbox" ' + (tags.has(t) ? 'checked' : '') + ' onchange="toggleLinha(\'' + pref + '\',\'' + esc(t) + '\',this.checked)"><span><b>' + esc(t) + '</b><br><span class="hint">' + esc(d) + '</span></span></label>').join('') || '<div class="hint" style="padding:10px">Nada encontrado — use "Outra linha/equipamento" abaixo.</div>';
+}
+function toggleLinha(pref, tag, on) {
+  const arr = sel(pref);
+  const i = arr.findIndex(l => l.tag === tag);
+  if (on && i < 0) { const x = LINHAS.find(l => l[0] === tag); arr.push({ tag, desc: x ? x[1] : '' }); }
+  if (!on && i >= 0) arr.splice(i, 1);
+  renderSelecionadas(pref);
+}
+function tirarLinha(pref, i) { sel(pref).splice(i, 1); renderSelecionadas(pref); renderPicker(pref); }
+function addLivre(pref) {
+  const el = document.getElementById(pref + 'Livre'); const v = txt(el.value, 60);
+  if (!v) return;
+  if (!sel(pref).some(l => !l.tag && l.desc.toLowerCase() === v.toLowerCase())) sel(pref).push({ tag: '', desc: v });
+  el.value = ''; renderSelecionadas(pref);
+}
+
+/* ═══ FORMULÁRIOS ═══ */
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+function abrirParada(id, dataIni) {
+  editPar = id ? db.paradas.find(p => p.id === id) : null;
+  if (id && (!editPar || !podeEditar(editPar))) { showToast('Esta parada não pode mais ser editada.'); return; }
+  const p = editPar || {};
+  document.getElementById('mParadaTit').textContent = editPar ? 'Editar parada' : 'Informar parada';
+  document.getElementById('pTipo').value = p.tipo || 'geral';
+  document.getElementById('pArea').value = p.area || '';
+  document.getElementById('pInicio').value = p.inicio || dataIni || '';
+  document.getElementById('pFim').value = p.fim || dataIni || '';
+  document.getElementById('pDesc').value = p.descricao || '';
+  document.getElementById('pSolic').value = p.solicitante || lembrar('solic');
+  document.getElementById('pContato').value = p.contato || lembrar('contato');
+  selP = JSON.parse(JSON.stringify(p.linhas || []));
+  document.getElementById('pBusca').value = ''; document.getElementById('pLivre').value = '';
+  renderSelecionadas('p'); renderPicker('p');
+  fecharModal('mDet'); abrirModal('mParada');
+}
+function lembrar(k, v) { const key = 'ctv_progsuz_' + k; try { if (v !== undefined) localStorage.setItem(key, v); return localStorage.getItem(key) || ''; } catch (e) { return v || ''; } }
+function carimbo(rec, novo) {
+  const agora = new Date().toISOString(), quem = emailAtual() || 'local';
+  if (novo) { rec.criadoEm = agora; rec.criadoPor = quem; rec.criadoUid = currentUser ? currentUser.uid : ''; }
+  rec.atualizadoEm = agora; rec.atualizadoPor = quem;
+  return rec;
+}
+function salvarParada() {
+  const g = id => document.getElementById(id).value;
+  const inicio = g('pInicio'), fim = g('pFim') || inicio;
+  if (!inicio) { showToast('Informe a data de início.'); return; }
+  if (fim < inicio) { showToast('O fim não pode ser antes do início.'); return; }
+  if (!selP.length && !txt(g('pArea'), 60)) { showToast('Informe a área ou pelo menos uma linha.'); return; }
+  if (!txt(g('pSolic'), 80)) { showToast('Informe o solicitante.'); return; }
+  const novo = !editPar;
+  const rec = Object.assign({}, editPar || { id: uid(), status: 'pendente', resposta: '' }, {
+    tipo: g('pTipo') === 'parcial' ? 'parcial' : 'geral', area: txt(g('pArea'), 60), linhas: selP.slice(0, 60),
+    inicio, fim, descricao: txt(g('pDesc'), 500), solicitante: txt(g('pSolic'), 80), contato: txt(g('pContato'), 80)
+  });
+  if (novo && isCTV()) rec.status = 'confirmada';   // lançada pela própria CTV já entra confirmada
+  lembrar('solic', rec.solicitante); lembrar('contato', rec.contato);
+  persist('par', carimbo(rec, novo));
+  fecharModal('mParada');
+  showToast(novo ? (rec.status === 'pendente' ? 'Parada enviada — aguardando confirmação da CTV' : 'Parada registrada') : 'Parada atualizada');
+}
+function renderServicos(v) { document.getElementById('aServico').innerHTML = SERVICOS.map(s => '<option' + (s === v ? ' selected' : '') + '>' + s + '</option>').join(''); }
+function renderParadaVinculo(v) {
+  const ini = document.getElementById('aInicio').value;
+  const cur = v !== undefined ? v : document.getElementById('aParada').value;
+  const ops = db.paradas.filter(p => ativa(p.status) && (!ini || (p.inicio <= addDias(ini, 30) && p.fim >= addDias(ini, -30))));
+  document.getElementById('aParada').innerHTML = '<option value="">— Nenhuma —</option>' + ops.sort((a, b) => a.inicio.localeCompare(b.inicio)).map(p => '<option value="' + p.id + '"' + (p.id === cur ? ' selected' : '') + '>' + fmt(p.inicio) + (p.fim !== p.inicio ? '–' + fmtCurto(p.fim) : '') + ' · ' + esc(p.area || linhasTexto(p.linhas).slice(0, 40)) + '</option>').join('');
+}
+function abrirAtividade(id, dataIni) {
+  editAtv = id ? db.previsoes.find(a => a.id === id) : null;
+  if (id && (!editAtv || !podeEditar(editAtv))) { showToast('Esta atividade não pode mais ser editada.'); return; }
+  const a = editAtv || {};
+  document.getElementById('mAtivTit').textContent = editAtv ? 'Editar atividade' : 'Prever atividade';
+  document.getElementById('aDesc').value = a.descricao || '';
+  renderServicos(a.servico || SERVICOS[0]);
+  document.getElementById('aPrior').value = a.prioridade || 'normal';
+  document.getElementById('aArea').value = a.area || '';
+  document.getElementById('aInicio').value = a.inicio || dataIni || '';
+  document.getElementById('aDias').value = a.dias || 1;
+  document.getElementById('aPessoas').value = a.pessoas || 2;
+  document.getElementById('aOm').value = a.om || '';
+  document.getElementById('aObs').value = a.obs || '';
+  document.getElementById('aSolic').value = a.solicitante || lembrar('solic');
+  document.getElementById('aContato').value = a.contato || lembrar('contato');
+  renderParadaVinculo(a.paradaId || '');
+  selA = JSON.parse(JSON.stringify(a.linhas || []));
+  document.getElementById('aBusca').value = ''; document.getElementById('aLivre').value = '';
+  renderSelecionadas('a'); renderPicker('a');
+  fecharModal('mDet'); abrirModal('mAtiv');
+}
+function salvarAtividade() {
+  const g = id => document.getElementById(id).value;
+  if (!txt(g('aDesc'), 200)) { showToast('Descreva a atividade.'); return; }
+  if (!g('aInicio')) { showToast('Informe a data prevista.'); return; }
+  if (!txt(g('aSolic'), 80)) { showToast('Informe o solicitante.'); return; }
+  const novo = !editAtv;
+  const rec = Object.assign({}, editAtv || { id: uid(), status: 'pendente', resposta: '' }, {
+    descricao: txt(g('aDesc'), 200), servico: SERVICOS.indexOf(g('aServico')) >= 0 ? g('aServico') : 'Outros',
+    prioridade: ['alta', 'urgente'].indexOf(g('aPrior')) >= 0 ? g('aPrior') : 'normal',
+    area: txt(g('aArea'), 60), linhas: selA.slice(0, 60), inicio: g('aInicio'),
+    dias: inteiro(g('aDias'), 1, 60), pessoas: inteiro(g('aPessoas'), 1, 40), om: txt(g('aOm'), 20),
+    paradaId: txt(g('aParada'), 40), obs: txt(g('aObs'), 500), solicitante: txt(g('aSolic'), 80), contato: txt(g('aContato'), 80)
+  });
+  if (novo && isCTV()) rec.status = 'confirmada';
+  lembrar('solic', rec.solicitante); lembrar('contato', rec.contato);
+  persist('atv', carimbo(rec, novo));
+  fecharModal('mAtiv');
+  showToast(novo ? (rec.status === 'pendente' ? 'Atividade enviada — aguardando confirmação da CTV' : 'Atividade registrada') : 'Atividade atualizada');
+}
+
+/* ═══ DETALHE E AÇÕES ═══ */
+function linhaInfo(rotulo, valor) { return valor ? '<div style="margin-top:6px"><span class="fld" style="display:inline;margin:0">' + rotulo + ':</span> ' + valor + '</div>' : ''; }
+function rodapeAutoria(r) {
+  return '<div class="hint" style="margin-top:10px">Informado por ' + esc(r.criadoPor || '—') + (r.criadoEm ? ' em ' + new Date(r.criadoEm).toLocaleString('pt-BR') : '')
+    + (r.atualizadoPor && r.atualizadoEm !== r.criadoEm ? '<br>Última alteração: ' + esc(r.atualizadoPor) + ' em ' + new Date(r.atualizadoEm).toLocaleString('pt-BR') : '') + '</div>';
+}
+function acoes(kind, r) {
+  const b = [];
+  const id = r.id;
+  if (isCTV() && r.status === 'pendente') {
+    b.push('<button class="btn btn-success" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'confirmada\')">✔ Confirmar</button>');
+    b.push('<button class="btn btn-danger" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'recusada\')">✖ Recusar</button>');
+  }
+  if (isCTV() && kind === 'atv' && r.status === 'confirmada') b.push('<button class="btn btn-primary" onclick="mudarStatus(\'atv\',\'' + id + '\',\'realizada\')">Marcar realizada</button>');
+  if (isCTV() && (r.status === 'recusada' || r.status === 'cancelada' || r.status === 'realizada')) b.push('<button class="btn btn-ghost" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'pendente\')">Reabrir</button>');
+  if (podeEditar(r)) b.push('<button class="btn btn-ghost" onclick="' + (kind === 'par' ? 'abrirParada' : 'abrirAtividade') + '(\'' + id + '\')">✏️ Editar</button>');
+  if (ativa(r.status) && (isCTV() || podeEditar(r))) b.push('<button class="btn btn-ghost" style="color:var(--danger)" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'cancelada\')">Cancelar ' + (kind === 'par' ? 'parada' : 'atividade') + '</button>');
+  b.push('<button class="btn btn-ghost" onclick="fecharModal(\'mDet\')">Fechar</button>');
+  return b.join('');
+}
+function detalheParada(id) {
+  const p = db.paradas.find(x => x.id === id); if (!p) return;
+  const ativs = db.previsoes.filter(a => a.paradaId === id && a.status !== 'cancelada');
+  document.getElementById('detBody').innerHTML = '<h3>' + (p.tipo === 'geral' ? '🛑 Parada geral' : '🔧 Parada parcial') + stBadge(p.status) + '</h3>'
+    + linhaInfo('Período', p.inicio === p.fim ? fmt(p.inicio) : fmt(p.inicio) + ' a ' + fmt(p.fim))
+    + linhaInfo('Área', esc(p.area))
+    + ((p.linhas || []).length ? '<div class="fld">Linhas / equipamentos</div><div class="chips">' + p.linhas.map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '')
+    + linhaInfo('Observação', esc(p.descricao).replace(/\n/g, '<br>'))
+    + linhaInfo('Solicitante', esc(p.solicitante) + (p.contato ? ' · ' + esc(p.contato) : ''))
+    + linhaInfo('Resposta da CTV', esc(p.resposta))
+    + (ativs.length ? '<div class="fld">Atividades vinculadas</div>' + ativs.map(cardAtividade).join('') : '')
+    + rodapeAutoria(p);
+  document.getElementById('detActions').innerHTML = acoes('par', p);
+  abrirModal('mDet');
+}
+function detalheAtividade(id) {
+  const a = db.previsoes.find(x => x.id === id); if (!a) return;
+  const par = a.paradaId ? db.paradas.find(p => p.id === a.paradaId) : null;
+  const fim = fimAtividade(a);
+  document.getElementById('detBody').innerHTML = '<h3>' + esc(a.descricao) + stBadge(a.status) + '</h3>'
+    + linhaInfo('Serviço', esc(a.servico) + ' · prioridade ' + ({ normal: 'normal', alta: 'alta', urgente: 'urgente' }[a.prioridade] || 'normal'))
+    + linhaInfo('Data', fim === a.inicio ? fmt(a.inicio) : fmt(a.inicio) + ' a ' + fmt(fim))
+    + linhaInfo('Estimativa', inteiro(a.pessoas, 0, 40) + ' pessoa(s) × ' + inteiro(a.dias, 1, 60) + ' dia(s) = ' + inteiro(a.pessoas, 0, 40) * inteiro(a.dias, 1, 60) + ' pessoas-dia')
+    + linhaInfo('Área', esc(a.area)) + linhaInfo('OM', esc(a.om))
+    + ((a.linhas || []).length ? '<div class="fld">Linhas / equipamentos</div><div class="chips">' + a.linhas.map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '')
+    + (par ? linhaInfo('Parada', fmt(par.inicio) + (par.fim !== par.inicio ? ' a ' + fmt(par.fim) : '') + ' · ' + esc(par.area)) : '')
+    + linhaInfo('Observação', esc(a.obs).replace(/\n/g, '<br>'))
+    + linhaInfo('Solicitante', esc(a.solicitante) + (a.contato ? ' · ' + esc(a.contato) : ''))
+    + linhaInfo('Resposta da CTV', esc(a.resposta))
+    + rodapeAutoria(a);
+  document.getElementById('detActions').innerHTML = acoes('atv', a);
+  abrirModal('mDet');
+}
+function mudarStatus(kind, id, status) {
+  const arr = kind === 'par' ? db.paradas : db.previsoes;
+  const r0 = arr.find(x => x.id === id); if (!r0) return;
+  const r = JSON.parse(JSON.stringify(r0));
+  if (status === 'recusada') {
+    const motivo = prompt('Motivo da recusa (aparece para quem informou):', r.resposta || '');
+    if (motivo === null) return;
+    r.resposta = txt(motivo, 300);
+  } else if (status === 'confirmada' && isCTV()) {
+    const obs = prompt('Observação para a Suzano (opcional):', r.resposta || '');
+    if (obs === null) return;
+    r.resposta = txt(obs, 300);
+  } else if (status === 'cancelada') {
+    if (!confirm('Cancelar este registro? Ele continua no histórico como "Cancelado".')) return;
+  }
+  r.status = status;
+  persist(kind, carimbo(r, false));
+  fecharModal('mDet');
+  showToast((STATUS_NOME[status] || status) + ' ✔');
+}
+function abrirDia(iso) {
+  const ps = db.paradas.filter(p => p.inicio <= iso && iso <= p.fim);
+  const as = db.previsoes.filter(a => a.inicio <= iso && iso <= fimAtividade(a));
+  const tot = pessoasNoDia(iso);
+  document.getElementById('detBody').innerHTML = '<h3>' + fmt(iso) + '</h3><div class="hint">👷 ' + tot + ' pessoa(s) previstas neste dia' + (pessoasNoDia(iso, 'pendente') ? ' (' + pessoasNoDia(iso, 'pendente') + ' pendentes de confirmação)' : '') + '</div>'
+    + '<div class="fld">Paradas</div>' + (ps.map(cardParada).join('') || '<div class="hint">Nenhuma.</div>')
+    + '<div class="fld">Atividades</div>' + (as.map(cardAtividade).join('') || '<div class="hint">Nenhuma.</div>');
+  document.getElementById('detActions').innerHTML = '<button class="btn btn-primary" onclick="abrirParada(null,\'' + iso + '\')">+ Parada</button><button class="btn btn-primary" style="background:var(--violet)" onclick="abrirAtividade(null,\'' + iso + '\')">+ Atividade</button><button class="btn btn-ghost" onclick="fecharModal(\'mDet\')">Fechar</button>';
+  abrirModal('mDet');
+}
+
+/* ═══ CONFIGURAÇÕES DA CTV ═══ */
+function salvarEfetivoBase() {
+  const v = inteiro(document.getElementById('efBase').value, 0, 200);
+  db.config.efetivoBase = v; saveLocal(); renderEfetivo();
+  if (MODE === 'cloud' && FB && isCTV()) {
+    FB.setDoc(FB.doc(FB.fs, 'prog_suzano_config', 'geral'), { efetivoBase: v, atualizadoEm: new Date().toISOString(), atualizadoPor: emailAtual() })
+      .then(() => showToast('Efetivo salvo')).catch(onWriteError);
+  } else showToast('Salvo neste aparelho');
+}
+function gravarAcessos(lista) {
+  if (MODE !== 'cloud' || !FB || !isAdmin()) { showToast('Disponível só para administradores, conectado.'); return; }
+  FB.setDoc(FB.doc(FB.fs, 'prog_suzano_config', 'acessos'), { emails: lista, atualizadoEm: new Date().toISOString(), atualizadoPor: emailAtual() })
+    .then(() => { acessos = lista; renderAcessos(); showToast('Acessos atualizados'); }).catch(onWriteError);
+}
+function adicionarAcesso() {
+  const el = document.getElementById('novoAcesso'); const e = el.value.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { showToast('E-mail inválido.'); return; }
+  if (acessos.indexOf(e) >= 0) { showToast('Este e-mail já tem acesso.'); return; }
+  el.value = ''; gravarAcessos(acessos.concat([e]).sort());
+}
+function removerAcesso(i) { const e = acessos[i]; if (!e) return; if (confirm('Remover o acesso de ' + e + '?')) gravarAcessos(acessos.filter(x => x !== e)); }
+
+/* ═══ START ═══ */
+document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', ev => { if (ev.target === m) m.classList.remove('open'); }));
+window.__PROGSUZ = { bootLocal, upgradeToCloud, firebaseConfig };
+bootLocal();
+setTimeout(() => { if (MODE === 'local') document.getElementById('modeBanner').style.display = ''; }, 8000);
+</script>
+<script type="module">
+  const R = window.__PROGSUZ;
+  try {
+    const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+    const [appMod, authMod, fsMod] = await Promise.all([
+      import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')
+    ]);
+    const app = appMod.initializeApp(R.firebaseConfig);
+    const auth = authMod.getAuth(app);
+    const fs = fsMod.getFirestore(app);
+    try { await fsMod.enableIndexedDbPersistence(fs); } catch (e) {}
+    R.upgradeToCloud({
+      app, auth, fs,
+      signInWithEmailAndPassword: authMod.signInWithEmailAndPassword,
+      sendPasswordResetEmail: authMod.sendPasswordResetEmail,
+      onAuthStateChanged: authMod.onAuthStateChanged, signOut: authMod.signOut,
+      collection: fsMod.collection, doc: fsMod.doc, getDoc: fsMod.getDoc,
+      setDoc: fsMod.setDoc, onSnapshot: fsMod.onSnapshot
+    });
+  } catch (e) {
+    console.warn('Firebase indisponível — continuando em modo local.', e);
+  }
+</script>
+<div id="ctv-copyright" style="text-align:center;padding:12px 16px 20px;font-size:10px;color:var(--text-light);opacity:.55;line-height:1.4">Desenvolvido por CTV Consultoria Técnica em Vulcanização · CNPJ 65.601.481/0001-36 · © 2024-2026 — Todos os direitos reservados<br><span style="font-size:8px">Software protegido pela Lei nº 9.609/98 e Lei nº 9.610/98 · Autor: Glauber Dutra</span></div>
+<script src="app-update.js"></script>
+</body>
+</html>
