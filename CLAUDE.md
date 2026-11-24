@@ -28,7 +28,7 @@ Todos os 6 apps seguem o padrão:
 - `registro_placa_ctv.html` — Registro de Placas (Firebase desabilitado)
 - `cronograma_ctv.html` — Cronograma
 - `registo_horarios_ctv.html` — Registro de Horários
-- `programacao_suzano.html` — Programação Suzano (paradas, linhas e previsão de atividades informadas pela Suzano; demanda de efetivo). Regras do Firestore em `firestore.rules` (blocos `prog_suzano_*`).
+- `programacao_suzano.html` — Programação Suzano (paradas, linhas e previsão de atividades informadas pela Suzano; classificação automática com regra configurável no app, apontamento diário, indicadores, carga × capacidade e mapa de paradas). Regras do Firestore em `firestore.rules` (blocos `prog_suzano_*`); ao mudar campos gravados, atualizar as regras e testar no emulador.
 
 ## Regra de Deploy Seguro (CRÍTICA)
 Problema ocorrido: código foi perdido porque a branch foi resetada para main antes de confirmar que TODAS as alterações estavam incluídas no PR mergeado. O PR #103 foi mergeado com apenas 2 dos 3 arquivos modificados, e o reset apagou as mudanças do terceiro arquivo.

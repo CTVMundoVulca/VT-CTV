@@ -29,7 +29,7 @@
 :root {
   --bg: #F5F6FA; --card: #FFFFFF; --navy: #001a33; --blue: #43a6ea;
   --text: #1a1a2e; --text-light: #6b7280; --border: #dde1e7;
-  --success: #10b981; --warn: #f59e0b; --danger: #ef4444; --violet: #7c3aed;
+  --success: #10b981; --warn: #f59e0b; --danger: #ef4444; --violet: #7c3aed; --critica: #be185d;
   --radius: 12px;
 }
 html[data-dark="1"] {
@@ -45,9 +45,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .icon-btn { background: var(--navy); border: 1px solid rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; display: inline-grid; place-items: center; }
 .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .card h2 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.card h4 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; color: var(--text-light); margin: 14px 0 6px; }
 .hint { font-size: 12px; color: var(--text-light); line-height: 1.4; }
 .fld { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); margin: 10px 0 3px; text-transform: uppercase; letter-spacing: .3px; }
 input, select, textarea { width: 100%; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; background: var(--bg); color: var(--text); font-family: inherit; }
+input[type="checkbox"] { width: auto; }
 textarea { min-height: 70px; resize: vertical; }
 .row2 { display: flex; gap: 8px; } .row2 > * { flex: 1; min-width: 0; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -66,11 +68,12 @@ textarea { min-height: 70px; resize: vertical; }
 .cal .dow { font-size: 11px; font-weight: 700; text-align: center; color: var(--text-light); padding: 2px 0; }
 .cal .day { min-height: 58px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); padding: 3px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
 .cal .day.out { opacity: .35; }
+.cal .day.fer .num { color: var(--danger); }
 .cal .day.hoje { border: 2px solid var(--navy); }
 html[data-dark="1"] .cal .day.hoje { border-color: var(--blue); }
 .cal .num { font-size: 12px; font-weight: 800; }
 .cal .bar { height: 5px; border-radius: 3px; }
-.bar.geral { background: var(--danger); } .bar.parcial { background: var(--warn); }
+.bar.geral { background: var(--danger); } .bar.parcial { background: var(--warn); } .bar.critica { background: var(--critica); }
 .bar.pend { opacity: .45; background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,.7) 3px 5px); }
 .cal .ppl { font-size: 10px; font-weight: 700; color: var(--violet); margin-top: auto; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 11px; color: var(--text-light); margin-top: 10px; }
@@ -78,25 +81,52 @@ html[data-dark="1"] .cal .day.hoje { border-color: var(--blue); }
 /* listas */
 .lst-count { font-size: 13px; color: var(--text-light); margin: 4px 2px 8px; }
 .item { border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: var(--radius); padding: 11px 13px; margin: 8px 0; cursor: pointer; background: var(--card); }
-.item.geral { border-left-color: var(--danger); } .item.parcial { border-left-color: var(--warn); } .item.ativ { border-left-color: var(--violet); }
+.item.geral { border-left-color: var(--danger); } .item.parcial { border-left-color: var(--warn); } .item.critica { border-left-color: var(--critica); } .item.ativ { border-left-color: var(--violet); }
+.item.alerta { box-shadow: 0 0 0 2px var(--warn) inset; }
 .item h3 { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
 .item .meta { font-size: 12px; color: var(--text-light); margin-top: 3px; overflow-wrap: anywhere; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .chip { font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
+.filtros { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.filtros button { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.filtros button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
 .st { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; margin-left: 4px; vertical-align: middle; }
 .st.pendente { background: #fef3c7; color: #92400e; } .st.confirmada { background: #d1fae5; color: #065f46; }
 .st.recusada { background: #fee2e2; color: #991b1b; } .st.cancelada { background: #e5e7eb; color: #374151; }
 .st.realizada { background: #dbeafe; color: #1e40af; }
 .st.sync { background: #ede9fe; color: #5b21b6; }
-/* tabela de efetivo */
+.st.programada { background: #d1fae5; color: #065f46; } .st.nao_programada { background: #ffedd5; color: #9a3412; } .st.emergencia { background: #fee2e2; color: #991b1b; }
+.st.aponta { background: #fef3c7; color: #92400e; }
+/* tabelas */
 table.ef { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.ef th, table.ef td { padding: 7px 5px; border-bottom: 1px solid var(--border); text-align: center; }
 table.ef th { font-size: 11px; color: var(--text-light); text-transform: uppercase; }
 table.ef td:first-child, table.ef th:first-child { text-align: left; }
 .sobra { font-weight: 800; color: var(--success); } .falta { font-weight: 800; color: var(--danger); }
+.barra { height: 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; min-width: 60px; }
+.barra > i { display: block; height: 100%; background: var(--success); }
+.barra > i.alto { background: var(--warn); } .barra > i.excesso { background: var(--danger); }
+/* mapa de paradas */
+.mapa-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.mapa { border-collapse: separate; border-spacing: 2px; font-size: 10px; }
+table.mapa th { font-weight: 700; color: var(--text-light); padding: 2px 0; min-width: 18px; text-align: center; }
+table.mapa th.area, table.mapa td.area { position: sticky; left: 0; background: var(--card); text-align: left; padding-right: 6px; min-width: 110px; max-width: 130px; font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 1; }
+table.mapa td.d { height: 18px; border-radius: 3px; background: var(--bg); cursor: pointer; }
+table.mapa td.d.fds { opacity: .6; }
+table.mapa td.d.geral { background: var(--danger); } table.mapa td.d.parcial { background: var(--warn); } table.mapa td.d.critica { background: var(--critica); }
+table.mapa td.d.pend { opacity: .5; }
+/* indicadores */
+.kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.kpi { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.kpi b { display: block; font-size: 22px; font-weight: 800; }
+.kpi span { font-size: 11px; color: var(--text-light); }
+.kpi.bom b { color: var(--success); } .kpi.ruim b { color: var(--danger); }
+.linha-kpi { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.linha-kpi > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 /* modal */
 .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
 .modal-bg.open { display: flex; }
+#mAcao { z-index: 220; }
 .modal { background: var(--card); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
 .modal h3 { font-size: 17px; margin-bottom: 4px; }
 .modal-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
@@ -104,6 +134,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
 .picker { max-height: 210px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; }
 .picker label { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
 .picker input { width: auto; margin-top: 3px; }
+.ap { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); }
 /* seletor de mês */
 .mes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .mes-grid button { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 4px 8px; font-size: 15px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 64px; }
@@ -113,10 +144,10 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
 .mes-grid .cnt { font-size: 10px; font-weight: 600; opacity: .85; }
 /* navegação inferior */
 .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 80; padding-bottom: env(safe-area-inset-bottom); }
-.nav button { flex: 1; background: none; border: none; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+.nav button { flex: 1; background: none; border: none; padding: 8px 2px 9px; font-size: 10.5px; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
 .nav button span { font-size: 20px; }
 .nav button.active { color: var(--blue); }
-.nav .badge { position: absolute; top: 4px; right: calc(50% - 22px); background: var(--danger); color: #fff; font-size: 10px; border-radius: 999px; padding: 0 5px; min-width: 16px; }
+.nav .badge { position: absolute; top: 4px; right: calc(50% - 22px); background: var(--danger); color: #fff; font-size: 10px; border-radius: 999px; padding: 0 5px; min-width: 16px; font-style: normal; }
 .view { display: none; } .view.active { display: block; }
 #authOverlay { position: fixed; inset: 0; z-index: 500; background: var(--navy); display: none; align-items: center; justify-content: center; padding: 24px; }
 #authOverlay.open { display: flex; }
@@ -165,15 +196,17 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
   <div class="card">
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelCal" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
+      <button class="btn btn-ghost month-label" data-mes onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <div class="cal" id="calGrid"></div>
     <div class="legend">
       <span><i style="background:var(--danger)"></i>Parada geral</span>
       <span><i style="background:var(--warn)"></i>Parada parcial</span>
+      <span><i style="background:var(--critica)"></i>Intervenção crítica</span>
       <span><i style="background:var(--warn);opacity:.45"></i>Pendente</span>
       <span style="color:var(--violet);font-weight:700">👷 pessoas previstas no dia</span>
+      <span style="color:var(--danger);font-weight:700">nº vermelho = feriado</span>
     </div>
   </div>
   <div class="card">
@@ -190,10 +223,14 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
     <h2>Paradas</h2>
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelPar" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
+      <button class="btn btn-ghost month-label" data-mes onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <button class="btn btn-primary btn-block" style="padding:13px" onclick="abrirParada()">+ Informar parada</button>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0">Mapa de paradas do mês</h4>
+    <div class="mapa-wrap" id="mapaParadas"></div>
   </div>
   <div class="card">
     <input type="search" id="buscaPar" placeholder="Buscar área, linha/TAG ou descrição" oninput="renderParadas()" autocomplete="off">
@@ -208,35 +245,79 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
     <h2>Atividades previstas</h2>
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelAtv" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
+      <button class="btn btn-ghost month-label" data-mes onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <button class="btn btn-primary btn-block" style="padding:13px;background:var(--violet)" onclick="abrirAtividade()">+ Prever atividade</button>
   </div>
   <div class="card">
     <input type="search" id="buscaAtv" placeholder="Buscar atividade, área, linha/TAG ou OM" oninput="renderAtividades()" autocomplete="off">
+    <div class="filtros" id="filtrosAtv"></div>
     <div class="lst-count" id="countAtv" style="margin-top:10px"></div>
     <div id="listAtv"></div>
+  </div>
+</div>
+
+<!-- ═══ INDICADORES ═══ -->
+<div class="view" id="view-ind">
+  <div class="card">
+    <h2>Indicadores</h2>
+    <div class="month-nav">
+      <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
+      <button class="btn btn-ghost month-label" data-mes onclick="abrirSeletorMes()" title="Escolher o mês"></button>
+      <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <div id="indBody"></div>
   </div>
 </div>
 
 <!-- ═══ EFETIVO (só CTV) ═══ -->
 <div class="view" id="view-efetivo">
   <div class="card">
-    <h2>Demanda de efetivo</h2>
-    <p class="hint">Soma das atividades previstas (pendentes e confirmadas) nas próximas semanas. Use para saber quando sobra efetivo para outros contratos.</p>
+    <h2>Carga × capacidade</h2>
+    <p class="hint">Pessoas previstas (pendentes e confirmadas) nos próximos dias úteis contra o efetivo disponível no contrato. Fins de semana e feriados ficam de fora.</p>
     <label class="fld" for="efBase">Efetivo disponível no contrato Suzano (pessoas por dia)</label>
     <div class="row2">
       <input type="number" id="efBase" min="0" max="200" inputmode="numeric" placeholder="ex.: 8">
       <button class="btn btn-primary" style="flex:0 0 auto" onclick="salvarEfetivoBase()">Salvar</button>
     </div>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table class="ef"><thead><tr><th>Dia útil</th><th>Pessoas</th><th>Ocupação</th><th>Sobra</th></tr></thead><tbody id="cargaBody"></tbody></table>
+    </div>
   </div>
   <div class="card" style="overflow-x:auto">
+    <h2>Demanda por semana</h2>
     <table class="ef">
       <thead><tr><th>Semana</th><th>Pessoas-dia</th><th>Pico/dia</th><th>Sobra</th></tr></thead>
       <tbody id="efBody"></tbody>
     </table>
     <p class="hint" style="margin-top:8px">Pessoas-dia = pessoas × dias de cada atividade. Pico = maior número de pessoas num mesmo dia da semana. Sobra = efetivo disponível − pico. Entre parênteses: quanto ainda está pendente de confirmação.</p>
+  </div>
+  <div class="card" id="cardRegras">
+    <h2>Regra de classificação</h2>
+    <p class="hint" id="regrasResumo"></p>
+    <div id="regrasForm" style="display:none">
+      <div class="row2">
+        <div><label class="fld">Antecedência mínima (horas)</label><input type="number" id="rgHoras" min="0" max="720" inputmode="numeric"></div>
+        <div><label class="fld">Meta de % programado</label><input type="number" id="rgMeta" min="0" max="100" inputmode="numeric"></div>
+      </div>
+      <div class="row2">
+        <div><label class="fld">Início da jornada</label><input type="time" id="rgIni"></div>
+        <div><label class="fld">Fim da jornada</label><input type="time" id="rgFim"></div>
+      </div>
+      <label class="fld" style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:13px;color:var(--text)"><input type="checkbox" id="rgFds"> Atividade em sábado ou domingo conta como emergência</label>
+      <label class="fld" style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:13px;color:var(--text)"><input type="checkbox" id="rgFer"> Atividade em feriado conta como emergência</label>
+      <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="salvarRegras()">Salvar regra</button>
+      <p class="hint" style="margin-top:8px">Vale para as atividades lançadas daqui em diante. As já classificadas mantêm a classificação (a CTV pode alterar uma a uma no detalhe da atividade).</p>
+    </div>
+  </div>
+  <div class="card" id="cardMotivos">
+    <h2>Motivos padronizados</h2>
+    <p class="hint">Um motivo por linha. Aparecem como opções ao recusar, cancelar ou apontar uma atividade não executada.</p>
+    <label class="fld">Recusa</label><textarea id="mtRecusa" rows="4"></textarea>
+    <label class="fld">Cancelamento</label><textarea id="mtCancel" rows="5"></textarea>
+    <label class="fld">Não execução / reprogramação</label><textarea id="mtNaoExec" rows="6"></textarea>
+    <button class="btn btn-primary btn-block" id="btnMotivos" style="margin-top:12px" onclick="salvarMotivos()">Salvar motivos</button>
   </div>
   <div class="card" id="cardAcessos" style="display:none">
     <h2>Acessos da Suzano</h2>
@@ -253,6 +334,7 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
   <button class="active" data-view="cal" onclick="switchView('cal')"><span>📅</span>Calendário</button>
   <button data-view="paradas" onclick="switchView('paradas')"><span>🛑</span>Paradas<i class="badge" id="badgePar" style="display:none"></i></button>
   <button data-view="ativ" onclick="switchView('ativ')"><span>🛠️</span>Atividades<i class="badge" id="badgeAtv" style="display:none"></i></button>
+  <button data-view="ind" onclick="switchView('ind')"><span>📊</span>Indicadores</button>
   <button data-view="efetivo" id="navEfetivo" style="display:none" onclick="switchView('efetivo')"><span>👷</span>Efetivo</button>
 </div>
 
@@ -262,7 +344,7 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
     <h3 id="mParadaTit">Informar parada</h3>
     <p class="hint">Dias em que as linhas ficam paradas para manutenção.</p>
     <label class="fld">Tipo</label>
-    <select id="pTipo"><option value="geral">Parada geral</option><option value="parcial">Parada parcial</option></select>
+    <select id="pTipo"><option value="geral">⛔ Parada geral</option><option value="parcial">🔧 Parada parcial</option><option value="critica">⚠️ Intervenção crítica</option></select>
     <label class="fld">Área</label>
     <input id="pArea" list="dlAreas" maxlength="60" placeholder="Ex.: Pátio de Madeira">
     <div class="row2">
@@ -299,8 +381,9 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
     <input id="aDesc" maxlength="200" placeholder="Ex.: Troca da correia do 23-132">
     <div class="row2">
       <div><label class="fld">Serviço</label><select id="aServico"></select></div>
-      <div><label class="fld">Prioridade</label><select id="aPrior"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+      <div><label class="fld">Urgência</label><select id="aPrior" onchange="dicaUrgencia()"></select></div>
     </div>
+    <p class="hint" id="aUrgDica" style="margin-top:4px"></p>
     <label class="fld">Área</label>
     <input id="aArea" list="dlAreas" maxlength="60" placeholder="Ex.: Pátio de Madeira">
     <label class="fld">Linhas / equipamentos</label>
@@ -312,9 +395,10 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
       <button class="btn btn-ghost" style="flex:0 0 auto" onclick="addLivre('a')">Incluir</button>
     </div>
     <div class="row2">
-      <div><label class="fld">Data prevista</label><input type="date" id="aInicio" onchange="renderParadaVinculo()"></div>
+      <div><label class="fld">Data prevista</label><input type="date" id="aInicio" onchange="renderParadaVinculo();previaClasse()"></div>
       <div><label class="fld">Duração (dias)</label><input type="number" id="aDias" min="1" max="60" inputmode="numeric" value="1"></div>
     </div>
+    <p class="hint" id="aClasseInfo" style="margin-top:6px"></p>
     <div class="row2">
       <div><label class="fld">Pessoas (estimativa)</label><input type="number" id="aPessoas" min="1" max="40" inputmode="numeric" value="2"></div>
       <div><label class="fld">OM (se houver)</label><input id="aOm" maxlength="20" inputmode="numeric"></div>
@@ -339,6 +423,22 @@ html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue)
   <div class="modal">
     <div id="detBody"></div>
     <div class="modal-actions" id="detActions"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: AÇÃO (motivo / data / classificação) ═══ -->
+<div class="modal-bg" id="mAcao">
+  <div class="modal">
+    <h3 id="acTit"></h3>
+    <p class="hint" id="acDica"></p>
+    <div id="acMotivoWrap"><label class="fld">Motivo</label><select id="acMotivo"></select></div>
+    <div id="acDataWrap"><label class="fld">Nova data</label><input type="date" id="acData"></div>
+    <div id="acClasseWrap"><label class="fld">Classificação</label><select id="acClasse"></select></div>
+    <div id="acObsWrap"><label class="fld" id="acObsLbl">Observação</label><textarea id="acObs" maxlength="300"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('mAcao')">Voltar</button>
+      <button class="btn btn-primary" id="acOk">Confirmar</button>
+    </div>
   </div>
 </div>
 
@@ -377,6 +477,21 @@ const COL_PAR = 'prog_suzano_paradas', COL_ATV = 'prog_suzano_previsoes';
 const STORE_KEY = 'ctv_progsuz_v1', PENDING_KEY = 'ctv_progsuz_pending', ROLE_KEY = 'ctv_progsuz_role';
 const SERVICOS = ['Troca de correia', 'Emenda', 'Reparo de correia', 'Revestimento de tambor', 'Inspeção', 'Preparação / logística', 'Outros'];
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const TIPOS_PARADA = { geral: { nome: 'Parada geral', ico: '⛔' }, parcial: { nome: 'Parada parcial', ico: '🔧' }, critica: { nome: 'Intervenção crítica', ico: '⚠️' } };
+const URGENCIAS = [
+  { id: 'normal', nome: 'Normal', dica: 'Entra na programação da semana.' },
+  { id: 'urgente', nome: 'Urgente', dica: 'Precisa ser feito nesta semana.' },
+  { id: 'parado', nome: 'Equipamento parado', dica: 'Equipamento parado ou risco à operação.' }
+];
+const CLASSES = { programada: 'Programada', nao_programada: 'Não programada', emergencia: 'Emergência' };
+const RESULTADOS = { executada: '✔ Executada', nao_executada: '✖ Não executada', reprogramada: '↻ Reprogramada' };
+/* Regra inicial (a mesma do AMT); a CTV altera no app, em Efetivo → Regra de classificação */
+const REGRAS_PADRAO = { antecedenciaHoras: 48, jornadaInicio: '07:15', jornadaFim: '17:15', fimDeSemana: true, feriado: true, metaProgramado: 80 };
+const MOTIVOS_PADRAO = {
+  recusa: ['Fora do escopo do contrato', 'Sem efetivo disponível na data', 'Falta de informação no pedido', 'Pedido duplicado'],
+  cancelamento: ['Área cancelou / não precisa mais', 'Equipamento não liberado (bloqueio)', 'Falta de material', 'Falta de recurso (munck, guindaste, andaime)', 'Chuva / condição climática', 'Serviço feito por outra equipe', 'Pedido duplicado'],
+  naoExecucao: ['Equipamento não liberado (bloqueio)', 'Falta de material', 'Falta de recurso (munck, guindaste, andaime)', 'Chuva / condição climática', 'Efetivo deslocado para emergência', 'Prioridade da área mudou', 'Serviço não concluído no dia']
+};
 /* Transportadores de Aracruz (mesma lista do app Transportadores): [TAG, descrição] */
 const LINHAS = [["3070-23-3152-132","TRANSP. CORREIA ( 23-132 ) P/ CASCA L1"],["3070-23-3152-137","TRANSP. CORREIA ( 23-137 ) P/ CASCA L2"],["3070-23-3153-20","TRANSP. DE CORREIA ( 23-20 ) P/ CASCA"],["3070-23-3153-21","TRANSP. DE CORREIA ( 23-21 ) P/ CASCA"],["3070-23-3152-159","TRANSP. CORREIA ( 23-159 ) P/ TORAS L1"],["3070-23-3152-160","TRANSP. CORREIA ( 23-160 ) P/ TORAS L2"],["3070-23-3152-19","TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L1"],["3070-23-3152-148","TRANSP. CORREIA ( 23-148 ) P/ TORAS L2"],["3070-23-3152-3","TRANSP. DE CORREIA ( 23-3 ) P/ TORAS L3"],["3070-23-3153-59","TRANSP. CORREIA ( 23-59 ) P/ CASCAS L3"],["3070-23-3153-23","TRANSP. DE CORREIA ( 23-23 ) P/ CASCA"],["3070-23-3153-24","TRANSP. DE CORREIA ( 23-24 ) P/ RESÍDUOS"],["3070-23-3153-41","TRANSP. DE CORREIA ( 23-41 ) P/ CASCA"],["3070-23-3153-42","TRANSP. DE CORREIA ( 23-42 ) P/ CASCA"],["3070-23-3153-43","TRANSP. DE CORREIA ( 23-43 ) P/ CASCA"],["3070-23-3153-44","TRANSP. DE CORREIA ( 23-44 ) P/ CASCA"],["3070-23-3153-45","TRANSP. DE CORREIA ( 23-45 ) P/ CASCA"],["3070-23-3153-46","TRANSP. DE CORREIA ( 23-46 ) P/ CASCA"],["3070-23-3153-47","TRANSP. DE CORREIA ( 23-47 ) P/ CASCA"],["3070-23-3153-26","TRANSP. DE CORREIA ( 23-26 ) P/ CASCA"],["3070-23-3153-5","TRANSP CORR 23-5 MÓVEL/REVERSÍVEL  CASC"],["3070-23-3153-8","TRANSP. DE CORREIA ( 23-8 ) P/ CASCA"],["3070-23-3153-9","TRANSP. DE CORREIA ( 23-9 ) P/ CASCA"],["3070-23-3153-10","TRANSP. DE CORREIA ( 23-10 ) P/ CASCA"],["3070-23-3153-11","TRANSP. DE CORREIA ( 23-11 ) P/ CASCA"],["3070-23-3153-51","TRANSP. DE CORREIA ( 23-51 ) P/ CASCA"],["3070-23-3153-52","TRANSP. DE CORREIA ( 23-52 ) P/ CASCA"],["3070-23-3153-53","TRANSP. DE CORREIA ( 23-53 ) P/ CASCA"],["3070-23-3153-54","TRANSP. DE CORREIA ( 23-54 ) P/ CASCA"],["3070-23-3153-55","TRANSP. DE CORREIA ( 23-55 ) P/ CASCA"],["3070-23-3152-30","TRANSP CORR 23-30 P/ COLETA OVERS PENS"],["3070-23-3153-1","TRANSP CORREIA 23-1 P/ CASCAS E RESÍDUOS"],["3070-23-3174-12","CORREIA DE CASCAS SAÍDA ARRASTADOR L9"],["3070-23-3174-1","TRANSPORTADOR TORAS"],["3070-23-3174-6","TRANSPORTADOR DE CAVACOS"],["3070-23-3174-7","TRANSP CORREIAS CAVACO FAB C"],["3070-23-3152-17","TRANSP. DE CORREIA ( 23-17 ) P/ CAVACOS"],["3070-23-3152-18","TRANSP. DE CORREIA ( 23-18 ) P/ CAVACOS"],["3070-23-3152-20","TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS"],["3070-23-3152-25","TRANSP CORR 23-25 CAVACOS P/ DIGESTOR A"],["3070-23-3152-26","TRANSP CORR 23-26 CAVACOS P/ DIGESTOR A"],["3070-23-3152-27","TRANSP CORR 23-27 CAVACOS P/ DIGESTOR A"],["3070-20-3201-101","TRANSP CORREIA  CAVACOS P/ IMPBIN"],["3070-23-3152-155","TRANSP CORR 23-155 DESVIO CAV FB A P/ B"],["3070-23-3162-501","TRANSP. CORREIA ( 23-501 ) P/ TORAS L6"],["3070-23-3163-501","TRANSP CORR 23-501  COLETA RESÍDUOS MESA"],["3070-23-3163-502","TRANSP CORR 23-502 TRANSFE RESÍD L6/L4"],["3070-23-3162-507","TRANSP. CORREIA ( 23-507 ) P/ CAVACOS L6"],["3070-23-3162-1","TRANSP. DE CORREIA ( 23-1 ) P/ TORAS L4"],["3070-23-3162-5","TRANSP. DE CORREIA ( 23-5 ) P/ TORAS L4"],["3070-23-3162-11","TRANSP. DE CORREIA ( 23-11 ) P/ TORAS L4"],["3070-23-3162-3","CORR TRANSP TORAS P/ALIM DESCASC 4"],["3070-23-3162-6","TRANSP. DE CORREIA ( 23-6 ) P/ TORAS L5"],["3070-23-3162-12","TRANSP. DE CORREIA ( 23-12 ) P/ TORAS L5"],["3070-23-3162-38","TRANSP CORR 23-38 P/ COLETA OVERS PENS"],["3070-23-3162-39","TRANSP CORR 23-39 P/ COLETA OVERS PENS"],["3070-23-3162-20","TRANSP. DE CORREIA ( 23-20 ) P/ CAVACOS"],["3070-23-3162-21","TRANSP. DE CORREIA ( 23-21 ) P/ CAVACOS"],["3070-23-3162-22","TRANSP. DE CORREIA ( 23-22 ) P/ CAVACOS"],["3070-23-3162-23","TRANSP. DE CORREIA ( 23-23 ) P/ CAVACOS"],["3070-23-3162-27","TRANSP CORR 23-27 CAVACOS P/ DIGESTOR B"],["3070-23-3162-28","TRANSP CORR 23-28 CAVACOS P/ DIGESTOR B"],["3070-23-3162-29","TRANSP CORR 23-29 CAVACOS P/ DIGESTOR B"],["3070-23-3162-30","TRANSP CORR 23-30 CAVACOS P/ DIGESTOR B"],["3070-23-3162-33","TRANSP CORR 23-33 CAVACOS P/ DIGESTOR B"],["3070-23-3162-34","TRANSP CORR 23-34 CAVACOS P/ DIGESTOR B"],["3070-23-3163-1","TRANSP. DE CORREIA ( 23-1 ) P/ CASCA L4"],["3070-23-3163-2","TRANSP. DE CORREIA ( 23-2 ) P/ CASCA L5"],["3070-23-3163-3","TRANSP. DE CORREIA ( 23-3 ) P/ CASCA L4"],["3070-23-3163-4","TRANSP. DE CORREIA ( 23-30P/ CASCA L5"],["3070-23-3163-5","TRANSP. DE CORREIA ( 23-5 ) P/ CASCA L4"],["3070-23-3163-6","TRANSP. DE CORREIA ( 23-6 ) P/ CASCA L5"],["3070-23-3163-13","TRANSP. DE CORREIA ( 23-13 ) P/ CASCA"],["3070-23-3163-14","TRANSP. DE CORREIA ( 23-14 ) P/ CASCA"],["3070-23-3163-16","TRANSP. DE CORREIA ( 23-16 ) P/ CASCA"],["3070-23-3163-17","TRANSP. DE CORREIA ( 23-17 ) P/ CASCA"],["3070-23-3163-7","TRANSP. CORREIA 23-7  P/ CASCA TRITURADA"],["3070-23-3163-18","TRANSP. CORREIA 23-18 P/ CASCA TRITURADA"],["3070-23-3163-21","TRANSP. CORREIA 23-21 P/ CASCA TRITURADA"],["3070-23-3163-22","TRANSP. CORREIA 23-22 P/ CASCA TRITURADA"],["3070-23-3163-25","TRANSP. DE CORREIA ( 23-25 ) P/ CASCA"],["3070-23-3163-26","TRANSP. DE CORREIA ( 23-26 ) P/ CASCA"],["3070-23-3163-27","TRANSP. DE CORREIA ( 23-27 ) P/ CASCA"],["3070-23-3163-28","TRANSP. DE CORREIA ( 23-28 ) P/ CASCA"],["3070-23-3172-701","CORREIA TRANSP. TORAS L7 PM/FAB C"],["3070-23-3172-801","CORREIA TRANSP. TORAS L8- PÁTIO-FAB C"],["3070-23-3173-701","CORREIA TRANSP. P/ CASCAS L7 PM/FAB C"],["3070-23-3173-801","CORREIA TRANSP. P/ CASCAS L8 PM/FAB C"],["3070-23-3173-26","CORREIA TRANSP. FINOS/OVERS L7/8"],["3070-23-3173-27","TRANSP. CORREIA P/ CASCAS/ RESÍDUOS L7/8"],["3070-23-3173-30","CORREIA TRANSP. P/ CASCAS/ RESÍDUOS L7/8"],["3070-23-3163-36","TRANSP CORR 23-36 COL REJEIT MESAS 4/5"],["3070-23-3172-1","CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C"],["3070-23-3172-2","CORREIA TRANSP. DE CAVACOS L7/8 PM/FAB C"],["3070-23-3172-3","CORREIA TRANSP. REVERSÍVEL L7/8 PM/FAB C"],["3070-23-3172-8","CORREIA TRANSP. P/ DIGESTOR PM/FAB C"],["3070-23-3172-9","CORREIA TRANSP. CAVACOS P/ DIGESTOR L7/8"]];
 
@@ -385,6 +500,7 @@ let MODE = 'local', FB = null, currentUser = null, cloudUnsub = [], booted = fal
 let ROLE = '';              // 'ctv' | 'suzano' | 'sem_acesso' | '' (desconhecido)
 let acessos = [];           // e-mails da Suzano (só CTV vê)
 let mes = mesChave(new Date());
+let filtroAtv = 'todas';
 let editPar = null, editAtv = null, selP = [], selA = [];
 let _pending = new Set();   // "par:<id>" / "atv:<id>" ainda não confirmados pelo servidor
 
@@ -392,14 +508,17 @@ let _pending = new Set();   // "par:<id>" / "atv:<id>" ainda não confirmados pe
 function mesChave(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
 function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function hoje() { return isoLocal(new Date()); }
-function addDias(iso, n) { const [y, m, d] = iso.split('-').map(Number); return isoLocal(new Date(y, m - 1, d + n)); }
+function dataDe(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDias(iso, n) { const d = dataDe(iso); return isoLocal(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)); }
 function fmt(iso) { if (!iso) return ''; const p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
 function fmtCurto(iso) { const p = iso.split('-'); return p[2] + '/' + p[1]; }
-function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtDH(isoTs) { try { return new Date(isoTs).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return isoTs; } }
+function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function semAcento(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function txt(v, max) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max); }
 function inteiro(v, min, max) { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : min; }
+const pct = (a, b) => b ? Math.round(a * 100 / b) : null;
 let toastTimer = null;
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
 function emailAtual() { return currentUser ? String(currentUser.email || '').toLowerCase() : ''; }
@@ -407,13 +526,98 @@ function isAdmin() { return ADMIN_EMAILS.indexOf(emailAtual()) >= 0; }
 function isCTV() { return ROLE === 'ctv'; }
 const STATUS_NOME = { pendente: 'Pendente', confirmada: 'Confirmada', recusada: 'Recusada', cancelada: 'Cancelada', realizada: 'Realizada' };
 function stBadge(s) { return '<span class="st ' + s + '">' + (STATUS_NOME[s] || s) + '</span>'; }
+function classeBadge(c) { return c ? '<span class="st ' + c + '">' + CLASSES[c] + '</span>' : ''; }
+function nomeUrg(v) { if (v === 'alta') v = 'urgente'; const u = URGENCIAS.find(x => x.id === v); return u ? u.nome : 'Normal'; }
+function urgTag(v) { return v === 'parado' ? '🔴 Equipamento parado' : (v === 'urgente' || v === 'alta') ? '🟠 Urgente' : ''; }
 function linhaNome(l) { return l.tag ? l.tag.replace(/^3070-\d+-\d+-/, '') + (l.desc ? ' — ' + l.desc.replace(/^TRANSP\.?\s*(DE\s*)?CORREIA\s*/i, '') : '') : l.desc; }
 function linhasTexto(arr) { return (arr || []).map(linhaNome).join(' · '); }
+function regras() { return Object.assign({}, REGRAS_PADRAO, db.config.regras || {}); }
+function motivos(tipo) { const m = db.config.motivos && db.config.motivos[tipo]; return (Array.isArray(m) && m.length ? m : MOTIVOS_PADRAO[tipo]); }
+
+/* ═══ FERIADOS (nacionais calculados + municipais do RDO/Horários em shared/feriados) ═══ */
+function easterSunday(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+const _holCache = {};
+function feriadosNacionais(year) {
+  if (_holCache[year]) return _holCache[year];
+  const H = {}, p = n => String(n).padStart(2, '0');
+  [[1, 1, 'Confraternização Universal'], [4, 21, 'Tiradentes'], [5, 1, 'Dia do Trabalho'], [9, 7, 'Independência do Brasil'], [10, 12, 'Nossa Senhora Aparecida'],
+   [11, 2, 'Finados'], [11, 15, 'Proclamação da República'], [11, 20, 'Consciência Negra'], [12, 25, 'Natal']].forEach(([mo, da, n]) => { H[year + '-' + p(mo) + '-' + p(da)] = n; });
+  const pas = easterSunday(year);
+  [[-47, 'Carnaval'], [-2, 'Sexta-feira Santa'], [60, 'Corpus Christi']].forEach(([off, n]) => { H[isoLocal(new Date(pas.getFullYear(), pas.getMonth(), pas.getDate() + off))] = n; });
+  return (_holCache[year] = H);
+}
+function feriadoEm(iso) { return (db.config.feriados || {})[iso] || feriadosNacionais(Number(iso.slice(0, 4)))[iso] || ''; }
+function fimDeSemana(iso) { const w = dataDe(iso).getDay(); return w === 0 || w === 6; }
+function diaUtil(iso) { return !fimDeSemana(iso) && !feriadoEm(iso); }
+
+/* ═══ CLASSIFICAÇÃO (regra configurável no app) ═══
+   Emergência: atividade em fim de semana/feriado (se a regra marcar).
+   Programada: comunicada com a antecedência mínima ou mais, contada do recebimento do pedido
+   até o início da jornada do dia da atividade. Pedido fora da jornada (antes do início, depois
+   do fim, em fim de semana ou feriado) conta como recebido no início da jornada do próximo dia útil.
+   Não programada: menos que a antecedência mínima. */
+function minutos(hhmm) { const [h, m] = String(hhmm || '00:00').split(':').map(Number); return (h || 0) * 60 + (m || 0); }
+function recebidoEm(ts, rg) {
+  const d = new Date(ts);
+  const abre = x => new Date(x.getFullYear(), x.getMonth(), x.getDate(), 0, minutos(rg.jornadaInicio));
+  const fecha = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, minutos(rg.jornadaFim));
+  if (diaUtil(isoLocal(d))) { if (d < abre(d)) return abre(d); if (d <= fecha) return d; }
+  let x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  for (let i = 0; i < 30 && !diaUtil(isoLocal(x)); i++) x = new Date(x.getFullYear(), x.getMonth(), x.getDate() + 1);
+  return abre(x);
+}
+function fmtHoras(h) { if (h >= 72) { const d = Math.floor(h / 24), r = Math.floor(h - d * 24); return d + ' dias' + (r ? ' e ' + r + ' h' : ''); } return Math.max(0, Math.round(h)) + ' h'; }
+function classificar(dataIso, comunicadoTs) {
+  if (!dataIso || !comunicadoTs) return null;
+  const rg = regras();
+  const fer = feriadoEm(dataIso);
+  if (rg.feriado && fer) return { classe: 'emergencia', motivo: 'feriado (' + fer + ')' };
+  if (rg.fimDeSemana && fimDeSemana(dataIso)) return { classe: 'emergencia', motivo: dataDe(dataIso).getDay() === 6 ? 'sábado' : 'domingo' };
+  const dd = dataDe(dataIso);
+  const inicio = new Date(dd.getFullYear(), dd.getMonth(), dd.getDate(), 0, minutos(rg.jornadaInicio));
+  const horas = (inicio - recebidoEm(comunicadoTs, rg)) / 3600000;
+  const txtH = horas <= 0 ? 'pedido no próprio dia ou depois' : 'comunicada ' + fmtHoras(horas) + ' antes do início da jornada';
+  return horas >= rg.antecedenciaHoras ? { classe: 'programada', motivo: txtH } : { classe: 'nao_programada', motivo: txtH + ' (menos de ' + rg.antecedenciaHoras + ' h)' };
+}
+function regrasTexto() {
+  const rg = regras();
+  return 'Programada: comunicada com ' + rg.antecedenciaHoras + ' h ou mais de antecedência (jornada ' + rg.jornadaInicio + '–' + rg.jornadaFim + ', dias úteis). Não programada: menos que isso.'
+    + (rg.fimDeSemana || rg.feriado ? ' Emergência: atividade em ' + [rg.fimDeSemana ? 'sábado/domingo' : '', rg.feriado ? 'feriado' : ''].filter(Boolean).join(' ou ') + '.' : '')
+    + ' Meta de programadas: ' + rg.metaProgramado + '%.';
+}
+
+/* ═══ NORMALIZAÇÃO (registros antigos ganham os campos novos com valor padrão) ═══ */
+function normPar(p) {
+  if (!TIPOS_PARADA[p.tipo]) p.tipo = 'geral';
+  if (typeof p.motivo !== 'string') p.motivo = '';
+  return p;
+}
+function normAtv(a) {
+  if (typeof a.motivo !== 'string') a.motivo = '';
+  if (!(a.classe in CLASSES)) a.classe = '';
+  if (typeof a.classeManual !== 'boolean') a.classeManual = false;
+  if (typeof a.comunicadoEm !== 'string') a.comunicadoEm = a.criadoEm || '';
+  if (!(a.execucao in RESULTADOS)) a.execucao = '';
+  if (!Array.isArray(a.apontamentos)) a.apontamentos = [];
+  if (typeof a.reprogramacoes !== 'number') a.reprogramacoes = 0;
+  if (typeof a.dataOriginal !== 'string') a.dataOriginal = a.inicio || '';
+  return a;
+}
 
 /* ═══ PERSISTÊNCIA LOCAL ═══ */
 function loadLocal() {
   try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && Array.isArray(d.paradas) && Array.isArray(d.previsoes)) db = d; } catch (e) {}
   if (!db.config) db.config = { dark: false, efetivoBase: 0 };
+  db.paradas.forEach(normPar); db.previsoes.forEach(normAtv);
 }
 function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
 function loadPending() { try { _pending = new Set(JSON.parse(localStorage.getItem(PENDING_KEY) || '[]')); } catch (e) { _pending = new Set(); } }
@@ -506,8 +710,9 @@ function startCloudListeners() {
   clearCloudListeners();
   const merge = (kind, snap) => {
     const arr = kind === 'par' ? 'paradas' : 'previsoes';
+    const norm = kind === 'par' ? normPar : normAtv;
     const local = db[arr];
-    const cloud = snap.docs.map(d => d.data());
+    const cloud = snap.docs.map(d => norm(d.data()));
     const ids = new Set(cloud.map(r => r.id));
     const out = cloud.map(r => {
       const k = kind + ':' + r.id;
@@ -528,15 +733,17 @@ function startCloudListeners() {
     if (c.includes('permission-denied')) { ROLE = 'sem_acesso'; try { localStorage.setItem(ROLE_KEY, ROLE); } catch (e) {} updateRoleUI(); setSync('semacesso'); }
     else setSync('error', c);
   };
+  const cfg = (doc, aplicar) => cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, ...doc), s => {
+    const d = s.exists() ? s.data() : null; aplicar(d); saveLocal(); renderAll();
+  }, () => {}));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, COL_PAR), s => merge('par', s), onErr));
   cloudUnsub.push(FB.onSnapshot(FB.collection(FB.fs, COL_ATV), s => merge('atv', s), onErr));
+  cfg(['prog_suzano_config', 'regras'], d => { db.config.regras = d ? { antecedenciaHoras: d.antecedenciaHoras, jornadaInicio: d.jornadaInicio, jornadaFim: d.jornadaFim, fimDeSemana: d.fimDeSemana, feriado: d.feriado, metaProgramado: d.metaProgramado } : null; });
+  cfg(['prog_suzano_config', 'motivos'], d => { db.config.motivos = d ? { recusa: d.recusa, cancelamento: d.cancelamento, naoExecucao: d.naoExecucao } : null; });
+  cfg(['shared', 'feriados'], d => { db.config.feriados = (d && d.map) || {}; });
   if (isCTV()) {
-    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'prog_suzano_config', 'geral'), s => {
-      const d = s.data(); if (d && typeof d.efetivoBase === 'number') { db.config.efetivoBase = d.efetivoBase; saveLocal(); renderEfetivo(); }
-    }, () => {}));
-    cloudUnsub.push(FB.onSnapshot(FB.doc(FB.fs, 'prog_suzano_config', 'acessos'), s => {
-      acessos = (s.exists() && Array.isArray(s.data().emails)) ? s.data().emails : []; renderAcessos();
-    }, () => {}));
+    cfg(['prog_suzano_config', 'geral'], d => { if (d && typeof d.efetivoBase === 'number') db.config.efetivoBase = d.efetivoBase; });
+    cfg(['prog_suzano_config', 'acessos'], d => { acessos = (d && Array.isArray(d.emails)) ? d.emails : []; });
   }
 }
 function clearCloudListeners() { cloudUnsub.forEach(u => { try { u(); } catch (e) {} }); cloudUnsub = []; }
@@ -597,6 +804,7 @@ function switchView(v) {
 }
 function mudarMes(delta) { let [y, m] = mes.split('-').map(Number); m += delta; if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; } mes = y + '-' + String(m).padStart(2, '0'); renderAll(); }
 function irMesAtual() { mes = mesChave(new Date()); renderAll(); }
+function nomeMes(chave) { const [y, m] = chave.split('-').map(Number); return MESES[m - 1] + ' de ' + y; }
 let anoSeletor = 0;
 function abrirSeletorMes() { anoSeletor = Number(mes.slice(0, 4)); renderSeletorMes(); abrirModal('mMes'); }
 function mudarAnoSeletor(d) { anoSeletor += d; renderSeletorMes(); }
@@ -612,21 +820,30 @@ function renderSeletorMes() {
   }).join('');
 }
 function escolherMes(chave) { mes = chave; fecharModal('mMes'); renderAll(); }
-function nomeMes(chave) { const [y, m] = chave.split('-').map(Number); return MESES[m - 1] + ' de ' + y; }
 
 /* ═══ REGRAS DE NEGÓCIO ═══ */
 const ativa = s => s === 'pendente' || s === 'confirmada';
 function fimAtividade(a) { return addDias(a.inicio, inteiro(a.dias, 1, 60) - 1); }
 function cruzaMes(ini, fim, chave) { const a = chave + '-01', b = chave + '-31'; return ini <= b && fim >= a; }
+function noMes(iso, chave) { return iso && iso.slice(0, 7) === chave; }
 function paradasNoDia(iso) { return db.paradas.filter(p => ativa(p.status) && p.inicio <= iso && iso <= p.fim); }
-function atividadesNoDia(iso) { return db.previsoes.filter(a => (ativa(a.status) || a.status === 'realizada') && a.inicio <= iso && iso <= fimAtividade(a)); }
+/* atividade realizada só ocupa efetivo até o dia em que foi apontada como executada */
+function fimEfetivo(a) {
+  const fim = fimAtividade(a);
+  if (a.status !== 'realizada') return fim;
+  const ex = (a.apontamentos || []).filter(p => p.res === 'executada').pop();
+  return ex && ex.dia < fim ? ex.dia : fim;
+}
+function atividadesNoDia(iso) { return db.previsoes.filter(a => (ativa(a.status) || a.status === 'realizada') && a.inicio <= iso && iso <= fimEfetivo(a)); }
 function pessoasNoDia(iso, so) { return atividadesNoDia(iso).filter(a => !so || a.status === so).reduce((s, a) => s + inteiro(a.pessoas, 0, 40), 0); }
 function podeEditar(r) { return isCTV() || (r.criadoUid === (currentUser && currentUser.uid) && r.status === 'pendente') || (MODE !== 'cloud' && r.status === 'pendente'); }
+/* aguardando apontamento: confirmada, já começou e sem resultado (ou não executada sem decisão) */
+function aguardaApontamento(a) { return a.status === 'confirmada' && a.inicio <= hoje() && (a.execucao === '' || a.execucao === 'nao_executada'); }
 
 /* ═══ RENDER ═══ */
 function renderAll() {
-  ['mesLabelCal', 'mesLabelPar', 'mesLabelAtv'].forEach(id => document.getElementById(id).textContent = nomeMes(mes));
-  renderCal(); renderParadas(); renderAtividades(); renderEfetivo(); renderAcessos(); renderBadges(); renderAreas();
+  document.querySelectorAll('[data-mes]').forEach(b => b.textContent = nomeMes(mes));
+  renderCal(); renderMapa(); renderParadas(); renderAtividades(); renderInd(); renderEfetivo(); renderCarga(); renderRegras(); renderMotivos(); renderAcessos(); renderBadges(); renderAreas();
   if (currentUser) setSync(navigator.onLine ? 'ok' : 'offline');
 }
 function renderCal() {
@@ -642,24 +859,49 @@ function renderCal() {
     const iso = isoLocal(d);
     const ps = paradasNoDia(iso);
     const ppl = pessoasNoDia(iso);
+    const fer = feriadoEm(iso);
     const bars = ps.slice(0, 3).map(p => '<div class="bar ' + p.tipo + (p.status === 'pendente' ? ' pend' : '') + '"></div>').join('');
-    html += '<div class="day' + (d.getMonth() !== m - 1 ? ' out' : '') + (iso === hj ? ' hoje' : '') + '" onclick="abrirDia(\'' + iso + '\')"><div class="num">' + d.getDate() + '</div>' + bars + (ppl ? '<div class="ppl">👷 ' + ppl + '</div>' : '') + '</div>';
+    html += '<div class="day' + (d.getMonth() !== m - 1 ? ' out' : '') + (iso === hj ? ' hoje' : '') + (fer ? ' fer' : '') + '" title="' + esc(fer) + '" onclick="abrirDia(\'' + iso + '\')"><div class="num">' + d.getDate() + '</div>' + bars + (ppl ? '<div class="ppl">👷 ' + ppl + '</div>' : '') + '</div>';
   }
   g.innerHTML = html;
+}
+function renderMapa() {
+  const [y, m] = mes.split('-').map(Number);
+  const n = new Date(y, m, 0).getDate();
+  const ps = db.paradas.filter(p => ativa(p.status) && cruzaMes(p.inicio, p.fim, mes));
+  const el = document.getElementById('mapaParadas');
+  if (!ps.length) { el.innerHTML = '<div class="hint">Nenhuma parada em ' + nomeMes(mes) + '.</div>'; return; }
+  const areas = [...new Set(ps.map(p => p.area || 'Sem área'))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const peso = { geral: 0, critica: 1, parcial: 2 };
+  let h = '<table class="mapa"><tr><th class="area">Área</th>';
+  for (let d = 1; d <= n; d++) h += '<th>' + d + '</th>';
+  h += '</tr>';
+  areas.forEach(ar => {
+    h += '<tr><td class="area" title="' + esc(ar) + '">' + esc(ar) + '</td>';
+    for (let d = 1; d <= n; d++) {
+      const iso = mes + '-' + String(d).padStart(2, '0');
+      const p = ps.filter(x => (x.area || 'Sem área') === ar && x.inicio <= iso && iso <= x.fim).sort((a, b) => peso[a.tipo] - peso[b.tipo])[0];
+      h += '<td class="d' + (fimDeSemana(iso) ? ' fds' : '') + (p ? ' ' + p.tipo + (p.status === 'pendente' ? ' pend' : '') : '') + '" onclick="' + (p ? 'detalheParada(\'' + p.id + '\')' : 'abrirDia(\'' + iso + '\')') + '"></td>';
+    }
+    h += '</tr>';
+  });
+  el.innerHTML = h + '</table>';
 }
 function filtroTexto(q, campos) { return !q || semAcento(campos.join(' ')).includes(q); }
 function cardParada(p) {
   const pend = _pending.has('par:' + p.id) ? '<span class="st sync">⏳ enviando</span>' : '';
-  return '<div class="item ' + p.tipo + '" onclick="detalheParada(\'' + p.id + '\')"><h3>' + (p.tipo === 'geral' ? '🛑 Parada geral' : '🔧 Parada parcial') + (p.area ? ' — ' + esc(p.area) : '') + stBadge(p.status) + pend + '</h3>'
+  const t = TIPOS_PARADA[p.tipo] || TIPOS_PARADA.geral;
+  return '<div class="item ' + p.tipo + '" onclick="detalheParada(\'' + p.id + '\')"><h3>' + t.ico + ' ' + t.nome + (p.area ? ' — ' + esc(p.area) : '') + stBadge(p.status) + pend + '</h3>'
     + '<div class="meta">' + (p.inicio === p.fim ? fmt(p.inicio) : fmt(p.inicio) + ' a ' + fmt(p.fim)) + (p.solicitante ? ' · ' + esc(p.solicitante) : '') + '</div>'
     + (p.linhas && p.linhas.length ? '<div class="chips">' + p.linhas.slice(0, 8).map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + (p.linhas.length > 8 ? '<span class="chip">+' + (p.linhas.length - 8) + '</span>' : '') + '</div>' : '') + '</div>';
 }
 function cardAtividade(a) {
   const pend = _pending.has('atv:' + a.id) ? '<span class="st sync">⏳ enviando</span>' : '';
   const fim = fimAtividade(a);
-  return '<div class="item ativ" onclick="detalheAtividade(\'' + a.id + '\')"><h3>' + esc(a.descricao) + stBadge(a.status) + pend + '</h3>'
+  const aguarda = isCTV() && aguardaApontamento(a);
+  return '<div class="item ativ' + (aguarda ? ' alerta' : '') + '" onclick="detalheAtividade(\'' + a.id + '\')"><h3>' + esc(a.descricao) + stBadge(a.status) + classeBadge(a.classe) + pend + (aguarda ? '<span class="st aponta">📋 apontar</span>' : '') + '</h3>'
     + '<div class="meta">' + (fim === a.inicio ? fmt(a.inicio) : fmt(a.inicio) + ' a ' + fmt(fim)) + ' · 👷 ' + inteiro(a.pessoas, 0, 40) + ' pessoa(s) × ' + inteiro(a.dias, 1, 60) + ' dia(s)'
-    + (a.prioridade !== 'normal' ? ' · ' + (a.prioridade === 'urgente' ? '🔴 Urgente' : '🟠 Alta') : '') + (a.area ? ' · ' + esc(a.area) : '') + (a.om ? ' · OM ' + esc(a.om) : '') + '</div>'
+    + (urgTag(a.prioridade) ? ' · ' + urgTag(a.prioridade) : '') + (a.area ? ' · ' + esc(a.area) : '') + (a.om ? ' · OM ' + esc(a.om) : '') + (a.reprogramacoes ? ' · ↻ ' + a.reprogramacoes + 'x' : '') + '</div>'
     + (a.linhas && a.linhas.length ? '<div class="chips">' + a.linhas.slice(0, 6).map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '') + '</div>';
 }
 function renderParadas() {
@@ -669,17 +911,25 @@ function renderParadas() {
   document.getElementById('countPar').textContent = l.length + ' de ' + doMes.length + ' parada(s) em ' + nomeMes(mes);
   document.getElementById('listPar').innerHTML = l.map(cardParada).join('') || '<div class="hint" style="text-align:center;padding:24px">Nenhuma parada em ' + nomeMes(mes) + '.</div>';
 }
+function setFiltroAtv(f) { filtroAtv = f; renderAtividades(); }
 function renderAtividades() {
   const q = semAcento(document.getElementById('buscaAtv').value.trim());
-  const doMes = db.previsoes.filter(a => cruzaMes(a.inicio, fimAtividade(a), mes));
-  const l = doMes.filter(a => filtroTexto(q, [a.descricao, a.area, a.om, a.servico, linhasTexto(a.linhas), (a.linhas || []).map(x => x.tag).join(' ')])).sort((a, b) => a.inicio.localeCompare(b.inicio));
-  document.getElementById('countAtv').textContent = l.length + ' de ' + doMes.length + ' atividade(s) em ' + nomeMes(mes);
-  document.getElementById('listAtv').innerHTML = l.map(cardAtividade).join('') || '<div class="hint" style="text-align:center;padding:24px">Nenhuma atividade prevista em ' + nomeMes(mes) + '.</div>';
+  const aguardando = db.previsoes.filter(aguardaApontamento);
+  const filtros = [['todas', 'Do mês'], ['pendentes', 'Pendentes de confirmação']].concat(isCTV() ? [['apontar', 'Aguardando apontamento (' + aguardando.length + ')']] : []);
+  if (!isCTV() && filtroAtv === 'apontar') filtroAtv = 'todas';
+  document.getElementById('filtrosAtv').innerHTML = filtros.map(([id, n]) => '<button class="' + (filtroAtv === id ? 'on' : '') + '" onclick="setFiltroAtv(\'' + id + '\')">' + n + '</button>').join('');
+  let base, rotulo;
+  if (filtroAtv === 'apontar') { base = aguardando; rotulo = 'aguardando apontamento (todos os meses)'; }
+  else if (filtroAtv === 'pendentes') { base = db.previsoes.filter(a => a.status === 'pendente'); rotulo = 'pendente(s) de confirmação (todos os meses)'; }
+  else { base = db.previsoes.filter(a => cruzaMes(a.inicio, fimAtividade(a), mes)); rotulo = 'atividade(s) em ' + nomeMes(mes); }
+  const l = base.filter(a => filtroTexto(q, [a.descricao, a.area, a.om, a.servico, linhasTexto(a.linhas), (a.linhas || []).map(x => x.tag).join(' ')])).sort((a, b) => a.inicio.localeCompare(b.inicio));
+  document.getElementById('countAtv').textContent = l.length + ' de ' + base.length + ' ' + rotulo;
+  document.getElementById('listAtv').innerHTML = l.map(cardAtividade).join('') || '<div class="hint" style="text-align:center;padding:24px">Nada aqui.</div>';
 }
 function renderBadges() {
   const show = (id, n) => { const b = document.getElementById(id); b.style.display = n && isCTV() ? '' : 'none'; b.textContent = n; };
   show('badgePar', db.paradas.filter(p => p.status === 'pendente').length);
-  show('badgeAtv', db.previsoes.filter(a => a.status === 'pendente').length);
+  show('badgeAtv', db.previsoes.filter(a => a.status === 'pendente').length + db.previsoes.filter(aguardaApontamento).length);
 }
 function renderAreas() {
   const set = new Set(); db.paradas.concat(db.previsoes).forEach(r => { if (r.area) set.add(r.area); });
@@ -708,9 +958,110 @@ function renderEfetivo() {
   }
   document.getElementById('efBody').innerHTML = html;
 }
+function proximosDiasUteis(n) { const out = []; let d = hoje(); for (let i = 0; out.length < n && i < 60; i++) { if (diaUtil(d)) out.push(d); d = addDias(d, 1); } return out; }
+function renderCarga() {
+  const base = inteiro(db.config.efetivoBase, 0, 200);
+  const dias = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+  document.getElementById('cargaBody').innerHTML = proximosDiasUteis(10).map(iso => {
+    const p = pessoasNoDia(iso), pend = pessoasNoDia(iso, 'pendente');
+    const oc = base ? Math.round(p * 100 / base) : null;
+    const cls = oc === null ? '' : oc > 100 ? 'excesso' : oc >= 85 ? 'alto' : '';
+    const par = paradasNoDia(iso).length;
+    return '<tr><td>' + dias[dataDe(iso).getDay()] + ' ' + fmtCurto(iso) + (par ? ' 🛑' : '') + '</td><td>' + p + (pend ? ' <span class="hint">(' + pend + ')</span>' : '') + '</td>'
+      + '<td>' + (oc === null ? '<span class="hint">—</span>' : '<div class="barra" title="' + oc + '%"><i class="' + cls + '" style="width:' + Math.min(100, oc) + '%"></i></div><span class="hint">' + oc + '%</span>') + '</td>'
+      + '<td>' + (base ? '<span class="' + (base - p < 0 ? 'falta' : 'sobra') + '">' + (base - p < 0 ? 'faltam ' + (p - base) : base - p) + '</span>' : '<span class="hint">—</span>') + '</td></tr>';
+  }).join('');
+}
+function renderRegras() {
+  document.getElementById('regrasResumo').textContent = regrasTexto();
+  const adm = isAdmin() && isCTV();
+  const f = document.getElementById('regrasForm'); f.style.display = adm ? '' : 'none';
+  if (!adm || f.contains(document.activeElement)) return;
+  const rg = regras();
+  document.getElementById('rgHoras').value = rg.antecedenciaHoras; document.getElementById('rgMeta').value = rg.metaProgramado;
+  document.getElementById('rgIni').value = rg.jornadaInicio; document.getElementById('rgFim').value = rg.jornadaFim;
+  document.getElementById('rgFds').checked = !!rg.fimDeSemana; document.getElementById('rgFer').checked = !!rg.feriado;
+}
+function renderMotivos() {
+  const adm = isAdmin() && isCTV();
+  const card = document.getElementById('cardMotivos');
+  if (card.contains(document.activeElement)) return;
+  [['mtRecusa', 'recusa'], ['mtCancel', 'cancelamento'], ['mtNaoExec', 'naoExecucao']].forEach(([id, k]) => { const t = document.getElementById(id); t.value = motivos(k).join('\n'); t.readOnly = !adm; });
+  document.getElementById('btnMotivos').style.display = adm ? '' : 'none';
+}
 function renderAcessos() {
   const el = document.getElementById('listaAcessos');
   el.innerHTML = acessos.length ? acessos.map((e, i) => '<div class="item" style="cursor:default;display:flex;align-items:center;gap:8px"><span style="flex:1;overflow-wrap:anywhere">' + esc(e) + '</span><button class="btn btn-ghost btn-sm" onclick="removerAcesso(' + i + ')">Remover</button></div>').join('') : '<div class="hint">Nenhum e-mail liberado ainda.</div>';
+}
+
+/* ═══ INDICADORES (mês selecionado) ═══ */
+function kpi(valor, rotulo, cls) { return '<div class="kpi ' + (cls || '') + '"><b>' + valor + '</b><span>' + rotulo + '</span></div>'; }
+function contar(lista) { const m = new Map(); lista.forEach(k => { if (k) m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR')); }
+function linhasKpi(pares, vazio) { return pares.length ? pares.map(([k, v]) => '<div class="linha-kpi"><span>' + esc(k) + '</span><b>' + v + '</b></div>').join('') : '<div class="hint">' + vazio + '</div>'; }
+function renderInd() {
+  const el = document.getElementById('indBody');
+  const rg = regras(); const hj = hoje();
+  const doMes = db.previsoes.filter(a => cruzaMes(a.inicio, fimAtividade(a), mes));
+  const validas = doMes.filter(a => a.status !== 'cancelada' && a.status !== 'recusada');
+  const porStatus = s => doMes.filter(a => a.status === s).length;
+  // classificação
+  const classif = validas.filter(a => a.classe);
+  const nc = c => classif.filter(a => a.classe === c).length;
+  const pProg = pct(nc('programada'), classif.length);
+  // aderência (apontamentos feitos em dias do mês)
+  const aps = []; db.previsoes.forEach(a => (a.apontamentos || []).forEach(p => { if (noMes(p.dia, mes)) aps.push(Object.assign({ atv: a }, p)); }));
+  const ne = r => aps.filter(p => p.res === r).length;
+  const ader = pct(ne('executada'), aps.length);
+  const previstasAteHoje = validas.filter(a => (a.status === 'confirmada' || a.status === 'realizada') && a.inicio <= hj);
+  const cobertura = pct(previstasAteHoje.filter(a => (a.apontamentos || []).length).length, previstasAteHoje.length);
+  // antecedência por área
+  const ant = new Map();
+  validas.forEach(a => {
+    if (!a.comunicadoEm) return;
+    const dd = dataDe(a.inicio), ini = new Date(dd.getFullYear(), dd.getMonth(), dd.getDate(), 0, minutos(rg.jornadaInicio));
+    const h = (ini - new Date(a.comunicadoEm)) / 3600000; const k = a.area || 'Sem área';
+    const x = ant.get(k) || { s: 0, n: 0 }; x.s += h; x.n++; ant.set(k, x);
+  });
+  const antL = [...ant.entries()].map(([k, x]) => [k + ' (' + x.n + ')', fmtHoras(x.s / x.n)]).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+  // backlog: pessoas-dia ainda por fazer (de hoje em diante) ÷ capacidade semanal
+  const base = inteiro(db.config.efetivoBase, 0, 200);
+  let resto = 0;
+  db.previsoes.filter(a => ativa(a.status) && a.execucao !== 'executada').forEach(a => {
+    const fim = fimAtividade(a); if (fim < hj) return;
+    const ini = a.inicio > hj ? a.inicio : hj;
+    const dias = Math.round((dataDe(fim) - dataDe(ini)) / 86400000) + 1;
+    resto += dias * inteiro(a.pessoas, 0, 40);
+  });
+  const backlog = base ? (resto / (base * 5)).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' sem.' : '—';
+  // motivos do mês
+  const mNao = contar(aps.filter(p => p.res !== 'executada').map(p => p.motivo));
+  const canc = db.paradas.concat(db.previsoes).filter(r => r.status === 'cancelada' && noMes(r.atualizadoEm, mes)).map(r => r.motivo);
+  const recs = db.paradas.concat(db.previsoes).filter(r => r.status === 'recusada' && noMes(r.atualizadoEm, mes)).map(r => r.motivo);
+  // reincidência: mesmo equipamento em 2+ atividades nos últimos 90 dias
+  const lim = addDias(hj, -90);
+  const reinc = contar([].concat(...db.previsoes.filter(a => a.status !== 'cancelada' && a.status !== 'recusada' && a.inicio >= lim && a.inicio <= hj).map(a => [...new Set((a.linhas || []).map(linhaNome))]))).filter(x => x[1] >= 2);
+  // paradas do mês
+  const parMes = db.paradas.filter(p => ativa(p.status) && cruzaMes(p.inicio, p.fim, mes));
+
+  el.innerHTML = '<h4>Demandas do mês</h4><div class="kpis">'
+    + kpi(validas.length, 'atividades (sem canceladas/recusadas)') + kpi(porStatus('pendente'), 'pendentes de confirmação')
+    + kpi(porStatus('confirmada') + porStatus('realizada'), 'confirmadas / realizadas') + kpi(parMes.length, 'paradas no mês')
+    + '</div>'
+    + '<h4>Classificação</h4><div class="kpis">'
+    + kpi(pProg === null ? '—' : pProg + '%', 'programadas (meta ' + rg.metaProgramado + '%)', pProg === null ? '' : pProg >= rg.metaProgramado ? 'bom' : 'ruim')
+    + kpi(nc('programada') + ' / ' + nc('nao_programada') + ' / ' + nc('emergencia'), 'programada / não prog. / emergência')
+    + '</div><p class="hint" style="margin-top:6px">' + esc(regrasTexto()) + '</p>'
+    + '<h4>Aderência à programação</h4><div class="kpis">'
+    + kpi(ader === null ? '—' : ader + '%', 'executadas ÷ apontadas', ader === null ? '' : ader >= 85 ? 'bom' : 'ruim')
+    + kpi(cobertura === null ? '—' : cobertura + '%', 'cobertura do apontamento')
+    + kpi(ne('executada') + ' / ' + ne('nao_executada') + ' / ' + ne('reprogramada'), 'executada / não exec. / reprogramada')
+    + kpi(backlog, 'backlog (efetivo ' + (base || '—') + ' × 5 dias)')
+    + '</div><p class="hint" style="margin-top:6px">Referência de mercado: aderência acima de 85% e trabalho programado acima de 80%.</p>'
+    + '<h4>Antecedência média por área</h4>' + linhasKpi(antL, 'Sem atividades com data de comunicação.')
+    + '<h4>Motivos de não execução / reprogramação</h4>' + linhasKpi(mNao, 'Nenhum no mês.')
+    + '<h4>Motivos de cancelamento</h4>' + linhasKpi(contar(canc), 'Nenhum no mês.')
+    + '<h4>Motivos de recusa</h4>' + linhasKpi(contar(recs), 'Nenhum no mês.')
+    + '<h4>Reincidência — equipamentos com 2+ atividades em 90 dias</h4>' + linhasKpi(reinc, 'Nenhuma reincidência.');
 }
 
 /* ═══ SELETOR DE LINHAS ═══ */
@@ -742,12 +1093,19 @@ function addLivre(pref) {
 /* ═══ FORMULÁRIOS ═══ */
 function abrirModal(id) { document.getElementById(id).classList.add('open'); }
 function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+function lembrar(k, v) { const key = 'ctv_progsuz_' + k; try { if (v !== undefined) localStorage.setItem(key, v); return localStorage.getItem(key) || ''; } catch (e) { return v || ''; } }
+function carimbo(rec, novo) {
+  const agora = new Date().toISOString(), quem = emailAtual() || 'local';
+  if (novo) { rec.criadoEm = agora; rec.criadoPor = quem; rec.criadoUid = currentUser ? currentUser.uid : ''; }
+  rec.atualizadoEm = agora; rec.atualizadoPor = quem;
+  return rec;
+}
 function abrirParada(id, dataIni) {
   editPar = id ? db.paradas.find(p => p.id === id) : null;
   if (id && (!editPar || !podeEditar(editPar))) { showToast('Esta parada não pode mais ser editada.'); return; }
   const p = editPar || {};
   document.getElementById('mParadaTit').textContent = editPar ? 'Editar parada' : 'Informar parada';
-  document.getElementById('pTipo').value = p.tipo || 'geral';
+  document.getElementById('pTipo').value = TIPOS_PARADA[p.tipo] ? p.tipo : 'geral';
   document.getElementById('pArea').value = p.area || '';
   document.getElementById('pInicio').value = p.inicio || dataIni || '';
   document.getElementById('pFim').value = p.fim || dataIni || '';
@@ -759,13 +1117,6 @@ function abrirParada(id, dataIni) {
   renderSelecionadas('p'); renderPicker('p');
   fecharModal('mDet'); abrirModal('mParada');
 }
-function lembrar(k, v) { const key = 'ctv_progsuz_' + k; try { if (v !== undefined) localStorage.setItem(key, v); return localStorage.getItem(key) || ''; } catch (e) { return v || ''; } }
-function carimbo(rec, novo) {
-  const agora = new Date().toISOString(), quem = emailAtual() || 'local';
-  if (novo) { rec.criadoEm = agora; rec.criadoPor = quem; rec.criadoUid = currentUser ? currentUser.uid : ''; }
-  rec.atualizadoEm = agora; rec.atualizadoPor = quem;
-  return rec;
-}
 function salvarParada() {
   const g = id => document.getElementById(id).value;
   const inicio = g('pInicio'), fim = g('pFim') || inicio;
@@ -774,17 +1125,26 @@ function salvarParada() {
   if (!selP.length && !txt(g('pArea'), 60)) { showToast('Informe a área ou pelo menos uma linha.'); return; }
   if (!txt(g('pSolic'), 80)) { showToast('Informe o solicitante.'); return; }
   const novo = !editPar;
-  const rec = Object.assign({}, editPar || { id: uid(), status: 'pendente', resposta: '' }, {
-    tipo: g('pTipo') === 'parcial' ? 'parcial' : 'geral', area: txt(g('pArea'), 60), linhas: selP.slice(0, 60),
+  const rec = Object.assign({}, editPar || { id: uid(), status: 'pendente', resposta: '', motivo: '' }, {
+    tipo: TIPOS_PARADA[g('pTipo')] ? g('pTipo') : 'geral', area: txt(g('pArea'), 60), linhas: selP.slice(0, 60),
     inicio, fim, descricao: txt(g('pDesc'), 500), solicitante: txt(g('pSolic'), 80), contato: txt(g('pContato'), 80)
   });
   if (novo && isCTV()) rec.status = 'confirmada';   // lançada pela própria CTV já entra confirmada
   lembrar('solic', rec.solicitante); lembrar('contato', rec.contato);
-  persist('par', carimbo(rec, novo));
+  persist('par', carimbo(normPar(rec), novo));
   fecharModal('mParada');
   showToast(novo ? (rec.status === 'pendente' ? 'Parada enviada — aguardando confirmação da CTV' : 'Parada registrada') : 'Parada atualizada');
 }
 function renderServicos(v) { document.getElementById('aServico').innerHTML = SERVICOS.map(s => '<option' + (s === v ? ' selected' : '') + '>' + s + '</option>').join(''); }
+function renderUrgencias(v) { if (v === 'alta') v = 'urgente'; document.getElementById('aPrior').innerHTML = URGENCIAS.map(u => '<option value="' + u.id + '"' + (u.id === v ? ' selected' : '') + '>' + u.nome + '</option>').join(''); dicaUrgencia(); }
+function dicaUrgencia() { const u = URGENCIAS.find(x => x.id === document.getElementById('aPrior').value); document.getElementById('aUrgDica').textContent = u ? u.dica : ''; }
+function previaClasse() {
+  const el = document.getElementById('aClasseInfo');
+  const ini = document.getElementById('aInicio').value;
+  if (editAtv && editAtv.classeManual) { el.innerHTML = 'Classificação: ' + classeBadge(editAtv.classe) + ' (definida pela CTV)'; return; }
+  const c = ini ? classificar(ini, (editAtv && editAtv.comunicadoEm) || new Date().toISOString()) : null;
+  el.innerHTML = c ? 'Classificação: ' + classeBadge(c.classe) + ' — ' + esc(c.motivo) : '';
+}
 function renderParadaVinculo(v) {
   const ini = document.getElementById('aInicio').value;
   const cur = v !== undefined ? v : document.getElementById('aParada').value;
@@ -798,7 +1158,7 @@ function abrirAtividade(id, dataIni) {
   document.getElementById('mAtivTit').textContent = editAtv ? 'Editar atividade' : 'Prever atividade';
   document.getElementById('aDesc').value = a.descricao || '';
   renderServicos(a.servico || SERVICOS[0]);
-  document.getElementById('aPrior').value = a.prioridade || 'normal';
+  renderUrgencias(a.prioridade || 'normal');
   document.getElementById('aArea').value = a.area || '';
   document.getElementById('aInicio').value = a.inicio || dataIni || '';
   document.getElementById('aDias').value = a.dias || 1;
@@ -810,7 +1170,7 @@ function abrirAtividade(id, dataIni) {
   renderParadaVinculo(a.paradaId || '');
   selA = JSON.parse(JSON.stringify(a.linhas || []));
   document.getElementById('aBusca').value = ''; document.getElementById('aLivre').value = '';
-  renderSelecionadas('a'); renderPicker('a');
+  renderSelecionadas('a'); renderPicker('a'); previaClasse();
   fecharModal('mDet'); abrirModal('mAtiv');
 }
 function salvarAtividade() {
@@ -819,13 +1179,19 @@ function salvarAtividade() {
   if (!g('aInicio')) { showToast('Informe a data prevista.'); return; }
   if (!txt(g('aSolic'), 80)) { showToast('Informe o solicitante.'); return; }
   const novo = !editAtv;
-  const rec = Object.assign({}, editAtv || { id: uid(), status: 'pendente', resposta: '' }, {
+  const agora = new Date().toISOString();
+  const rec = normAtv(Object.assign({}, editAtv || { id: uid(), status: 'pendente', resposta: '', comunicadoEm: agora }, {
     descricao: txt(g('aDesc'), 200), servico: SERVICOS.indexOf(g('aServico')) >= 0 ? g('aServico') : 'Outros',
-    prioridade: ['alta', 'urgente'].indexOf(g('aPrior')) >= 0 ? g('aPrior') : 'normal',
+    prioridade: URGENCIAS.some(u => u.id === g('aPrior')) ? g('aPrior') : 'normal',
     area: txt(g('aArea'), 60), linhas: selA.slice(0, 60), inicio: g('aInicio'),
     dias: inteiro(g('aDias'), 1, 60), pessoas: inteiro(g('aPessoas'), 1, 40), om: txt(g('aOm'), 20),
     paradaId: txt(g('aParada'), 40), obs: txt(g('aObs'), 500), solicitante: txt(g('aSolic'), 80), contato: txt(g('aContato'), 80)
-  });
+  }));
+  // classificação automática (a manual, feita pela CTV, é mantida)
+  if (!rec.classeManual && (novo || rec.status === 'pendente' || !rec.classe)) {
+    const c = classificar(rec.inicio, rec.comunicadoEm || agora); rec.classe = c ? c.classe : '';
+  }
+  if (novo) rec.dataOriginal = rec.inicio;
   if (novo && isCTV()) rec.status = 'confirmada';
   lembrar('solic', rec.solicitante); lembrar('contato', rec.contato);
   persist('atv', carimbo(rec, novo));
@@ -833,36 +1199,115 @@ function salvarAtividade() {
   showToast(novo ? (rec.status === 'pendente' ? 'Atividade enviada — aguardando confirmação da CTV' : 'Atividade registrada') : 'Atividade atualizada');
 }
 
-/* ═══ DETALHE E AÇÕES ═══ */
+/* ═══ AÇÃO GENÉRICA: motivo, data, classificação e observação ═══ */
+let _acaoCb = null;
+function abrirAcao(o) {
+  document.getElementById('acTit').textContent = o.titulo;
+  document.getElementById('acDica').textContent = o.dica || '';
+  const mw = document.getElementById('acMotivoWrap'); mw.style.display = o.motivos ? '' : 'none';
+  if (o.motivos) document.getElementById('acMotivo').innerHTML = (o.motivoOpcional ? '<option value="">— Sem motivo —</option>' : '<option value="">Escolha…</option>') + o.motivos.map(m => '<option>' + esc(m) + '</option>').join('');
+  const dw = document.getElementById('acDataWrap'); dw.style.display = o.data ? '' : 'none';
+  document.getElementById('acData').value = o.dataIni || '';
+  const cw = document.getElementById('acClasseWrap'); cw.style.display = o.classe ? '' : 'none';
+  if (o.classe) document.getElementById('acClasse').innerHTML = '<option value="auto">Automática (pela regra)</option>' + Object.keys(CLASSES).map(c => '<option value="' + c + '"' + (c === o.classeAtual ? ' selected' : '') + '>' + CLASSES[c] + '</option>').join('');
+  const ow = document.getElementById('acObsWrap'); ow.style.display = o.obs === false ? 'none' : '';
+  document.getElementById('acObsLbl').textContent = o.obsLabel || 'Observação';
+  document.getElementById('acObs').value = o.obsIni || '';
+  const ok = document.getElementById('acOk'); ok.textContent = o.ok || 'Confirmar'; ok.className = 'btn ' + (o.okClasse || 'btn-primary');
+  _acaoCb = () => {
+    const v = { motivo: document.getElementById('acMotivo').value, data: document.getElementById('acData').value, classe: document.getElementById('acClasse').value, obs: txt(document.getElementById('acObs').value, 300) };
+    if (o.motivos && !o.motivoOpcional && !v.motivo) { showToast('Escolha o motivo.'); return; }
+    if (o.data && !v.data) { showToast('Informe a nova data.'); return; }
+    fecharModal('mAcao'); o.aplicar(v);
+  };
+  ok.onclick = () => _acaoCb && _acaoCb();
+  abrirModal('mAcao');
+}
+function registro(kind, id) { const r = (kind === 'par' ? db.paradas : db.previsoes).find(x => x.id === id); return r ? JSON.parse(JSON.stringify(r)) : null; }
+function gravar(kind, r, msg) { persist(kind, carimbo(r, false)); fecharModal('mDet'); if (msg) showToast(msg); }
+function confirmar(kind, id) {
+  const r = registro(kind, id); if (!r) return;
+  abrirAcao({ titulo: 'Confirmar ' + (kind === 'par' ? 'parada' : 'atividade'), dica: 'Fica confirmada para a Suzano.', obsLabel: 'Observação para a Suzano (opcional)', obsIni: r.resposta, ok: '✔ Confirmar', okClasse: 'btn-success',
+    aplicar: v => { r.status = 'confirmada'; r.resposta = v.obs; r.motivo = ''; gravar(kind, r, 'Confirmada ✔'); } });
+}
+function recusar(kind, id) {
+  const r = registro(kind, id); if (!r) return;
+  abrirAcao({ titulo: 'Recusar ' + (kind === 'par' ? 'parada' : 'atividade'), dica: 'O motivo e a mensagem aparecem para quem informou.', motivos: motivos('recusa'), obsLabel: 'Mensagem para a Suzano', obsIni: r.resposta, ok: '✖ Recusar', okClasse: 'btn-danger',
+    aplicar: v => { r.status = 'recusada'; r.motivo = v.motivo; r.resposta = v.obs; gravar(kind, r, 'Recusada'); } });
+}
+function cancelar(kind, id) {
+  const r = registro(kind, id); if (!r) return;
+  abrirAcao({ titulo: 'Cancelar ' + (kind === 'par' ? 'parada' : 'atividade'), dica: 'O registro continua no histórico como "Cancelado".', motivos: motivos('cancelamento'), obs: false, ok: 'Cancelar registro', okClasse: 'btn-danger',
+    aplicar: v => { r.status = 'cancelada'; r.motivo = v.motivo; gravar(kind, r, 'Cancelada'); } });
+}
+function reabrir(kind, id) { const r = registro(kind, id); if (!r) return; if (!confirm('Reabrir como pendente?')) return; r.status = 'pendente'; r.motivo = ''; if (kind === 'atv') r.execucao = ''; gravar(kind, r, 'Reaberta'); }
+function apontar(a, res, motivo, obs, extra) {
+  const hj = hoje(), fim = fimAtividade(a);
+  a.apontamentos = (a.apontamentos || []).concat([Object.assign({ dia: hj < fim ? hj : fim, res, motivo: motivo || '', obs: obs || '', em: new Date().toISOString(), por: emailAtual() || 'local' }, extra || {})]).slice(-30);
+}
+function apontarExecutada(id) {
+  const a = registro('atv', id); if (!a) return;
+  abrirAcao({ titulo: '✔ Executada', dica: a.descricao, obsLabel: 'Observação (opcional)', ok: '✔ Executada', okClasse: 'btn-success',
+    aplicar: v => { apontar(a, 'executada', '', v.obs); a.execucao = 'executada'; a.status = 'realizada'; gravar('atv', a, 'Apontada como executada'); } });
+}
+function apontarNaoExecutada(id) {
+  const a = registro('atv', id); if (!a) return;
+  abrirAcao({ titulo: '✖ Não executada', dica: 'Depois você pode reprogramar ou cancelar.', motivos: motivos('naoExecucao'), obsLabel: 'Observação (opcional)', ok: '✖ Não executada', okClasse: 'btn-danger',
+    aplicar: v => { apontar(a, 'nao_executada', v.motivo, v.obs); a.execucao = 'nao_executada'; gravar('atv', a, 'Apontada como não executada'); } });
+}
+function reprogramar(id) {
+  const a = registro('atv', id); if (!a) return;
+  abrirAcao({ titulo: '↻ Reprogramar', dica: 'A atividade vai para a nova data e conta como reprogramada.', motivos: motivos('naoExecucao'), data: true, dataIni: addDias(hoje(), 1), obsLabel: 'Observação (opcional)', ok: '↻ Reprogramar',
+    aplicar: v => {
+      apontar(a, 'reprogramada', v.motivo, v.obs, { para: v.data });
+      if (!a.dataOriginal) a.dataOriginal = a.inicio;
+      a.inicio = v.data; a.reprogramacoes = (a.reprogramacoes || 0) + 1; a.execucao = ''; a.status = 'confirmada';
+      gravar('atv', a, 'Reprogramada para ' + fmt(v.data));
+    } });
+}
+function alterarClasse(id) {
+  const a = registro('atv', id); if (!a) return;
+  abrirAcao({ titulo: 'Classificação', dica: 'Automática usa a regra atual. Escolher uma classe fixa a classificação desta atividade.', classe: true, classeAtual: a.classeManual ? a.classe : 'auto', obs: false, ok: 'Salvar',
+    aplicar: v => {
+      if (v.classe === 'auto') { const c = classificar(a.inicio, a.comunicadoEm || a.criadoEm); a.classe = c ? c.classe : ''; a.classeManual = false; }
+      else { a.classe = v.classe; a.classeManual = true; }
+      gravar('atv', a, 'Classificação: ' + (CLASSES[a.classe] || '—'));
+    } });
+}
+
+/* ═══ DETALHE ═══ */
 function linhaInfo(rotulo, valor) { return valor ? '<div style="margin-top:6px"><span class="fld" style="display:inline;margin:0">' + rotulo + ':</span> ' + valor + '</div>' : ''; }
 function rodapeAutoria(r) {
-  return '<div class="hint" style="margin-top:10px">Informado por ' + esc(r.criadoPor || '—') + (r.criadoEm ? ' em ' + new Date(r.criadoEm).toLocaleString('pt-BR') : '')
-    + (r.atualizadoPor && r.atualizadoEm !== r.criadoEm ? '<br>Última alteração: ' + esc(r.atualizadoPor) + ' em ' + new Date(r.atualizadoEm).toLocaleString('pt-BR') : '') + '</div>';
+  return '<div class="hint" style="margin-top:10px">Informado por ' + esc(r.criadoPor || '—') + (r.criadoEm ? ' em ' + fmtDH(r.criadoEm) : '')
+    + (r.atualizadoPor && r.atualizadoEm !== r.criadoEm ? '<br>Última alteração: ' + esc(r.atualizadoPor) + ' em ' + fmtDH(r.atualizadoEm) : '') + '</div>';
 }
+function btn(txtB, acao, cls) { return '<button class="btn ' + (cls || 'btn-ghost') + '" onclick="' + acao + '">' + txtB + '</button>'; }
 function acoes(kind, r) {
-  const b = [];
-  const id = r.id;
-  if (isCTV() && r.status === 'pendente') {
-    b.push('<button class="btn btn-success" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'confirmada\')">✔ Confirmar</button>');
-    b.push('<button class="btn btn-danger" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'recusada\')">✖ Recusar</button>');
+  const b = [], q = '\'' + kind + '\',\'' + r.id + '\'';
+  if (isCTV() && r.status === 'pendente') { b.push(btn('✔ Confirmar', 'confirmar(' + q + ')', 'btn-success')); b.push(btn('✖ Recusar', 'recusar(' + q + ')', 'btn-danger')); }
+  if (isCTV() && kind === 'atv' && r.status === 'confirmada' && r.inicio <= hoje()) {
+    b.push(btn('✔ Executada', 'apontarExecutada(\'' + r.id + '\')', 'btn-success'));
+    if (r.execucao !== 'nao_executada') b.push(btn('✖ Não executada', 'apontarNaoExecutada(\'' + r.id + '\')', 'btn-danger'));
   }
-  if (isCTV() && kind === 'atv' && r.status === 'confirmada') b.push('<button class="btn btn-primary" onclick="mudarStatus(\'atv\',\'' + id + '\',\'realizada\')">Marcar realizada</button>');
-  if (isCTV() && (r.status === 'recusada' || r.status === 'cancelada' || r.status === 'realizada')) b.push('<button class="btn btn-ghost" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'pendente\')">Reabrir</button>');
-  if (podeEditar(r)) b.push('<button class="btn btn-ghost" onclick="' + (kind === 'par' ? 'abrirParada' : 'abrirAtividade') + '(\'' + id + '\')">✏️ Editar</button>');
-  if (ativa(r.status) && (isCTV() || podeEditar(r))) b.push('<button class="btn btn-ghost" style="color:var(--danger)" onclick="mudarStatus(\'' + kind + '\',\'' + id + '\',\'cancelada\')">Cancelar ' + (kind === 'par' ? 'parada' : 'atividade') + '</button>');
-  b.push('<button class="btn btn-ghost" onclick="fecharModal(\'mDet\')">Fechar</button>');
+  if (isCTV() && kind === 'atv' && ativa(r.status)) b.push(btn('↻ Reprogramar', 'reprogramar(\'' + r.id + '\')'));
+  if (isCTV() && kind === 'atv' && r.status !== 'cancelada') b.push(btn('🏷️ Classificação', 'alterarClasse(\'' + r.id + '\')'));
+  if (isCTV() && (r.status === 'recusada' || r.status === 'cancelada' || r.status === 'realizada')) b.push(btn('Reabrir', 'reabrir(' + q + ')'));
+  if (podeEditar(r) && r.status !== 'realizada') b.push(btn('✏️ Editar', (kind === 'par' ? 'abrirParada' : 'abrirAtividade') + '(\'' + r.id + '\')'));
+  if (ativa(r.status) && (isCTV() || podeEditar(r))) b.push('<button class="btn btn-ghost" style="color:var(--danger)" onclick="cancelar(' + q + ')">Cancelar ' + (kind === 'par' ? 'parada' : 'atividade') + '</button>');
+  b.push(btn('Fechar', 'fecharModal(\'mDet\')'));
   return b.join('');
 }
 function detalheParada(id) {
   const p = db.paradas.find(x => x.id === id); if (!p) return;
+  const t = TIPOS_PARADA[p.tipo] || TIPOS_PARADA.geral;
   const ativs = db.previsoes.filter(a => a.paradaId === id && a.status !== 'cancelada');
-  document.getElementById('detBody').innerHTML = '<h3>' + (p.tipo === 'geral' ? '🛑 Parada geral' : '🔧 Parada parcial') + stBadge(p.status) + '</h3>'
+  document.getElementById('detBody').innerHTML = '<h3>' + t.ico + ' ' + t.nome + stBadge(p.status) + '</h3>'
     + linhaInfo('Período', p.inicio === p.fim ? fmt(p.inicio) : fmt(p.inicio) + ' a ' + fmt(p.fim))
     + linhaInfo('Área', esc(p.area))
     + ((p.linhas || []).length ? '<div class="fld">Linhas / equipamentos</div><div class="chips">' + p.linhas.map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '')
-    + linhaInfo('Observação', esc(p.descricao).replace(/\n/g, '<br>'))
+    + linhaInfo('Observação', esc(p.descricao))
     + linhaInfo('Solicitante', esc(p.solicitante) + (p.contato ? ' · ' + esc(p.contato) : ''))
-    + linhaInfo('Resposta da CTV', esc(p.resposta))
+    + linhaInfo('Motivo', esc(p.motivo)) + linhaInfo('Resposta da CTV', esc(p.resposta))
     + (ativs.length ? '<div class="fld">Atividades vinculadas</div>' + ativs.map(cardAtividade).join('') : '')
     + rodapeAutoria(p);
   document.getElementById('detActions').innerHTML = acoes('par', p);
@@ -872,45 +1317,29 @@ function detalheAtividade(id) {
   const a = db.previsoes.find(x => x.id === id); if (!a) return;
   const par = a.paradaId ? db.paradas.find(p => p.id === a.paradaId) : null;
   const fim = fimAtividade(a);
+  const cl = a.classe && a.comunicadoEm && !a.classeManual ? classificar(a.inicio, a.comunicadoEm) : null;
   document.getElementById('detBody').innerHTML = '<h3>' + esc(a.descricao) + stBadge(a.status) + '</h3>'
-    + linhaInfo('Serviço', esc(a.servico) + ' · prioridade ' + ({ normal: 'normal', alta: 'alta', urgente: 'urgente' }[a.prioridade] || 'normal'))
-    + linhaInfo('Data', fim === a.inicio ? fmt(a.inicio) : fmt(a.inicio) + ' a ' + fmt(fim))
+    + linhaInfo('Classificação', a.classe ? classeBadge(a.classe) + (a.classeManual ? ' <span class="hint">(definida pela CTV)</span>' : cl && a.dataOriginal === a.inicio ? ' <span class="hint">' + esc(cl.motivo) + '</span>' : '') : '<span class="hint">não classificada</span>')
+    + linhaInfo('Serviço', esc(a.servico) + ' · urgência: ' + nomeUrg(a.prioridade))
+    + linhaInfo('Data', (fim === a.inicio ? fmt(a.inicio) : fmt(a.inicio) + ' a ' + fmt(fim)) + (a.reprogramacoes ? ' <span class="hint">(original ' + fmt(a.dataOriginal) + ', reprogramada ' + a.reprogramacoes + 'x)</span>' : ''))
     + linhaInfo('Estimativa', inteiro(a.pessoas, 0, 40) + ' pessoa(s) × ' + inteiro(a.dias, 1, 60) + ' dia(s) = ' + inteiro(a.pessoas, 0, 40) * inteiro(a.dias, 1, 60) + ' pessoas-dia')
     + linhaInfo('Área', esc(a.area)) + linhaInfo('OM', esc(a.om))
     + ((a.linhas || []).length ? '<div class="fld">Linhas / equipamentos</div><div class="chips">' + a.linhas.map(l => '<span class="chip">' + esc(linhaNome(l)) + '</span>').join('') + '</div>' : '')
     + (par ? linhaInfo('Parada', fmt(par.inicio) + (par.fim !== par.inicio ? ' a ' + fmt(par.fim) : '') + ' · ' + esc(par.area)) : '')
-    + linhaInfo('Observação', esc(a.obs).replace(/\n/g, '<br>'))
+    + linhaInfo('Observação', esc(a.obs))
     + linhaInfo('Solicitante', esc(a.solicitante) + (a.contato ? ' · ' + esc(a.contato) : ''))
-    + linhaInfo('Resposta da CTV', esc(a.resposta))
+    + linhaInfo('Comunicada em', a.comunicadoEm ? fmtDH(a.comunicadoEm) : '')
+    + linhaInfo('Motivo', esc(a.motivo)) + linhaInfo('Resposta da CTV', esc(a.resposta))
+    + ((a.apontamentos || []).length ? '<div class="fld">Apontamentos</div>' + a.apontamentos.slice().reverse().map(p => '<div class="ap"><b>' + fmt(p.dia) + '</b> · ' + (RESULTADOS[p.res] || p.res) + (p.para ? ' para ' + fmt(p.para) : '') + (p.motivo ? ' — ' + esc(p.motivo) : '') + (p.obs ? '<br><span class="hint">' + esc(p.obs) + '</span>' : '') + '<br><span class="hint">' + esc(p.por) + ' · ' + fmtDH(p.em) + '</span></div>').join('') : '')
     + rodapeAutoria(a);
   document.getElementById('detActions').innerHTML = acoes('atv', a);
   abrirModal('mDet');
 }
-function mudarStatus(kind, id, status) {
-  const arr = kind === 'par' ? db.paradas : db.previsoes;
-  const r0 = arr.find(x => x.id === id); if (!r0) return;
-  const r = JSON.parse(JSON.stringify(r0));
-  if (status === 'recusada') {
-    const motivo = prompt('Motivo da recusa (aparece para quem informou):', r.resposta || '');
-    if (motivo === null) return;
-    r.resposta = txt(motivo, 300);
-  } else if (status === 'confirmada' && isCTV()) {
-    const obs = prompt('Observação para a Suzano (opcional):', r.resposta || '');
-    if (obs === null) return;
-    r.resposta = txt(obs, 300);
-  } else if (status === 'cancelada') {
-    if (!confirm('Cancelar este registro? Ele continua no histórico como "Cancelado".')) return;
-  }
-  r.status = status;
-  persist(kind, carimbo(r, false));
-  fecharModal('mDet');
-  showToast((STATUS_NOME[status] || status) + ' ✔');
-}
 function abrirDia(iso) {
   const ps = db.paradas.filter(p => p.inicio <= iso && iso <= p.fim);
   const as = db.previsoes.filter(a => a.inicio <= iso && iso <= fimAtividade(a));
-  const tot = pessoasNoDia(iso);
-  document.getElementById('detBody').innerHTML = '<h3>' + fmt(iso) + '</h3><div class="hint">👷 ' + tot + ' pessoa(s) previstas neste dia' + (pessoasNoDia(iso, 'pendente') ? ' (' + pessoasNoDia(iso, 'pendente') + ' pendentes de confirmação)' : '') + '</div>'
+  const tot = pessoasNoDia(iso), fer = feriadoEm(iso);
+  document.getElementById('detBody').innerHTML = '<h3>' + fmt(iso) + (fer ? ' <span class="st recusada">' + esc(fer) + '</span>' : '') + '</h3><div class="hint">👷 ' + tot + ' pessoa(s) previstas neste dia' + (pessoasNoDia(iso, 'pendente') ? ' (' + pessoasNoDia(iso, 'pendente') + ' pendentes de confirmação)' : '') + '</div>'
     + '<div class="fld">Paradas</div>' + (ps.map(cardParada).join('') || '<div class="hint">Nenhuma.</div>')
     + '<div class="fld">Atividades</div>' + (as.map(cardAtividade).join('') || '<div class="hint">Nenhuma.</div>');
   document.getElementById('detActions').innerHTML = '<button class="btn btn-primary" onclick="abrirParada(null,\'' + iso + '\')">+ Parada</button><button class="btn btn-primary" style="background:var(--violet)" onclick="abrirAtividade(null,\'' + iso + '\')">+ Atividade</button><button class="btn btn-ghost" onclick="fecharModal(\'mDet\')">Fechar</button>';
@@ -920,11 +1349,31 @@ function abrirDia(iso) {
 /* ═══ CONFIGURAÇÕES DA CTV ═══ */
 function salvarEfetivoBase() {
   const v = inteiro(document.getElementById('efBase').value, 0, 200);
-  db.config.efetivoBase = v; saveLocal(); renderEfetivo();
+  db.config.efetivoBase = v; saveLocal(); renderAll();
   if (MODE === 'cloud' && FB && isCTV()) {
     FB.setDoc(FB.doc(FB.fs, 'prog_suzano_config', 'geral'), { efetivoBase: v, atualizadoEm: new Date().toISOString(), atualizadoPor: emailAtual() })
       .then(() => showToast('Efetivo salvo')).catch(onWriteError);
   } else showToast('Salvo neste aparelho');
+}
+function gravarConfig(doc, dados, msg) {
+  if (MODE !== 'cloud' || !FB || !isAdmin()) { showToast('Disponível só para administradores, conectado.'); return Promise.reject(); }
+  return FB.setDoc(FB.doc(FB.fs, 'prog_suzano_config', doc), Object.assign(dados, { atualizadoEm: new Date().toISOString(), atualizadoPor: emailAtual() }))
+    .then(() => showToast(msg)).catch(e => { onWriteError(e); showToast('Não foi possível salvar.'); });
+}
+const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+function salvarRegras() {
+  const g = id => document.getElementById(id);
+  const r = { antecedenciaHoras: inteiro(g('rgHoras').value, 0, 720), jornadaInicio: g('rgIni').value, jornadaFim: g('rgFim').value,
+    fimDeSemana: g('rgFds').checked, feriado: g('rgFer').checked, metaProgramado: inteiro(g('rgMeta').value, 0, 100) };
+  if (!HORA_RE.test(r.jornadaInicio) || !HORA_RE.test(r.jornadaFim)) { showToast('Informe o início e o fim da jornada.'); return; }
+  if (minutos(r.jornadaFim) <= minutos(r.jornadaInicio)) { showToast('O fim da jornada deve ser depois do início.'); return; }
+  gravarConfig('regras', r, 'Regra de classificação salva').then(() => { db.config.regras = Object.assign({}, r); saveLocal(); renderAll(); }, () => {});
+}
+function salvarMotivos() {
+  const lista = id => [...new Set(document.getElementById(id).value.split('\n').map(s => txt(s, 100)).filter(Boolean))].slice(0, 30);
+  const m = { recusa: lista('mtRecusa'), cancelamento: lista('mtCancel'), naoExecucao: lista('mtNaoExec') };
+  if (!m.recusa.length || !m.cancelamento.length || !m.naoExecucao.length) { showToast('Cada lista precisa de pelo menos um motivo.'); return; }
+  gravarConfig('motivos', m, 'Motivos salvos').then(() => { db.config.motivos = { recusa: m.recusa, cancelamento: m.cancelamento, naoExecucao: m.naoExecucao }; saveLocal(); renderAll(); }, () => {});
 }
 function gravarAcessos(lista) {
   if (MODE !== 'cloud' || !FB || !isAdmin()) { showToast('Disponível só para administradores, conectado.'); return; }
