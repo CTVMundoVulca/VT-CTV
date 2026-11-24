@@ -22,7 +22,8 @@
 <meta name="generator" content="CTV Apps Campo v1.0 — Propriedade de CTV Consultoria Técnica em Vulcanização">
 <meta name="theme-color" content="#001a33">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-programacao.png">
+<link rel="icon" type="image/webp" href="icon-programacao.webp">
 <title>Programação Suzano — CTV</title>
 <style>
 :root {
@@ -103,6 +104,13 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
 .picker { max-height: 210px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; }
 .picker label { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
 .picker input { width: auto; margin-top: 3px; }
+/* seletor de mês */
+.mes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mes-grid button { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 4px 8px; font-size: 15px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 64px; }
+.mes-grid button.sel { background: var(--blue); color: #fff; border-color: var(--blue); }
+.mes-grid button.atual:not(.sel) { border: 2px solid var(--navy); }
+html[data-dark="1"] .mes-grid button.atual:not(.sel) { border-color: var(--blue); }
+.mes-grid .cnt { font-size: 10px; font-weight: 600; opacity: .85; }
 /* navegação inferior */
 .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 80; padding-bottom: env(safe-area-inset-bottom); }
 .nav button { flex: 1; background: none; border: none; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
@@ -121,7 +129,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
 
 <div id="authOverlay">
   <div class="auth-card">
-    <img src="logo-benetech.png" alt="Benetech" style="height:36px;width:auto;margin-bottom:14px">
+    <img src="icon-programacao.webp" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:10px">
     <h3 style="margin-bottom:6px">Programação Suzano — Aracruz</h3>
     <p class="hint" id="authMsg" style="margin-bottom:16px">Entre com o e-mail e a senha fornecidos pela CTV.</p>
     <input type="email" id="authEmail" placeholder="E-mail" autocomplete="username" style="margin-bottom:10px">
@@ -133,6 +141,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
 
 <div class="topbar">
   <a class="menu-btn" href="index.html" title="Voltar ao menu principal">🏠 Menu</a>
+  <img src="icon-programacao.webp" alt="" style="width:30px;height:30px;border-radius:8px;flex:0 0 auto">
   <h1>Programação Suzano</h1>
   <span id="userChip" style="display:none;align-items:center;gap:6px;color:#ccc;font-size:11px">
     <span class="uname" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -156,7 +165,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
   <div class="card">
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelCal" onclick="irMesAtual()" title="Voltar ao mês atual"></button>
+      <button class="btn btn-ghost month-label" id="mesLabelCal" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <div class="cal" id="calGrid"></div>
@@ -181,7 +190,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
     <h2>Paradas</h2>
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelPar" onclick="irMesAtual()"></button>
+      <button class="btn btn-ghost month-label" id="mesLabelPar" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <button class="btn btn-primary btn-block" style="padding:13px" onclick="abrirParada()">+ Informar parada</button>
@@ -199,7 +208,7 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
     <h2>Atividades previstas</h2>
     <div class="month-nav">
       <button class="btn btn-ghost" onclick="mudarMes(-1)" aria-label="Mês anterior">‹</button>
-      <button class="btn btn-ghost month-label" id="mesLabelAtv" onclick="irMesAtual()"></button>
+      <button class="btn btn-ghost month-label" id="mesLabelAtv" onclick="abrirSeletorMes()" title="Escolher o mês"></button>
       <button class="btn btn-ghost" onclick="mudarMes(1)" aria-label="Próximo mês">›</button>
     </div>
     <button class="btn btn-primary btn-block" style="padding:13px;background:var(--violet)" onclick="abrirAtividade()">+ Prever atividade</button>
@@ -330,6 +339,22 @@ table.ef td:first-child, table.ef th:first-child { text-align: left; }
   <div class="modal">
     <div id="detBody"></div>
     <div class="modal-actions" id="detActions"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ESCOLHER MÊS ═══ -->
+<div class="modal-bg" id="mMes">
+  <div class="modal">
+    <div class="month-nav" style="margin-bottom:12px">
+      <button class="btn btn-ghost" onclick="mudarAnoSeletor(-1)" aria-label="Ano anterior">‹</button>
+      <div class="btn month-label" id="anoSeletor" style="cursor:default"></div>
+      <button class="btn btn-ghost" onclick="mudarAnoSeletor(1)" aria-label="Próximo ano">›</button>
+    </div>
+    <div class="mes-grid" id="mesGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="irMesAtual();fecharModal('mMes')">Mês atual</button>
+      <button class="btn btn-ghost" onclick="fecharModal('mMes')">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -572,6 +597,21 @@ function switchView(v) {
 }
 function mudarMes(delta) { let [y, m] = mes.split('-').map(Number); m += delta; if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; } mes = y + '-' + String(m).padStart(2, '0'); renderAll(); }
 function irMesAtual() { mes = mesChave(new Date()); renderAll(); }
+let anoSeletor = 0;
+function abrirSeletorMes() { anoSeletor = Number(mes.slice(0, 4)); renderSeletorMes(); abrirModal('mMes'); }
+function mudarAnoSeletor(d) { anoSeletor += d; renderSeletorMes(); }
+function renderSeletorMes() {
+  document.getElementById('anoSeletor').textContent = anoSeletor;
+  const atual = mesChave(new Date());
+  document.getElementById('mesGrid').innerHTML = MESES.map((nome, i) => {
+    const chave = anoSeletor + '-' + String(i + 1).padStart(2, '0');
+    const np = db.paradas.filter(p => p.status !== 'cancelada' && cruzaMes(p.inicio, p.fim, chave)).length;
+    const na = db.previsoes.filter(a => a.status !== 'cancelada' && cruzaMes(a.inicio, fimAtividade(a), chave)).length;
+    const info = (np ? '🛑' + np : '') + (np && na ? ' · ' : '') + (na ? '🛠️' + na : '');
+    return '<button class="' + (chave === mes ? 'sel ' : '') + (chave === atual ? 'atual' : '') + '" onclick="escolherMes(\'' + chave + '\')">' + nome.slice(0, 3) + '<span class="cnt">' + (info || '&nbsp;') + '</span></button>';
+  }).join('');
+}
+function escolherMes(chave) { mes = chave; fecharModal('mMes'); renderAll(); }
 function nomeMes(chave) { const [y, m] = chave.split('-').map(Number); return MESES[m - 1] + ' de ' + y; }
 
 /* ═══ REGRAS DE NEGÓCIO ═══ */
