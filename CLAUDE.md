@@ -1,5 +1,8 @@
 # Regras de Desenvolvimento — Apps CTV Campo
 
+## Idioma (OBRIGATÓRIO)
+- **Responder SEMPRE em português do Brasil** — todas as mensagens ao usuário, resumos, perguntas, descrições de PR e commits. O usuário não fala inglês.
+
 ## Regra de Integridade de Dados (CRÍTICA)
 Toda atualização, correção ou nova funcionalidade deve garantir que:
 1. **Dados existentes nunca sejam perdidos** — alterações no fluxo de boot, sincronização ou persistência devem preservar dados já salvos (localStorage, Firestore, IndexedDB).
